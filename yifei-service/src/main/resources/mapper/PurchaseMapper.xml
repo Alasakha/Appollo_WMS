@@ -1,0 +1,3184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.PurchaseMapper">
+    <delete id="deleteInvBarcodeOperationByCreateBy">
+        DELETE FROM purchase_summary WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = 100
+    </delete>
+    <delete id="deleteBarCodeOperation">
+        delete from purchase_summary where id = #{id}
+    </delete>
+
+    <!--获取采购管理汇总信息-->
+    <!--采购收货-->
+    <select id="getAllPurchaseInfo1" resultType="com.mgkj.dto.PurchaseSumDto">
+        SELECT [PURCHASE_ORDER].[DOC_NO] AS [docNo]
+                , CAST([PURCHASE_ORDER].[DOC_DATE] AS NVARCHAR (10)) AS [createDate]
+                , [SUPPLIER].[SUPPLIER_CODE] AS [supplierNo]
+                , [SUPPLIER].[SUPPLIER_NAME] AS [supplierName]
+                , [ITEM].[ITEM_CODE] AS [itemNo]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ') AS [productCode]
+                , '' AS stockCode
+                , [PURCHASE_ORDER_D].[ITEM_DESCRIPTION] AS [itemName]
+                , [PURCHASE_ORDER_D].[ITEM_SPECIFICATION] AS [itemSpec]
+                , [UNIT].[UNIT_CODE] AS [unitNo]
+                , 0 AS stockQty
+                , SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]) AS [applyQty]
+                , 0 AS [scanSumQty]
+                , '' AS customerNo
+                , '' AS customerName
+                , '' AS warehouseNo
+                , '' AS storageSpacesNo
+                , '' AS lotNo
+                , UNIT.UNIT_NAME as unitName --交易单位名称
+                , ISNULL(UNIT_02.UNIT_CODE, '') AS referenceUnitNo --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '') AS referenceUnitName--参考单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]), ITEM.SECOND_UNIT_ID, 0) AS referenceQty --参考单位数量
+                , UNIT_03.UNIT_CODE AS valuationUnitNo --计价单位编码
+                , UNIT_03.UNIT_NAME AS valuationUnitName --计价单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]), PURCHASE_ORDER_D.PRICE_UNIT_ID, 0) AS valuationQty --计价单位数量
+                , UNIT_04.UNIT_CODE AS stockUnitNo --库存单位编码
+                , UNIT_04.UNIT_NAME AS stockUnitName --库存单位名称
+                , UNIT_04.DICIMAL_DIGIT AS stockKeep --库存单位小数位数
+            --, dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]), ITEM.STOCK_UNIT_ID, 0) AS stockUnitQty --库存单位数量
+                , SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]) AS sourceDocQty
+                , SUM([PURCHASE_ORDER_SD].[PRICE_QTY]) AS sourceValuationQty
+                , 1 as rate, 0 as [keep]
+        FROM [PURCHASE_ORDER] AS [PURCHASE_ORDER]
+            INNER JOIN [PURCHASE_ORDER_D] AS [PURCHASE_ORDER_D]
+        ON [PURCHASE_ORDER].[PURCHASE_ORDER_ID] = [PURCHASE_ORDER_D].[PURCHASE_ORDER_ID]
+            INNER JOIN [ITEM]
+            ON [PURCHASE_ORDER_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            INNER JOIN [PURCHASE_ORDER_SD] AS [PURCHASE_ORDER_SD]
+            ON [PURCHASE_ORDER_D].[PURCHASE_ORDER_D_ID] = [PURCHASE_ORDER_SD].[PURCHASE_ORDER_D_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_ORDER_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON [PURCHASE_ORDER_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [PLANT]
+            ON [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_RTK]=N'PLANT'
+            AND [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_ROid]=[PLANT].[PLANT_ID]
+            INNER JOIN [SUPPLIER]
+            ON [PURCHASE_ORDER].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON [PURCHASE_ORDER_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04 --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+            LEFT JOIN WAREHOUSE
+            ON WAREHOUSE.WAREHOUSE_ID = PURCHASE_ORDER_SD.WAREHOUSE_ID
+        WHERE [PLANT].[PLANT_CODE]=#{site}
+          AND [PURCHASE_ORDER].[ApproveStatus]=N'Y'
+          AND [PURCHASE_ORDER].[DOC_NO]=#{docNo}
+          AND [PURCHASE_ORDER_SD].[BUSINESS_QTY]
+            >[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]
+          AND [PURCHASE_ORDER_SD].[RECEIPT_CLOSE] = '0'
+          AND [PURCHASE_ORDER].[CLOSE]= '0'
+        GROUP BY
+            [PURCHASE_ORDER].[DOC_NO]
+                , [PURCHASE_ORDER].[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , [PURCHASE_ORDER_D].[ITEM_DESCRIPTION]
+                , [PURCHASE_ORDER_D].[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , PURCHASE_ORDER_D.PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+
+        UNION ALL
+
+        SELECT A.[DOC_NO] AS [docNo]
+,CAST(A.[DOC_DATE] AS NVARCHAR(10))      AS [createDate]
+,[SUPPLIER].[SUPPLIER_CODE]      AS [supplierNo]
+,[SUPPLIER].[SUPPLIER_NAME]      AS [supplierName]
+,[ITEM].[ITEM_CODE]              AS [itemNo]
+,ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE] ,N' ') AS [productCode]
+,'' AS stockCode
+,B.[ITEM_DESCRIPTION] AS [itemName]
+,B.[ITEM_SPECIFICATION] AS [itemSpec]
+,[UNIT].[UNIT_CODE]              AS [unitNo]
+,0 AS stockQty
+,SUM(B.[BUSINESS_QTY])AS [applyQty]
+,0           AS [scanSumQty]
+,'' AS customerNo
+,'' AS customerName
+,'' AS  warehouseNo
+,'' AS  storageSpacesNo
+,'' AS  lotNo
+,UNIT.UNIT_NAME as   unitName   --交易单位名称
+,ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceUnitNo  --参考单位编码(第二单位)
+,ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceUnitName--参考单位名称
+,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),ITEM.SECOND_UNIT_ID,0) AS referenceQty  --参考单位数量
+,UNIT_03.UNIT_CODE AS   valuationUnitNo  --计价单位编码
+,UNIT_03.UNIT_NAME AS   valuationUnitName --计价单位名称
+,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),B.PRICE_UNIT_ID,0)AS  valuationQty  --计价单位数量
+,UNIT_04.UNIT_CODE AS   stockUnitNo  --库存单位编码
+,UNIT_04.UNIT_NAME AS   stockUnitName  --库存单位名称
+,UNIT_04.DICIMAL_DIGIT AS   stockKeep   --库存单位小数位数
+--,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),ITEM.STOCK_UNIT_ID,0) AS   stockUnitQty  --库存单位数量
+,SUM(B.[BUSINESS_QTY]) AS sourceDocQty
+,SUM(B.[PRICE_QTY]) AS sourceValuationQty
+,1 as rate,0 as [keep]
+        FROM SALES_ISSUE AS A
+            INNER JOIN SALES_ISSUE_D AS B
+        ON B.SALES_ISSUE_ID = A.SALES_ISSUE_ID
+            INNER JOIN SUPPLY_SYNERGY AS SUPPLY_SYNERGY
+            ON B.[SYNERGY_ID] = SUPPLY_SYNERGY.[SUPPLY_SYNERGY_ID]
+            LEFT JOIN [SUPPLY_SYNERGY_FI_D] AS [SUPPLY_SYNERGY_FI_D]
+            ON B.[SYNERGY_D_ID] = [SUPPLY_SYNERGY_FI_D].[SUPPLY_SYNERGY_FI_D_ID]
+            INNER JOIN [ITEM]
+            ON B.[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = B.[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON B.[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [PLANT]
+            ON [SUPPLY_SYNERGY_FI_D].[TO_Owner_Org_RTK] =N'PLANT'
+            AND [SUPPLY_SYNERGY_FI_D].[TO_Owner_Org_ROid] =[PLANT].[PLANT_ID]
+            INNER JOIN [SUPPLIER]
+            ON SUPPLY_SYNERGY_FI_D.SUPPLIER_ID = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON B.PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04 --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+            LEFT JOIN WAREHOUSE
+            ON WAREHOUSE.WAREHOUSE_ID = B.WAREHOUSE_ID
+        WHERE
+            [PLANT].[PLANT_CODE]=#{site}
+          AND A.[ApproveStatus]=N'Y'
+          AND A.[DOC_NO]=#{docNo}
+          AND B.[BUSINESS_QTY]
+            >'0'
+          AND SUPPLY_SYNERGY.[SUPPLY_TYPE] IN (N'2'
+            , N'4')
+          AND B.[PURCHASE_ARRIVALED]= '0'
+        GROUP BY
+            A.[DOC_NO]
+                , A.[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , B.[ITEM_DESCRIPTION]
+                , B.[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , B.PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+    </select>
+    <!--扫码入库-->
+    <select id="getAllPurchaseInfo2" resultType="com.mgkj.dto.PurchaseSumDto">
+        SELECT [PURCHASE_ARRIVAL].[DOC_NO] AS [docNo]
+                , CAST([PURCHASE_ARRIVAL].[DOC_DATE] AS NVARCHAR (10)) AS [createDate]
+                , [SUPPLIER].[SUPPLIER_CODE] AS [supplierNo]
+                , [SUPPLIER].[SUPPLIER_NAME] AS [supplierName]
+                , [ITEM].[ITEM_CODE] AS [itemNo]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ') AS [productCode]
+                , '' AS stockCode
+                , [PURCHASE_ARRIVAL_D].[ITEM_DESCRIPTION] AS [itemName]
+                , [PURCHASE_ARRIVAL_D].[ITEM_SPECIFICATION] AS [itemSpec]
+                , [UNIT].[UNIT_CODE] AS [unitNo]
+                , 0 AS stockQty
+                , SUM([PURCHASE_ARRIVAL_D].[ACCEPTED_BUSINESS_QTY]+[PURCHASE_ARRIVAL_D].[SP_RECEIPT_BUSINESS_QTY]-[PURCHASE_ARRIVAL_D].[RECEIPTED_BUSINESS_QTY]) AS [applyQty]
+                , 0 AS [scanSumQty]
+                , '' AS customerNo
+                , '' AS customerName
+                , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ') AS warehouseNo
+                , ISNULL([BIN].[BIN_CODE], N' ') AS storageSpacesNo
+                , ISNULL([ITEM_LOT].[LOT_CODE], N' ') AS lotNo
+                , UNIT.UNIT_NAME as unitName --交易单位名称
+                , ISNULL(UNIT_02.UNIT_CODE, '') AS referenceUnitNo --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '') AS referenceUnitName--参考单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ARRIVAL_D].[ACCEPTED_BUSINESS_QTY]+[PURCHASE_ARRIVAL_D].[SP_RECEIPT_BUSINESS_QTY]-[PURCHASE_ARRIVAL_D].[RECEIPTED_BUSINESS_QTY]), ITEM.SECOND_UNIT_ID, 0) AS referenceQty --参考单位数量
+                , UNIT_03.UNIT_CODE AS valuationUnitNo --计价单位编码
+                , UNIT_03.UNIT_NAME AS valuationUnitName --计价单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ARRIVAL_D].[ACCEPTED_BUSINESS_QTY]+[PURCHASE_ARRIVAL_D].[SP_RECEIPT_BUSINESS_QTY]-[PURCHASE_ARRIVAL_D].[RECEIPTED_BUSINESS_QTY]), PURCHASE_ARRIVAL_D.PRICE_UNIT_ID, 0) AS valuationQty --计价单位数量
+                , UNIT_04.UNIT_CODE AS stockUnitNo --库存单位编码
+                , UNIT_04.UNIT_NAME AS stockUnitName --库存单位名称
+                , UNIT_04.DICIMAL_DIGIT AS stockKeep --库存单位小数位数
+            --, dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ARRIVAL_D].[ACCEPTED_BUSINESS_QTY]+[PURCHASE_ARRIVAL_D].[SP_RECEIPT_BUSINESS_QTY]-[PURCHASE_ARRIVAL_D].[RECEIPTED_BUSINESS_QTY]), ITEM.STOCK_UNIT_ID, 0) AS stockUnitQty --库存单位数量
+                , SUM([PURCHASE_ARRIVAL_D].[ACCEPTED_BUSINESS_QTY]) AS sourceDocQty
+                , SUM([PURCHASE_ARRIVAL_D].[PRICE_QTY]) AS sourceValuationQty
+                , 1 as rate, 0 as [keep]
+        FROM [PURCHASE_ARRIVAL] AS [PURCHASE_ARRIVAL]
+            INNER JOIN [PLANT]
+        ON [PURCHASE_ARRIVAL].[RECEIVE_Owner_Org_ROid] = [PLANT].[PLANT_ID]
+            INNER JOIN [PURCHASE_ARRIVAL_D] AS [PURCHASE_ARRIVAL_D]
+            ON [PURCHASE_ARRIVAL].[PURCHASE_ARRIVAL_ID] = [PURCHASE_ARRIVAL_D].[PURCHASE_ARRIVAL_ID]
+            INNER JOIN [SUPPLIER]
+            ON [PURCHASE_ARRIVAL].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            INNER JOIN [ITEM]
+            ON [PURCHASE_ARRIVAL_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_ARRIVAL_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON [PURCHASE_ARRIVAL_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            LEFT OUTER JOIN [WAREHOUSE] AS [WAREHOUSE]
+            ON [PURCHASE_ARRIVAL_D].[WAREHOUSE_ID]=[WAREHOUSE].[WAREHOUSE_ID]
+            LEFT OUTER JOIN [BIN] AS [BIN]
+            ON [PURCHASE_ARRIVAL_D].[BIN_ID]=[BIN].[BIN_ID]
+            LEFT OUTER JOIN [ITEM_LOT] AS [ITEM_LOT]
+            ON [PURCHASE_ARRIVAL_D].[ITEM_LOT_ID]=[ITEM_LOT].[ITEM_LOT_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON PURCHASE_ARRIVAL_D.PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04 --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+        WHERE [PURCHASE_ARRIVAL].[CATEGORY]=N'36'
+          AND [PLANT].[PLANT_CODE]= #{site}
+          AND [PURCHASE_ARRIVAL].[ApproveStatus]=N'Y'
+          AND [PURCHASE_ARRIVAL].[DOC_NO] =#{docNo}
+          AND [PURCHASE_ARRIVAL_D].[RECEIPT_CLOSE]=N'0'
+          AND ([PURCHASE_ARRIVAL_D].[ACCEPTED_BUSINESS_QTY] + [PURCHASE_ARRIVAL_D].[SP_RECEIPT_BUSINESS_QTY] - [PURCHASE_ARRIVAL_D].[RECEIPTED_BUSINESS_QTY] )
+            > 0
+          AND [PURCHASE_ARRIVAL_D].[RETURN_BUSINESS_QTY] &lt;&gt; [PURCHASE_ARRIVAL_D].[BUSINESS_QTY]
+        GROUP BY
+            [PURCHASE_ARRIVAL].[DOC_NO]
+                , [PURCHASE_ARRIVAL].[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , [PURCHASE_ARRIVAL_D].[ITEM_DESCRIPTION]
+                , [PURCHASE_ARRIVAL_D].[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , [WAREHOUSE].[WAREHOUSE_CODE]
+                , [BIN].[BIN_CODE]
+                , [ITEM_LOT].[LOT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , PURCHASE_ARRIVAL_D.PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+    </select>
+    <!--采购仓退-->
+    <select id="getAllPurchaseInfo3" resultType="com.mgkj.dto.PurchaseSumDto">
+        SELECT [PURCHASE_RETURN].[DOC_NO] AS [docNo]
+                , CAST([PURCHASE_RETURN].[DOC_DATE] AS NVARCHAR (10)) AS [createDate]
+                , [SUPPLIER].[SUPPLIER_CODE] AS [supplierNo]
+                , [SUPPLIER].[SUPPLIER_NAME] AS [supplierName]
+                , [ITEM].[ITEM_CODE] AS [itemNo]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ') AS [productCode]
+                , '' AS stockCode
+                , [PURCHASE_RETURN_D].[ITEM_DESCRIPTION] AS [itemName]
+                , [PURCHASE_RETURN_D].[ITEM_SPECIFICATION] AS [itemSpec]
+                , [UNIT].[UNIT_CODE] AS [unitNo]
+                , [PURCHASE_RETURN_D].[applyQty] AS [applyQty]
+                , SUM(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_INVENTORY_QTY], 0)) AS [stockQty]
+                , sum(ISNULL([ITEM_WAREHOUSE_BIN].TOTAL_SECOND_QTY, 0)) AS referenceStockQty
+                , ISNULL(UNIT_02.UNIT_CODE, '') AS referenceStockUnitNo --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '') AS referenceStockUnitName--参考单位名称
+                , 0 AS [scanSumQty]
+                , '' AS customerNo
+                , '' AS customerName
+                , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ') AS warehouseNo
+                , ISNULL([BIN].[BIN_CODE], N' ') AS storageSpacesNo
+                , ISNULL([ITEM_LOT].[LOT_CODE], N' ') AS lotNo
+                , UNIT.UNIT_NAME as unitName --交易单位名称
+                , ISNULL(UNIT_02.UNIT_CODE, '') AS referenceUnitNo --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '') AS referenceUnitName--参考单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_RETURN_D].[applyQty], ITEM.SECOND_UNIT_ID, 0) AS referenceQty --参考单位数量
+                , UNIT_03.UNIT_CODE AS valuationUnitNo --计价单位编码
+                , UNIT_03.UNIT_NAME AS valuationUnitName --计价单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_RETURN_D].[applyQty], [PURCHASE_RETURN_D].PRICE_UNIT_ID, 0) AS valuationQty --计价单位数量
+                , UNIT_04.UNIT_CODE AS stockUnitNo --库存单位编码
+                , UNIT_04.UNIT_NAME AS stockUnitName --库存单位名称
+                , UNIT_04.DICIMAL_DIGIT AS stockKeep --库存单位小数位数
+            --, dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_RETURN_D].[applyQty], ITEM.STOCK_UNIT_ID, 0) AS stockUnitQty --库存单位数量
+                , [PURCHASE_RETURN_D].sourceDocQty AS sourceDocQty
+                , [PURCHASE_RETURN_D].sourceValuationQty AS sourceValuationQty
+                , CASE WHEN dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, 1, ITEM.STOCK_UNIT_ID, 1) ='0' THEN 1 ELSE dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, 1, ITEM.STOCK_UNIT_ID, 1) END as rate, ISNULL(UNIT.DICIMAL_DIGIT, 0) as [keep]
+        FROM [PURCHASE_RETURN] AS [PURCHASE_RETURN]
+            INNER JOIN [PLANT]
+        ON [PURCHASE_RETURN].[PLANT_ID] = [PLANT].[PLANT_ID]
+            INNER JOIN
+            (select [PURCHASE_RETURN_D].[PURCHASE_RETURN_ID],
+            PURCHASE_RETURN_D.ITEM_ID,
+            PURCHASE_RETURN_D.ITEM_FEATURE_ID,
+            PURCHASE_RETURN_D.[WAREHOUSE_ID],
+            PURCHASE_RETURN_D.BIN_ID,
+            PURCHASE_RETURN_D.ITEM_LOT_ID,
+            [PURCHASE_RETURN_D].[ITEM_DESCRIPTION] ,
+            [PURCHASE_RETURN_D].[ITEM_SPECIFICATION],
+            [PURCHASE_RETURN_D].[BUSINESS_UNIT_ID],
+            [PURCHASE_RETURN_D].[ISSUE_CLOSE],
+            SUM([PURCHASE_RETURN_D].[BUSINESS_QTY]-[PURCHASE_RETURN_D].[ISSUED_BUSINESS_QTY]) AS [applyQty]
+            ,[PURCHASE_RETURN_D].PRICE_UNIT_ID
+            ,SUM([PURCHASE_RETURN_D].[BUSINESS_QTY]) AS sourceDocQty
+            ,SUM([PURCHASE_RETURN_D].[PRICE_QTY]) AS sourceValuationQty
+            from [PURCHASE_RETURN_D]
+            WHERE [PURCHASE_RETURN_D].[ISSUE_CLOSE]=N'0'
+            GROUP BY [PURCHASE_RETURN_D].[PURCHASE_RETURN_ID],
+            PURCHASE_RETURN_D.ITEM_ID,
+            PURCHASE_RETURN_D.ITEM_FEATURE_ID,
+            PURCHASE_RETURN_D.[WAREHOUSE_ID],
+            PURCHASE_RETURN_D.BIN_ID,
+            PURCHASE_RETURN_D.ITEM_LOT_ID,
+            [PURCHASE_RETURN_D].[ITEM_DESCRIPTION] ,
+            [PURCHASE_RETURN_D].[ITEM_SPECIFICATION],
+            [PURCHASE_RETURN_D].[BUSINESS_UNIT_ID] ,
+            [PURCHASE_RETURN_D].[ISSUE_CLOSE]
+            ,[PURCHASE_RETURN_D].PRICE_UNIT_ID)
+            AS [PURCHASE_RETURN_D]
+            ON [PURCHASE_RETURN].[PURCHASE_RETURN_ID] = [PURCHASE_RETURN_D].[PURCHASE_RETURN_ID]
+            INNER JOIN [ITEM]
+            ON [PURCHASE_RETURN_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_RETURN_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON [PURCHASE_RETURN_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [SUPPLIER]
+            ON [PURCHASE_RETURN].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT OUTER JOIN [WAREHOUSE] ON [PURCHASE_RETURN_D].[WAREHOUSE_ID]=[WAREHOUSE].[WAREHOUSE_ID]
+            LEFT OUTER JOIN [BIN] ON [PURCHASE_RETURN_D].[BIN_ID] = [BIN].[BIN_ID]
+            LEFT OUTER JOIN [ITEM_LOT] ON [PURCHASE_RETURN_D].[ITEM_LOT_ID] = [ITEM_LOT].[ITEM_LOT_ID]
+            LEFT OUTER JOIN (
+            SELECT [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+            ,[ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+            ,[ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+            ,[ITEM_WAREHOUSE_BIN].BIN_ID
+            ,[ITEM_WAREHOUSE_BIN].ITEM_LOT_ID
+            ,SUM([ITEM_WAREHOUSE_BIN].[INVENTORY_QTY]) AS [TOTAL_INVENTORY_QTY]
+            ,SUM([ITEM_WAREHOUSE_BIN].[SECOND_QTY]) AS [TOTAL_SECOND_QTY]
+            FROM [ITEM_WAREHOUSE_BIN] AS [ITEM_WAREHOUSE_BIN]
+            INNER JOIN [PLANT] ON [ITEM_WAREHOUSE_BIN].[Owner_Org_ROid] =[PLANT].[PLANT_ID]
+            INNER JOIN [WAREHOUSE] ON [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+            WHERE ITEM_WAREHOUSE_BIN.BO_ID_RTK ='OTHER' AND
+            ITEM_WAREHOUSE_BIN.BO_ID_ROid = '00000000-0000-0000-0000-000000000000' AND
+            [PLANT].[PLANT_CODE]=#{site} AND
+            WAREHOUSE.WAREHOUSE_CODE = #{warehouseNo}
+            GROUP BY [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+            ,[ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+            ,[ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+            ,[ITEM_WAREHOUSE_BIN].BIN_ID
+            ,[ITEM_WAREHOUSE_BIN].ITEM_LOT_ID
+            ) AS [ITEM_WAREHOUSE_BIN]
+            ON [ITEM_WAREHOUSE_BIN].[ITEM_ID]=[PURCHASE_RETURN_D].[ITEM_ID] AND
+            [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID] = [PURCHASE_RETURN_D].[ITEM_FEATURE_ID] AND
+            ([ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = [PURCHASE_RETURN_D].WAREHOUSE_ID OR [PURCHASE_RETURN_D].WAREHOUSE_ID = '00000000-0000-0000-0000-000000000000' ) AND
+            ([ITEM_WAREHOUSE_BIN].BIN_ID = [PURCHASE_RETURN_D].BIN_ID OR [PURCHASE_RETURN_D].BIN_ID= '00000000-0000-0000-0000-000000000000' ) AND
+            ([ITEM_WAREHOUSE_BIN].ITEM_LOT_ID =[PURCHASE_RETURN_D].ITEM_LOT_ID or [PURCHASE_RETURN_D].ITEM_LOT_ID= '00000000-0000-0000-0000-000000000000')
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON [PURCHASE_RETURN_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04 --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+        WHERE [PURCHASE_RETURN].[CATEGORY]=N'39'
+          AND [PURCHASE_RETURN].[ApproveStatus]=N'Y'
+          AND [PLANT].[PLANT_CODE]=#{site}
+          AND [PURCHASE_RETURN_D].[ISSUE_CLOSE
+            ]=N'0'
+          AND [PURCHASE_RETURN].[DOC_NO]=#{docNo}
+        GROUP BY
+            [PURCHASE_RETURN].[DOC_NO]
+                , [PURCHASE_RETURN].[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , [PURCHASE_RETURN_D].[ITEM_DESCRIPTION]
+                , [PURCHASE_RETURN_D].[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , [PURCHASE_RETURN_D].[applyQty]
+                , [WAREHOUSE].[WAREHOUSE_CODE]
+                , [BIN].[BIN_CODE]
+                , [ITEM_LOT].[LOT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , [PURCHASE_RETURN_D].PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+                , [PURCHASE_RETURN_D].sourceDocQty
+                , [PURCHASE_RETURN_D].sourceValuationQty
+                , UNIT.DICIMAL_DIGIT
+
+        UNION ALL
+
+        SELECT [PURCHASE_ISSUE].[DOC_NO] AS [docNo]
+                , CAST([PURCHASE_ISSUE].[DOC_DATE] AS NVARCHAR (10)) AS [createDate]
+                , [SUPPLIER].[SUPPLIER_CODE] AS [supplierNo]
+                , [SUPPLIER].[SUPPLIER_NAME] AS [supplierName]
+                , [ITEM].[ITEM_CODE] AS [itemNo]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ') AS [productCode]
+                , '' AS stockCode
+                , [PURCHASE_ISSUE_D].[ITEM_DESCRIPTION] AS [itemName]
+                , [PURCHASE_ISSUE_D].[ITEM_SPECIFICATION] AS [itemSpec]
+                , [UNIT].[UNIT_CODE] AS [unitNo]
+                , SUM([PURCHASE_ISSUE_D].BUSINESS_QTY) AS [applyQty]
+                , SUM(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_INVENTORY_QTY], 0)) AS [stockQty]
+                , sum(ISNULL([ITEM_WAREHOUSE_BIN].TOTAL_SECOND_QTY, 0)) AS referenceStockQty
+                , ISNULL(UNIT_02.UNIT_CODE, '') AS referenceStockUnitNo --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '') AS referenceStockUnitName--参考单位名称
+                , 0 AS [scanSumQty]
+                , '' AS customerNo
+                , '' AS customerName
+                , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ') AS warehouseNo
+                , ISNULL([BIN].[BIN_CODE], N' ') AS storageSpacesNo
+                , ISNULL([ITEM_LOT].[LOT_CODE], N' ') AS lotNo
+                , UNIT.UNIT_NAME as unitName --交易单位名称
+                , ISNULL(UNIT_02.UNIT_CODE, '') AS referenceUnitNo --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '') AS referenceUnitName--参考单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_ISSUE_D].BUSINESS_QTY, ITEM.SECOND_UNIT_ID, 0) AS referenceQty --参考单位数量
+                , UNIT_03.UNIT_CODE AS valuationUnitNo --计价单位编码
+                , UNIT_03.UNIT_NAME AS valuationUnitName --计价单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_ISSUE_D].BUSINESS_QTY, [PURCHASE_ISSUE_D].PRICE_UNIT_ID, 0) AS valuationQty --计价单位数量
+                , UNIT_04.UNIT_CODE AS stockUnitNo --库存单位编码
+                , UNIT_04.UNIT_NAME AS stockUnitName --库存单位名称
+                , UNIT_04.DICIMAL_DIGIT AS stockKeep --库存单位小数位数
+                , [PURCHASE_ISSUE_D].BUSINESS_QTY AS sourceDocQty
+                , [PURCHASE_ISSUE_D].PRICE_QTY AS sourceValuationQty
+                , CASE WHEN dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, 1, ITEM.STOCK_UNIT_ID, 1) ='0' THEN 1 ELSE dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, 1, ITEM.STOCK_UNIT_ID, 1) END as rate, ISNULL(UNIT.DICIMAL_DIGIT, 0) as [keep]
+        FROM [PURCHASE_ISSUE] AS [PURCHASE_ISSUE]
+            INNER JOIN [PLANT]
+        ON [PURCHASE_ISSUE].Owner_Org_ROid = [PLANT].[PLANT_ID]
+            INNER JOIN PURCHASE_ISSUE_D
+            ON [PURCHASE_ISSUE].[PURCHASE_ISSUE_ID] = [PURCHASE_ISSUE_D].[PURCHASE_ISSUE_ID]
+            INNER JOIN [ITEM]
+            ON [PURCHASE_ISSUE_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_ISSUE_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON [PURCHASE_ISSUE_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [SUPPLIER]
+            ON [PURCHASE_ISSUE].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT OUTER JOIN [WAREHOUSE] ON [PURCHASE_ISSUE_D].[WAREHOUSE_ID]=[WAREHOUSE].[WAREHOUSE_ID]
+            LEFT OUTER JOIN [BIN] ON [PURCHASE_ISSUE_D].[BIN_ID] = [BIN].[BIN_ID]
+            LEFT OUTER JOIN [ITEM_LOT] ON [PURCHASE_ISSUE_D].[ITEM_LOT_ID] = [ITEM_LOT].[ITEM_LOT_ID]
+            LEFT OUTER JOIN (
+            SELECT [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+            ,[ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+            ,[ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+            ,[ITEM_WAREHOUSE_BIN].BIN_ID
+            ,[ITEM_WAREHOUSE_BIN].ITEM_LOT_ID
+            ,SUM([ITEM_WAREHOUSE_BIN].[INVENTORY_QTY]) AS [TOTAL_INVENTORY_QTY]
+            ,SUM([ITEM_WAREHOUSE_BIN].[SECOND_QTY]) AS [TOTAL_SECOND_QTY]
+            FROM [ITEM_WAREHOUSE_BIN] AS [ITEM_WAREHOUSE_BIN]
+            INNER JOIN [PLANT] ON [ITEM_WAREHOUSE_BIN].[Owner_Org_ROid] =[PLANT].[PLANT_ID]
+            INNER JOIN [WAREHOUSE] ON [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+            WHERE ITEM_WAREHOUSE_BIN.BO_ID_RTK ='OTHER' AND
+            ITEM_WAREHOUSE_BIN.BO_ID_ROid = '00000000-0000-0000-0000-000000000000' AND
+            [PLANT].[PLANT_CODE]=#{site} AND
+            WAREHOUSE.WAREHOUSE_CODE = #{warehouseNo}
+            GROUP BY [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+            ,[ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+            ,[ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+            ,[ITEM_WAREHOUSE_BIN].BIN_ID
+            ,[ITEM_WAREHOUSE_BIN].ITEM_LOT_ID
+            ) AS [ITEM_WAREHOUSE_BIN]
+            ON [ITEM_WAREHOUSE_BIN].[ITEM_ID]=[PURCHASE_ISSUE_D].[ITEM_ID] AND
+            [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID] = [PURCHASE_ISSUE_D].[ITEM_FEATURE_ID] AND
+            ([ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = [PURCHASE_ISSUE_D].WAREHOUSE_ID OR [PURCHASE_ISSUE_D].WAREHOUSE_ID = '00000000-0000-0000-0000-000000000000' ) AND
+            ([ITEM_WAREHOUSE_BIN].BIN_ID = [PURCHASE_ISSUE_D].BIN_ID OR [PURCHASE_ISSUE_D].BIN_ID= '00000000-0000-0000-0000-000000000000' ) AND
+            ([ITEM_WAREHOUSE_BIN].ITEM_LOT_ID =[PURCHASE_ISSUE_D].ITEM_LOT_ID or [PURCHASE_ISSUE_D].ITEM_LOT_ID= '00000000-0000-0000-0000-000000000000')
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON [PURCHASE_ISSUE_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04 --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+        WHERE [PURCHASE_ISSUE].[ApproveStatus]=N'N'
+          AND [PLANT].[PLANT_CODE]=#{site}
+          AND [PURCHASE_ISSUE].[DOC_NO]=#{docNo}
+        GROUP BY
+            [PURCHASE_ISSUE].[DOC_NO]
+                , [PURCHASE_ISSUE].[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , [PURCHASE_ISSUE_D].[ITEM_DESCRIPTION]
+                , [PURCHASE_ISSUE_D].[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , [PURCHASE_ISSUE_D].BUSINESS_QTY
+                , [WAREHOUSE].[WAREHOUSE_CODE]
+                , [BIN].[BIN_CODE]
+                , [ITEM_LOT].[LOT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , [PURCHASE_ISSUE_D].PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+                , [PURCHASE_ISSUE_D].BUSINESS_QTY
+                , [PURCHASE_ISSUE_D].PRICE_QTY
+                , UNIT.DICIMAL_DIGIT
+    </select>
+    <!--采购单明细获取-->
+    <select id="getPurchaseDetailInfo" resultType="com.mgkj.dto.PurchaseDetailDto">
+        SELECT [PURCHASE_ORDER].[DOC_NO] AS [docNo]
+                , CAST([PURCHASE_ORDER].[DOC_DATE] AS NVARCHAR (10)) AS [createDate]
+                , [SUPPLIER].[SUPPLIER_CODE] AS [supplierNo]
+                , [SUPPLIER].[SUPPLIER_NAME] AS [supplierName]
+                , [ITEM].[ITEM_CODE] AS [itemNo]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ') AS [productCode]
+                , '' AS stockCode
+                , [PURCHASE_ORDER_D].[ITEM_DESCRIPTION] AS [itemName]
+                , [PURCHASE_ORDER_D].[ITEM_SPECIFICATION] AS [itemSpec]
+                , [UNIT].[UNIT_CODE] AS [unitNo]
+                , 0 AS stockQty
+                , SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]) AS [applyQty]
+                , 0 AS [scanSumQty]
+                , '' AS customerNo
+                , '' AS customerName
+                , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ') AS warehouseNo
+                , '' AS storageSpacesNo
+                , '' AS lotNo
+                , UNIT.UNIT_NAME as unitName --交易单位名称
+                , ISNULL(UNIT_02.UNIT_CODE, '') AS referenceUnitNo --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '') AS referenceUnitName--参考单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]), ITEM.SECOND_UNIT_ID, 0) AS referenceQty --参考单位数量
+                , UNIT_03.UNIT_CODE AS valuationUnitNo --计价单位编码
+                , UNIT_03.UNIT_NAME AS valuationUnitName --计价单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]), PURCHASE_ORDER_D.PRICE_UNIT_ID, 0) AS valuationQty --计价单位数量
+                , UNIT_04.UNIT_CODE AS stockUnitNo --库存单位编码
+                , UNIT_04.UNIT_NAME AS stockUnitName --库存单位名称
+                , UNIT_04.DICIMAL_DIGIT AS stockKeep --库存单位小数位数
+            --, dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]), ITEM.STOCK_UNIT_ID, 0) AS stockUnitQty --库存单位数量
+                , SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]) AS sourceDocQty
+                , SUM([PURCHASE_ORDER_SD].[PRICE_QTY]) AS sourceValuationQty
+        FROM [PURCHASE_ORDER] AS [PURCHASE_ORDER]
+            INNER JOIN [PURCHASE_ORDER_D] AS [PURCHASE_ORDER_D]
+        ON [PURCHASE_ORDER].[PURCHASE_ORDER_ID] = [PURCHASE_ORDER_D].[PURCHASE_ORDER_ID]
+            INNER JOIN [ITEM]
+            ON [PURCHASE_ORDER_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            INNER JOIN [PURCHASE_ORDER_SD] AS [PURCHASE_ORDER_SD]
+            ON [PURCHASE_ORDER_D].[PURCHASE_ORDER_D_ID] = [PURCHASE_ORDER_SD].[PURCHASE_ORDER_D_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_ORDER_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON [PURCHASE_ORDER_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [PLANT]
+            ON [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_RTK]=N'PLANT'
+            AND [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_ROid]=[PLANT].[PLANT_ID]
+            INNER JOIN [SUPPLIER]
+            ON [PURCHASE_ORDER].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT JOIN dbo.ITEM_PLANT
+            ON [ITEM_PLANT].[Owner_Org_RTK]=N'PLANT'
+            AND [ITEM_PLANT].[Owner_Org_ROid]=[PLANT].[PLANT_ID]
+            AND [ITEM_PLANT].[ITEM_ID]=[PURCHASE_ORDER_D].[ITEM_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON PURCHASE_ORDER_D.PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04 --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+            LEFT JOIN WAREHOUSE
+            ON WAREHOUSE.WAREHOUSE_ID = PURCHASE_ORDER_SD.WAREHOUSE_ID
+        WHERE [PLANT].[PLANT_CODE]=#{site}
+          AND [PURCHASE_ORDER].[ApproveStatus]=N'Y'
+          AND [PURCHASE_ORDER].[DOC_NO]=#{docNo}
+          AND [PURCHASE_ORDER_SD].[BUSINESS_QTY]
+            >[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]
+          AND [PURCHASE_ORDER_SD].[RECEIPT_CLOSE] = '0'
+          AND [PURCHASE_ORDER].[CLOSE]= '0'
+          AND [ITEM_PLANT].[INSPECT_MODE] &lt;&gt;'2'
+        GROUP BY
+            [PURCHASE_ORDER].[DOC_NO]
+                , [PURCHASE_ORDER].[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , [PURCHASE_ORDER_D].[ITEM_DESCRIPTION]
+                , [PURCHASE_ORDER_D].[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , PURCHASE_ORDER_D.PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+                , [WAREHOUSE].[WAREHOUSE_CODE]
+
+        UNION ALL
+
+        SELECT A.[DOC_NO] AS [docNo]
+        ,CAST(A.[DOC_DATE] AS NVARCHAR(10))      AS [createDate]
+        ,[SUPPLIER].[SUPPLIER_CODE]      AS [supplierNo]
+        ,[SUPPLIER].[SUPPLIER_NAME]      AS [supplierName]
+        ,[ITEM].[ITEM_CODE]              AS [itemNo]
+        ,ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE] ,N' ') AS [productCode]
+        ,'' AS stockCode
+        ,B.[ITEM_DESCRIPTION] AS [itemName]
+        ,B.[ITEM_SPECIFICATION] AS [itemSpec]
+        ,[UNIT].[UNIT_CODE]              AS [unitNo]
+        ,0 AS stockQty
+        ,SUM(B.[BUSINESS_QTY])AS [applyQty]
+        ,0           AS [scanSumQty]
+        ,'' AS customerNo
+        ,'' AS customerName
+        ,'' AS  warehouseNo
+        ,'' AS  storageSpacesNo
+        ,'' AS  lotNo
+        ,UNIT.UNIT_NAME as   unitName   --交易单位名称
+        ,ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceUnitNo  --参考单位编码(第二单位)
+        ,ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceUnitName--参考单位名称
+        ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),ITEM.SECOND_UNIT_ID,0) AS referenceQty  --参考单位数量
+        ,UNIT_03.UNIT_CODE AS   valuationUnitNo  --计价单位编码
+        ,UNIT_03.UNIT_NAME AS   valuationUnitName --计价单位名称
+        ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),B.PRICE_UNIT_ID,0)AS  valuationQty  --计价单位数量
+        ,UNIT_04.UNIT_CODE AS   stockUnitNo  --库存单位编码
+        ,UNIT_04.UNIT_NAME AS   stockUnitName  --库存单位名称
+        ,UNIT_04.DICIMAL_DIGIT AS   stockKeep   --库存单位小数位数
+        --,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),ITEM.STOCK_UNIT_ID,0) AS   stockUnitQty  --库存单位数量
+        ,SUM(B.[BUSINESS_QTY]) AS sourceDocQty
+        ,SUM(B.[PRICE_QTY]) AS sourceValuationQty
+        FROM SALES_ISSUE AS A
+            INNER JOIN SALES_ISSUE_D AS B
+        ON B.SALES_ISSUE_ID = A.SALES_ISSUE_ID
+            INNER JOIN SUPPLY_SYNERGY AS SUPPLY_SYNERGY
+            ON B.[SYNERGY_ID] = SUPPLY_SYNERGY.[SUPPLY_SYNERGY_ID]
+            LEFT JOIN [SUPPLY_SYNERGY_FI_D] AS [SUPPLY_SYNERGY_FI_D]
+            ON B.[SYNERGY_D_ID] = [SUPPLY_SYNERGY_FI_D].[SUPPLY_SYNERGY_FI_D_ID]
+            INNER JOIN [ITEM]
+            ON B.[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = B.[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON B.[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [PLANT]
+            ON [SUPPLY_SYNERGY_FI_D].[TO_Owner_Org_RTK] =N'PLANT'
+            AND [SUPPLY_SYNERGY_FI_D].[TO_Owner_Org_ROid] =[PLANT].[PLANT_ID]
+            INNER JOIN [SUPPLIER]
+            ON SUPPLY_SYNERGY_FI_D.SUPPLIER_ID = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON B.PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04 --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+            LEFT JOIN WAREHOUSE
+            ON WAREHOUSE.WAREHOUSE_ID = B.WAREHOUSE_ID
+            LEFT JOIN dbo.ITEM_PLANT
+            ON [ITEM_PLANT].[Owner_Org_RTK]=N'PLANT'
+            AND [ITEM_PLANT].[Owner_Org_ROid]=[PLANT].[PLANT_ID]
+            AND [ITEM_PLANT].[ITEM_ID]=B.[ITEM_ID]
+        WHERE
+            [PLANT].[PLANT_CODE]=#{site}
+          AND A.[ApproveStatus]=N'Y'
+          AND A.[DOC_NO]=#{docNo}
+          AND B.[BUSINESS_QTY]
+            >'0'
+          AND SUPPLY_SYNERGY.[SUPPLY_TYPE] IN (N'2'
+            , N'4')
+          AND B.[PURCHASE_ARRIVALED]= '0'
+          AND [ITEM_PLANT].[INSPECT_MODE] &lt;&gt;'2'
+        GROUP BY
+            A.[DOC_NO]
+                , A.[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , B.[ITEM_DESCRIPTION]
+                , B.[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , B.PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+    </select>
+    <!--快速收货-->
+    <!--获取采购订单简洁信息-->
+    <select id="getPurcharseInfo" resultType="com.mgkj.vo.PurchaseOrderSimpleVo"
+            parameterType="com.mgkj.dto.PurchaseOrderSimpleDto">
+        SELECT PURCHASE_ORDER.DOC_NO AS docNo,
+               PURCHASE_ORDER.SUPPLIER_FULL_NAME AS supplierFullName,
+               CONVERT(CHAR(8), PURCHASE_ORDER.DOC_DATE, 112) AS docDate,
+               PURCHASE_ORDER_D.SequenceNumber AS serialNumber
+        from PURCHASE_ORDER_D
+                 LEFT JOIN PURCHASE_ORDER ON PURCHASE_ORDER_D.PURCHASE_ORDER_ID = PURCHASE_ORDER.PURCHASE_ORDER_ID
+                 LEFT JOIN ITEM ON PURCHASE_ORDER_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                 LEFT JOIN UNIT ON PURCHASE_ORDER_D.BUSINESS_UNIT_ID = UNIT.UNIT_ID
+                 LEFT JOIN PURCHASE_ORDER_SD
+                           ON PURCHASE_ORDER_D.PURCHASE_ORDER_D_ID = PURCHASE_ORDER_SD.PURCHASE_ORDER_D_ID
+
+        where PURCHASE_ORDER.DOC_NO LIKE concat('%', #{docNo}, '%')
+          and PURCHASE_ORDER.SUPPLIER_FULL_NAME LIKE concat('%', #{supplierFullName}, '%')
+          and PURCHASE_ORDER.DOC_DATE LIKE concat('%', #{docDate}, '%')
+          and ITEM.ITEM_CODE LIKE concat('%', #{itemCode}, '%')
+          AND PURCHASE_ORDER_SD.RECEIPT_CLOSE = '0'
+          AND PURCHASE_ORDER.[CLOSE] = '0'
+        ORDER BY DOC_DATE DESC
+    </select>
+    <!--获取批号-->
+    <select id="getItemLot" resultType="java.lang.String">
+        select LOT_CODE
+        from ITEM_LOT
+        where ITEM_ID = #{itemId}
+    </select>
+    <!--获取采购订单详细信息-->
+    <select id="getPurcharseDetail" resultType="com.mgkj.vo.PurchaseOrderDetailVo"
+            parameterType="com.mgkj.dto.PurchaseOrderDetailDto">
+        SELECT top 100 [PURCHASE_ORDER].[DOC_NO]       AS [docNo]
+        ,CAST([PURCHASE_ORDER].[DOC_DATE] AS NVARCHAR(10))      AS [docDate]
+        ,[SUPPLIER].[SUPPLIER_CODE]      AS [supplierNo]
+        ,[SUPPLIER].[SUPPLIER_NAME]      AS [supplierName]
+        ,[PURCHASE_ORDER_D].[SequenceNumber] AS xh
+        ,[ITEM].[ITEM_CODE]              AS [itemCode]
+        ,[PURCHASE_ORDER_D].[ITEM_DESCRIPTION] AS [itemDescription]
+        ,[PURCHASE_ORDER_D].[ITEM_SPECIFICATION] AS [itemSpecification]
+        -- ,PURCHASE_ORDER_D.PACKING_QTY1 + PURCHASE_ORDER_D.PACKING_QTY2 + PURCHASE_ORDER_D.PACKING_QTY3 +PURCHASE_ORDER_D.PACKING_QTY4 AS ALL_Packing_QTY
+        ,[UNIT].[UNIT_CODE]              AS [unitCode]
+        ,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]) AS businessQty
+        ,SUM([PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]) AS recordQty
+        ,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY])AS [recoverQty]
+        ,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY])AS [thisArrivalQty]
+        ,UNIT.UNIT_NAME as   unitName
+        ,ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceUnitNo
+        ,ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceUnitName
+        ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]),ITEM.SECOND_UNIT_ID,0) AS referenceQty  --参考单位数量
+        ,UNIT_03.UNIT_CODE AS   valuationUnitNo
+        ,UNIT_03.UNIT_NAME AS   valuationUnitName
+        ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]),[PURCHASE_ORDER_D].PRICE_UNIT_ID,0) AS  valuationQty  --计价单位数量
+        ,UNIT_04.UNIT_CODE AS   stockUnitNo
+        ,UNIT_04.UNIT_NAME AS   stockUnitName
+        ,UNIT_04.DICIMAL_DIGIT AS   stockKeep
+
+        ,SUM([PURCHASE_ORDER_SD].[PRICE_QTY]) AS sourceValuationQty
+        ,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY])AS defaultQty
+        ,SUM([PURCHASE_ORDER_SD].[PRICE_QTY])/SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]) AS valuationRate
+        FROM   [PURCHASE_ORDER]                AS [PURCHASE_ORDER]
+        INNER JOIN [PURCHASE_ORDER_D]   AS [PURCHASE_ORDER_D]
+        ON  [PURCHASE_ORDER].[PURCHASE_ORDER_ID] = [PURCHASE_ORDER_D].[PURCHASE_ORDER_ID]
+        INNER JOIN [ITEM]
+        ON  [PURCHASE_ORDER_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+        INNER JOIN [PURCHASE_ORDER_SD]  AS [PURCHASE_ORDER_SD]
+        ON  [PURCHASE_ORDER_D].[PURCHASE_ORDER_D_ID] = [PURCHASE_ORDER_SD].[PURCHASE_ORDER_D_ID]
+        LEFT OUTER JOIN [ITEM_FEATURE]    AS [ITEM_FEATURE]
+        ON  [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_ORDER_D].[ITEM_FEATURE_ID]
+        INNER JOIN [UNIT]
+        ON  [PURCHASE_ORDER_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+        INNER JOIN [PLANT]
+        ON  [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_RTK]=N'PLANT'
+        AND [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_ROid]=[PLANT].[PLANT_ID]
+        INNER JOIN [SUPPLIER]
+        ON  [PURCHASE_ORDER].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+        LEFT JOIN [UNIT] AS UNIT_02
+        ON  ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+        LEFT JOIN [UNIT] AS UNIT_03
+        ON  [PURCHASE_ORDER_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+        LEFT JOIN dbo.UNIT AS UNIT_04
+        ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+        WHERE  [PLANT].[PLANT_CODE]='1'
+        AND [PURCHASE_ORDER].[ApproveStatus]=N'Y'
+        AND [PURCHASE_ORDER_SD].[BUSINESS_QTY]>[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]
+        AND     [PURCHASE_ORDER_SD].[RECEIPT_CLOSE] = '0'
+        AND  [PURCHASE_ORDER].[CLOSE]= '0'
+        <if test="docNo!=null and docNo!=''">
+            and PURCHASE_ORDER.DOC_NO LIKE concat('%', #{docNo},'%')
+        </if>
+        <if test="startDate!=null and startDate!=''">
+            and PURCHASE_ORDER.DOC_DATE &gt;= concat(#{startDate},' 00:00:00.0000000')
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            and PURCHASE_ORDER.DOC_DATE &lt;= concat(#{endDate},' 23:59:59.0000000')
+        </if>
+        and (PURCHASE_ORDER.SUPPLIER_FULL_NAME LIKE concat('%', #{supplierFullName},'%')
+        or SUPPLIER.SUPPLIER_CODE LIKE concat('%', #{supplierFullName},'%'))
+        GROUP BY
+        [PURCHASE_ORDER].[DOC_NO]
+        ,[PURCHASE_ORDER].[DOC_DATE]
+        ,[SUPPLIER].[SUPPLIER_CODE]
+        ,[SUPPLIER].[SUPPLIER_NAME]
+        ,[ITEM].[ITEM_CODE]
+        ,[ITEM_FEATURE].[ITEM_FEATURE_CODE]
+        ,[PURCHASE_ORDER_D].[ITEM_DESCRIPTION]
+        ,[PURCHASE_ORDER_D].[ITEM_SPECIFICATION]
+        ,[UNIT].[UNIT_CODE]
+        ,[PURCHASE_ORDER_D].[SequenceNumber]
+        ,UNIT.UNIT_NAME
+        ,UNIT_02.UNIT_CODE
+        ,UNIT_02.UNIT_NAME
+        ,UNIT_03.UNIT_CODE
+        ,UNIT_03.UNIT_NAME
+        ,UNIT_04.UNIT_CODE
+        ,UNIT_04.UNIT_NAME
+        ,UNIT_04.DICIMAL_DIGIT
+        ,ITEM.SECOND_UNIT_ID
+        ,UNIT.UNIT_ID
+        ,ITEM.ITEM_BUSINESS_ID
+        ,PURCHASE_ORDER_D.PRICE_UNIT_ID
+        order by PURCHASE_ORDER.DOC_DATE DESC,
+                 PURCHASE_ORDER.DOC_NO  asc,
+                  PURCHASE_ORDER_D.SequenceNumber asc
+    </select>
+    <!--打印采购到货单-->
+    <select id="printPurchaseArrival" resultType="com.mgkj.vo.PurchaseArrivalPrintVo">
+        SELECT ITEM.ITEM_CODE,
+               PURCHASE_ARRIVAL_D.ITEM_DESCRIPTION,
+               SUM(PURCHASE_ARRIVAL_D.ACCEPTED_BUSINESS_QTY + PURCHASE_ARRIVAL_D.SP_RECEIPT_BUSINESS_QTY -
+                   PURCHASE_ARRIVAL_D.RECEIPTED_BUSINESS_QTY)   AS APPLY_QTY,
+               PURCHASE_ARRIVAL_D.ITEM_SPECIFICATION,
+               PURCHASE_ARRIVAL.DOC_NO,
+               SUPPLIER.SUPPLIER_NAME,
+               CONVERT(CHAR(8), PURCHASE_ARRIVAL.DOC_DATE, 112) AS DOC_DATE,
+               UNIT.UNIT_CODE
+
+        FROM PURCHASE_ARRIVAL
+                 LEFT JOIN SUPPLIER
+                           ON PURCHASE_ARRIVAL.SUPPLIER_ID = SUPPLIER.SUPPLIER_BUSINESS_ID
+                 LEFT JOIN PLANT
+                           ON PURCHASE_ARRIVAL.RECEIVE_Owner_Org_ROid = PLANT.PLANT_ID
+                 LEFT JOIN PURCHASE_ARRIVAL_D
+                           ON PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID = PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID
+                 LEFT JOIN ITEM
+                           ON PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                 LEFT JOIN BIN
+                           ON PURCHASE_ARRIVAL_D.BIN_ID = BIN.BIN_ID
+                 LEFT JOIN WAREHOUSE
+                           ON PURCHASE_ARRIVAL_D.WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+                 LEFT JOIN UNIT
+                           ON PURCHASE_ARRIVAL_D.BUSINESS_UNIT_ID = UNIT.UNIT_ID
+        WHERE PURCHASE_ARRIVAL.DOC_NO = #{docNo}
+
+        GROUP BY PURCHASE_ARRIVAL.DOC_NO
+               , PURCHASE_ARRIVAL.DOC_DATE
+               , SUPPLIER.SUPPLIER_NAME
+               , ITEM.ITEM_CODE
+               , PURCHASE_ARRIVAL_D.ITEM_DESCRIPTION
+               , PURCHASE_ARRIVAL_D.ITEM_SPECIFICATION
+               , UNIT.UNIT_CODE
+
+    </select>
+    <!--采购质检-查询-->
+    <select id="ListCheckPurchase" resultType="com.mgkj.vo.PurchaseArrivalDetailVo">
+        SELECT TOP 100 PURCHASE_ARRIVAL.DOC_NO,
+                CONVERT(CHAR(8), PURCHASE_ARRIVAL.DOC_DATE, 112) AS DOC_DATE,
+               SUPPLIER.SUPPLIER_NAME,
+               SUPPLIER.SUPPLIER_CODE,
+               ITEM.ITEM_CODE,
+               PURCHASE_ARRIVAL_D.SequenceNumber                as xh,
+               PURCHASE_ARRIVAL_D.ITEM_DESCRIPTION,
+               PURCHASE_ARRIVAL_D.ITEM_SPECIFICATION,
+               SUM(PURCHASE_ARRIVAL_D.ACCEPTED_BUSINESS_QTY + PURCHASE_ARRIVAL_D.SP_RECEIPT_BUSINESS_QTY -
+                   PURCHASE_ARRIVAL_D.RECEIPTED_BUSINESS_QTY)   AS applyQty,
+               WAREHOUSE.WAREHOUSE_CODE,
+               WAREHOUSE.WAREHOUSE_NAME,
+               BIN.BIN_CODE,
+               BIN.BIN_NAME,
+               UNIT.UNIT_CODE,
+               CAST(PURCHASE_ARRIVAL_D.INSPECTED_QTY AS REAL)                 AS checkQty,
+               PO_QC_RESULT.REMARK                              as remark,
+               PURCHASE_ARRIVAL_D.PRICE_QTY-PURCHASE_ARRIVAL_D.INSPECTED_QTY AS pendingCheckQty,
+               PURCHASE_ARRIVAL_D.INSPECTION_STATUS             as checkStatus
+        FROM PURCHASE_ARRIVAL
+                 LEFT JOIN SUPPLIER
+                           ON PURCHASE_ARRIVAL.SUPPLIER_ID = SUPPLIER.SUPPLIER_BUSINESS_ID
+                 LEFT JOIN PLANT
+                           ON PURCHASE_ARRIVAL.RECEIVE_Owner_Org_ROid = PLANT.PLANT_ID
+                 LEFT JOIN PURCHASE_ARRIVAL_D
+                           ON PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID = PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID
+                 LEFT JOIN ITEM
+                           ON PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                 LEFT JOIN BIN
+                           ON PURCHASE_ARRIVAL_D.BIN_ID = BIN.BIN_ID
+                 LEFT JOIN WAREHOUSE
+                           ON PURCHASE_ARRIVAL_D.WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+                 LEFT JOIN UNIT
+                           ON PURCHASE_ARRIVAL_D.BUSINESS_UNIT_ID = UNIT.UNIT_ID
+                 LEFT JOIN PO_QC_RESULT
+                           ON PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_D_ID = PO_QC_RESULT.SOURCE_ID_ROid
+                 LEFT JOIN PO_QC_RESULT_D
+                           ON PO_QC_RESULT.PO_QC_RESULT_ID = PO_QC_RESULT_D.PO_QC_RESULT_ID
+        WHERE PURCHASE_ARRIVAL.CATEGORY = N'37'
+          <if test="docNo!=null and docNo!=''">
+              and PURCHASE_ARRIVAL.DOC_NO like concat('%',#{docNo},'%')
+          </if>
+          <if test="startDate!=null and startDate!=''">
+              and PURCHASE_ARRIVAL.DOC_DATE &gt;= #{startDate}
+          </if>
+          <if test="endDate!=null and endDate!=''">
+              and PURCHASE_ARRIVAL.DOC_DATE &lt;= #{endDate}
+          </if>
+          and (PURCHASE_ARRIVAL_D.INSPECTION_STATUS = '2'
+            OR PURCHASE_ARRIVAL_D.INSPECTION_STATUS = '3')
+
+        GROUP BY PURCHASE_ARRIVAL.DOC_NO
+               , PURCHASE_ARRIVAL.DOC_DATE
+               , SUPPLIER.SUPPLIER_CODE
+               , SUPPLIER.SUPPLIER_NAME
+               , ITEM.ITEM_CODE
+               , PURCHASE_ARRIVAL_D.ITEM_DESCRIPTION
+               , PURCHASE_ARRIVAL_D.ITEM_SPECIFICATION
+               , WAREHOUSE.WAREHOUSE_CODE
+               , WAREHOUSE.WAREHOUSE_NAME
+               , BIN.BIN_CODE
+               , BIN.BIN_NAME
+               , UNIT.UNIT_CODE
+               , PURCHASE_ARRIVAL_D.SequenceNumber, PO_QC_RESULT_D.QUALIFIED_BUSINESS_QTY, PO_QC_RESULT.REMARK
+               , PO_QC_RESULT_D.UNQUALIFIED_BUSINESS_QTY, PO_QC_RESULT_D.IN_DESTROYED_BUSINESS_QTY
+               , PURCHASE_ARRIVAL_D.INSPECTED_QTY
+               ,PURCHASE_ARRIVAL_D.PRICE_QTY
+               ,PURCHASE_ARRIVAL_D.INSPECTION_STATUS
+    </select>
+
+    <!--采购质检-插入质检单单头-->
+    <insert id="producePurchaseInspectionOrder1">
+        INSERT INTO PO_QC_RESULT
+        (PO_QC_RESULT_ID, REMARK, ApproveStatus, ApproveDate,
+         ApproveBy, CreateDate, LastModifiedDate, ModifiedDate, CreateBy, LastModifiedBy,
+         ModifiedBy, Owner_Org_RTK, Owner_Org_ROid,
+         SOURCE_ID_RTK, SOURCE_ID_ROid)
+        VALUES (#{uuid}, #{dto.remark}, 'Y', #{dto.time}, #{dto.employeeId}, #{dto.time},
+                #{dto.time},
+                #{dto.time}, #{dto.employeeId}, #{dto.employeeId}, #{dto.employeeId}, 'PLANT',
+                #{dto.departmentId}, 'PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_D',
+                (select PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID
+                 from PURCHASE_ARRIVAL_D
+                          inner join ITEM on PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                          left join PURCHASE_ARRIVAL
+                                    on PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID = PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID
+                 where ITEM.ITEM_CODE = #{dto.itemCode}
+                        and  PURCHASE_ARRIVAL.DOC_NO = #{dto.docNo} ))
+    </insert>
+    <!--采购质检-插入质检单单身-->
+    <insert id="producePurchaseInspectionOrder2">
+        INSERT INTO PO_QC_RESULT_D (PO_QC_RESULT_D_ID, QC_DATE, QUALIFIED_BUSINESS_QTY, UNQUALIFIED_BUSINESS_QTY,
+                                    IN_DESTROYED_BUSINESS_QTY, REMARK, PO_INSPECTION_CODE, DETERMINE_QTY,
+                                    QC_TIMES, CreateDate, LastModifiedDate, ModifiedDate, CreateBy,
+                                    LastModifiedBy, ModifiedBy, PO_QC_RESULT_ID,RESULT_STATUS)
+        VALUES (#{uuid2}, #{dto.time}, #{dto.qualifiedBusinessQty}, #{dto.unQualifiedBusinessQty},
+                #{dto.inDestroyedBusinessQty}, #{dto.remark}, '1', #{dto.determineQty},
+                 '1', #{dto.time}, #{dto.time}, #{dto.time},
+                #{dto.employeeId}, #{dto.employeeId}, #{dto.employeeId}, #{uuid1},#{dto.resultStatus})
+
+    </insert>
+    <!--采购质检-插入质检单子单身-->
+    <insert id="producePurchaseInspectionOrder3">
+        INSERT INTO PO_QC_RESULT_SD (SequenceNumber, ACCEPTED_BUSINESS_QTY, SP_RECEIPT_BUSINESS_QTY, SCRAP_BUSINESS_QTY,
+                                     RETURN_BUSINESS_QTY, QC_DATE, REMARK, PO_QC_RESULT_SD_ID, DEDUCT_ARRIVED_QTY,
+                                     GENERATE_SOURCE, ApproveStatus, ApproveDate, ApproveBy, CreateDate,
+                                     LastModifiedDate, ModifiedDate,
+                                     CreateBy, LastModifiedBy, ModifiedBy, PO_QC_RESULT_D_ID)
+        VALUES ('1', #{dto.acceptedBusinessQty}, #{dto.spReceiptBusinessQty}, #{dto.scrapBusinessQty},
+                #{dto.returnBusinessQty},
+                #{dto.time}, #{dto.remark}, #{uuid3}, '0', '0', 'Y', #{dto.time}, #{dto.employeeId}, #{dto.time},
+                #{dto.time},
+                #{dto.time}, #{dto.employeeId}, #{dto.employeeId}, #{dto.employeeId}, #{uuid2})
+    </insert>
+    <!--采购之间-更新到货单数据-->
+    <update id="updatePurchaseArrival" parameterType="com.mgkj.dto.PurchaseInspectionOrderDto">
+        update PURCHASE_ARRIVAL_D
+        set PURCHASE_ARRIVAL_D.ACCEPTED_BUSINESS_QTY= #{acceptedBusinessQty}+PURCHASE_ARRIVAL_D.ACCEPTED_BUSINESS_QTY,
+            PURCHASE_ARRIVAL_D.ACCEPTED_INVENTORY_QTY = #{acceptedBusinessQty}+PURCHASE_ARRIVAL_D.ACCEPTED_INVENTORY_QTY,
+            PURCHASE_ARRIVAL_D.RETURN_BUSINESS_QTY = #{returnBusinessQty}+PURCHASE_ARRIVAL_D.RETURN_BUSINESS_QTY,
+            PURCHASE_ARRIVAL_D.SCRAP_BUSINESS_QTY = #{scrapBusinessQty}+PURCHASE_ARRIVAL_D.SCRAP_BUSINESS_QTY,
+            PURCHASE_ARRIVAL_D.INSPECTION_STATUS= #{ArrivalResultStatus},
+            PURCHASE_ARRIVAL_D.SCRAPED_BUSINESS_QTY= #{scrapBusinessQty}+ PURCHASE_ARRIVAL_D.SCRAPED_BUSINESS_QTY,
+            PURCHASE_ARRIVAL_D.INSPECTED_QTY= #{thisCheckQty} + PURCHASE_ARRIVAL_D.INSPECTED_QTY,
+            PURCHASE_ARRIVAL_D.SP_RECEIPT_BUSINESS_QTY= '0',
+            PURCHASE_ARRIVAL_D.SP_RECEIPT_INVENTORY_QTY= '0',
+            PURCHASE_ARRIVAL_D.QUALIFIED_BUSINESS_QTY= #{qualifiedBusinessQty}+PURCHASE_ARRIVAL_D.QUALIFIED_BUSINESS_QTY,
+            PURCHASE_ARRIVAL_D.UNQUALIFIED_BUSINESS_QTY= #{unQualifiedBusinessQty}+PURCHASE_ARRIVAL_D.UNQUALIFIED_BUSINESS_QTY,
+            PURCHASE_ARRIVAL_D.IN_DESTROYED_BUSINESS_QTY= #{inDestroyedBusinessQty}+PURCHASE_ARRIVAL_D.IN_DESTROYED_BUSINESS_QTY
+        where PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_D_ID = (select PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_D_ID
+                                                          from PURCHASE_ARRIVAL_D
+                                                                   inner join ITEM on PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                                                                   left join PURCHASE_ARRIVAL
+                                                                             on PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID =
+                                                                                PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID
+                                                          where ITEM.ITEM_CODE = #{itemCode}
+                                                            and PURCHASE_ARRIVAL.DOC_NO = #{docNo})
+    </update>
+    <!--采购质检-更改质检单单身-->
+    <update id="updatePurchaseInspectionOrder2" parameterType="com.mgkj.dto.PurchaseInspectionOrderDto">
+        update PO_QC_RESULT_D set QUALIFIED_BUSINESS_QTY = QUALIFIED_BUSINESS_QTY+#{qualifiedBusinessQty},
+                                  UNQUALIFIED_BUSINESS_QTY = UNQUALIFIED_BUSINESS_QTY + #{unQualifiedBusinessQty},
+                                  IN_DESTROYED_BUSINESS_QTY = IN_DESTROYED_BUSINESS_QTY + #{inDestroyedBusinessQty},
+                                  RESULT_STATUS = #{resultStatus},
+                                  LastModifiedDate = #{time},
+                                  ModifiedDate = #{time},
+                                  LastModifiedBy = #{employeeId},
+                                  ModifiedBy = #{employeeId}
+                                  where PO_QC_RESULT_D_ID = (select PO_QC_RESULT_D.PO_QC_RESULT_D_ID
+                                                             from PURCHASE_ARRIVAL_D
+                                                                      inner join ITEM on PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                                                                      left join PURCHASE_ARRIVAL
+                                                                                on PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID = PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID
+                                                                      left join PO_QC_RESULT ON PO_QC_RESULT.SOURCE_ID_ROid = PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID
+                                                                      LEFT JOIN PO_QC_RESULT_D ON PO_QC_RESULT_D.PO_QC_RESULT_ID = PO_QC_RESULT.PO_QC_RESULT_ID
+                                                             where ITEM.ITEM_CODE = #{itemCode}
+                                                               and  PURCHASE_ARRIVAL.DOC_NO = #{docNo})
+    </update>
+    <!--采购质检-更改质检单子单身-->
+    <update id="updatePurchaseInspectionOrder3" parameterType="com.mgkj.dto.PurchaseInspectionOrderDto">
+        update PO_QC_RESULT_SD
+        set ACCEPTED_BUSINESS_QTY   = ACCEPTED_BUSINESS_QTY + #{acceptedBusinessQty},
+            SP_RECEIPT_BUSINESS_QTY = SP_RECEIPT_BUSINESS_QTY + #{spReceiptBusinessQty},
+            SCRAP_BUSINESS_QTY      = SCRAP_BUSINESS_QTY + #{scrapBusinessQty},
+            RETURN_BUSINESS_QTY     = RETURN_BUSINESS_QTY + #{returnBusinessQty},
+            ApproveDate             = #{time},
+            ApproveBy               = #{employeeId},
+            LastModifiedDate        =#{time},
+            ModifiedDate            =#{time},
+            LastModifiedBy          = #{employeeId},
+            ModifiedBy              = #{employeeId}
+        where PO_QC_RESULT_SD.PO_QC_RESULT_D_ID = (select PO_QC_RESULT_SD.PO_QC_RESULT_SD_ID
+                                                   from PURCHASE_ARRIVAL_D
+                                                            inner join ITEM on PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                                                            left join PURCHASE_ARRIVAL
+                                                                      on PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID =
+                                                                         PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID
+                                                            left join PO_QC_RESULT
+                                                                      ON PO_QC_RESULT.SOURCE_ID_ROid = PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID
+                                                            LEFT JOIN PO_QC_RESULT_D
+                                                                      ON PO_QC_RESULT_D.PO_QC_RESULT_ID = PO_QC_RESULT.PO_QC_RESULT_ID
+                                                            LEFT JOIN PO_QC_RESULT_SD
+                                                                      ON PO_QC_RESULT_SD.PO_QC_RESULT_D_ID = PO_QC_RESULT_D.PO_QC_RESULT_D_ID
+                                                   where ITEM.ITEM_CODE = #{itemCode}
+                                                     and PURCHASE_ARRIVAL.DOC_NO = #{docNo})
+    </update>
+    <update id="UpdatePurchaseArrivalStorageCheckHeader">
+        UPDATE
+            PO_ARRIVAL_INSPECTION
+        SET
+            INSPECTION_QTY = #{inspectionQty},
+            ACCEPTABLE_QTY = #{acceptableQty},
+            UNQUALIFIED_QTY = #{unqualifiedQty},
+            DESTROYED_QTY = #{destroyedQty},
+            DECISION = #{decision},
+            REINSPECTION = #{reinspection},
+            DECISION_DESCRIPTION = #{decisionDescription},
+            PO_ARRIVAL_INSPECTION.Owner_Dept = #{departmentUUID},
+            PO_ARRIVAL_INSPECTION.Owner_Emp = #{employeeUUID},
+            UDF001 = #{defectRepairQty},
+            UDF025 = #{defectNumReason}
+        WHERE
+            DOC_NO = #{checkDocNo};
+    </update>
+    <update id="UpdatePurchaseArrivalStorageCheckLine">
+        UPDATE PO_ARRIVAL_INSPECTION_D
+        SET
+            INSPECTION_QTY = #{inspectionQty},
+            INSPECTION_AC = #{inspectionAc},
+            INSPECTION_RE = #{inspectionRe},
+            INSPECTION_QQ = #{defectiveQty},
+            DECISION = #{decision},
+            DEFECTIVE_REASONS_ID = #{defectReasonUuid},
+            IMPACT_RESULT = #{impactResult},
+            STANDARD_VALUE = #{standardValue},
+            STANDARD_MAX = #{standardMax},
+            STANDARD_MIN = #{standardMin},
+            REMARK = #{remark}
+        WHERE
+            PO_ARRIVAL_INSPECTION_D_ID = #{uuid}
+    </update>
+    <update id="UpdatePurchaseReceiptStorage">
+        UPDATE PURCHASE_ARRIVAL_D
+        SET
+            QUALIFIED_BUSINESS_QTY =#{acceptableQty},
+            UNQUALIFIED_BUSINESS_QTY =#{unqualifiedQty},
+            IN_DESTROYED_BUSINESS_QTY =#{destroyedQty},
+            INSPECTED_QTY=#{inspectionQty},
+            JUDGED_QTY=#{inspectionQty},
+            ACCEPTED_BUSINESS_QTY =#{acceptableQty},
+            ACCEPTED_INVENTORY_QTY =#{acceptableQty},
+            RETURN_BUSINESS_QTY =#{unqualifiedQty},
+            SCRAP_BUSINESS_QTY =#{unqualifiedQty},
+            SHOULD_SETTLE_PRICE_QTY =#{acceptableQty},
+            INSPECTION_STATUS ='4'
+        WHERE PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_D_ID
+            IN (
+            SELECT C.PURCHASE_ARRIVAL_D_ID
+            FROM PO_ARRIVAL_INSPECTION AS A
+            LEFT JOIN PO_ARRIVAL_INSPECTION_D AS B ON B.PO_ARRIVAL_INSPECTION_D_ID = A.PO_ARRIVAL_INSPECTION_ID
+            LEFT JOIN PURCHASE_ARRIVAL_D AS C ON C.PURCHASE_ARRIVAL_D_ID = A.SOURCE_ID
+            WHERE  A.DOC_NO = #{checkDocNo})
+    </update>
+    <update id="updateDeliveryUuid">
+        UPDATE deliveryList  set arrivalNo = #{docNo} WHERE uuid = #{uuid}
+    </update>
+
+    <!--扫码入库-->
+    <!--获取采购到货单简洁信息-->
+    <select id="getPurcharseArrivalInfo" resultType="com.mgkj.vo.PurchaseArrivalSimpleVo">
+        SELECT DISTINCT PURCHASE_ARRIVAL.DOC_NO AS docNo,
+                        CONVERT(CHAR(8), PURCHASE_ARRIVAL.DOC_DATE, 112) AS docDate,
+                        SUPPLIER.SUPPLIER_NAME AS supplierName,
+                        SUPPLIER.SUPPLIER_CODE AS supplierCode
+        FROM PURCHASE_ARRIVAL
+                 LEFT JOIN SUPPLIER
+                           ON PURCHASE_ARRIVAL.SUPPLIER_ID = SUPPLIER.SUPPLIER_BUSINESS_ID
+                 LEFT JOIN PLANT
+                           ON PURCHASE_ARRIVAL.RECEIVE_Owner_Org_ROid = PLANT.PLANT_ID
+                 LEFT JOIN PURCHASE_ARRIVAL_D
+                           ON PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID = PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID
+                 LEFT JOIN ITEM
+                           ON PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+
+        where PURCHASE_ARRIVAL.DOC_NO like concat('%', #{docNo}, '%')
+          and SUPPLIER.SUPPLIER_CODE like concat('%', #{supplierCode}, '%')
+          AND ITEM.ITEM_CODE like concat('%', #{barCode}, '%')
+          and PURCHASE_ARRIVAL.CATEGORY = N'36'
+        <if test="startDate!=null and startDate!=''">
+            AND CAST(PURCHASE_ARRIVAL.DOC_DATE AS NVARCHAR(10)) &gt; #{startDate}
+        </if>
+        <if test="endDate!=null and endDate!='' ">
+            AND CAST(PURCHASE_ARRIVAL.DOC_DATE AS NVARCHAR(10)) &lt; #{endDate}
+        </if>
+
+    </select>
+    <!--获取采购到货单详细信息-->
+    <select id="getPurchaseArrivalDetail" resultType="com.mgkj.vo.PurchaseArrivalDetailVo"
+            parameterType="com.mgkj.dto.PurchaseArrivalDetailDto">
+        SELECT PURCHASE_ARRIVAL.DOC_NO AS docNo,
+        CONVERT(CHAR(8), PURCHASE_ARRIVAL.DOC_DATE, 112) AS docDate,
+        SUPPLIER.SUPPLIER_NAME  AS supplierName,
+        SUPPLIER.SUPPLIER_CODE  AS supplierCode,
+        ITEM.ITEM_CODE AS itemCode,
+        PURCHASE_ARRIVAL_D.SequenceNumber as xh,
+        PURCHASE_ARRIVAL_D.ITEM_DESCRIPTION AS itemDescription,
+        PURCHASE_ARRIVAL_D.ITEM_SPECIFICATION AS itemSpecification,
+        SUM(PURCHASE_ARRIVAL_D.ACCEPTED_BUSINESS_QTY+PURCHASE_ARRIVAL_D.SP_RECEIPT_BUSINESS_QTY-PURCHASE_ARRIVAL_D.RECEIPTED_BUSINESS_QTY)
+        AS applyQty,
+        WAREHOUSE.WAREHOUSE_CODE AS warehouseCode,
+        WAREHOUSE.WAREHOUSE_NAME AS warehouseName,
+        ISNULL(BIN.BIN_CODE,' ') AS binCode,
+        ISNULL(BIN.BIN_NAME,' ') AS binName,
+        ISNULL(UNIT.UNIT_CODE,' ') AS unitCode,
+        PO_QC_RESULT_D.QUALIFIED_BUSINESS_QTY+PO_QC_RESULT_D.UNQUALIFIED_BUSINESS_QTY+PO_QC_RESULT_D.IN_DESTROYED_BUSINESS_QTY
+        AS checkQty,
+        ISNULL(PO_QC_RESULT.REMARK,' ') as remark
+        FROM PURCHASE_ARRIVAL
+        LEFT JOIN SUPPLIER
+        ON PURCHASE_ARRIVAL.SUPPLIER_ID = SUPPLIER.SUPPLIER_BUSINESS_ID
+        LEFT JOIN PLANT
+        ON PURCHASE_ARRIVAL.RECEIVE_Owner_Org_ROid = PLANT.PLANT_ID
+        LEFT JOIN PURCHASE_ARRIVAL_D
+        ON PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID = PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID
+        LEFT JOIN ITEM
+        ON PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+        LEFT JOIN BIN
+        ON PURCHASE_ARRIVAL_D.BIN_ID = BIN.BIN_ID
+        LEFT JOIN WAREHOUSE
+        ON PURCHASE_ARRIVAL_D.WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+        LEFT JOIN UNIT
+        ON PURCHASE_ARRIVAL_D.BUSINESS_UNIT_ID = UNIT.UNIT_ID
+        LEFT JOIN PO_QC_RESULT
+        ON PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_D_ID = PO_QC_RESULT.SOURCE_ID_ROid
+        LEFT JOIN PO_QC_RESULT_D
+        ON PO_QC_RESULT.PO_QC_RESULT_ID = PO_QC_RESULT_D.PO_QC_RESULT_ID
+        WHERE PURCHASE_ARRIVAL.CATEGORY = N'36'
+        <if test="docNo!=null and docNo!=''">
+            AND PURCHASE_ARRIVAL.DOC_NO like concat('%',#{docNo},'%')
+        </if>
+        <if test="supplier!=null and supplier!='' ">
+            and (SUPPLIER.SUPPLIER_NAME like concat('%',#{supplier},'%')
+            or SUPPLIER.SUPPLIER_CODE like concat('%',#{supplier},'%'))
+        </if>
+        <if test="docDate!=null and docDate!= '' ">
+            and PURCHASE_ARRIVAL.DOC_DATE like concat('%',#{docDate},'%')
+        </if>
+        AND PLANT.PLANT_CODE= '2'
+        AND PURCHASE_ARRIVAL.ApproveStatus=N'Y'
+        AND PURCHASE_ARRIVAL_D.RECEIPT_CLOSE=N'0'
+                /*允收业务数量+特采业务数量-已入库业务数量 > 0*/
+        AND  (PURCHASE_ARRIVAL_D.ACCEPTED_BUSINESS_QTY + PURCHASE_ARRIVAL_D.SP_RECEIPT_BUSINESS_QTY - PURCHASE_ARRIVAL_D.RECEIPTED_BUSINESS_QTY ) > 0
+                /*拒收业务数量 !=业务数量*/
+        AND  PURCHASE_ARRIVAL_D.RETURN_BUSINESS_QTY &lt;&gt; PURCHASE_ARRIVAL_D.BUSINESS_QTY
+        GROUP BY PURCHASE_ARRIVAL.DOC_NO
+        , PURCHASE_ARRIVAL.DOC_DATE
+        , SUPPLIER.SUPPLIER_CODE
+        , SUPPLIER.SUPPLIER_NAME
+        , ITEM.ITEM_CODE
+        , PURCHASE_ARRIVAL_D.ITEM_DESCRIPTION
+        , PURCHASE_ARRIVAL_D.ITEM_SPECIFICATION
+        , WAREHOUSE.WAREHOUSE_CODE
+        , WAREHOUSE.WAREHOUSE_NAME
+        , BIN.BIN_CODE
+        , BIN.BIN_NAME
+        ,UNIT.UNIT_CODE
+        ,PURCHASE_ARRIVAL_D.SequenceNumber
+        ,PURCHASE_ARRIVAL_D.SequenceNumber, PO_QC_RESULT_D.QUALIFIED_BUSINESS_QTY, PO_QC_RESULT.REMARK,
+        PO_QC_RESULT_D.UNQUALIFIED_BUSINESS_QTY, PO_QC_RESULT_D.IN_DESTROYED_BUSINESS_QTY
+        ORDER BY CONVERT(CHAR(8), PURCHASE_ARRIVAL.DOC_DATE, 112) DESC,
+        PURCHASE_ARRIVAL.DOC_NO ASC,
+        xh ASC
+
+    </select>
+
+
+    <!--获取采购到货单汇总信息-->
+    <select id="getPurcharseArrivalDetailByDocNo" resultType="com.mgkj.vo.PurchaseArrivalDetailCollectVo"
+            parameterType="com.mgkj.dto.PurchaseArrivalDetailDto">
+        SELECT PURCHASE_ARRIVAL.DOC_NO,
+               CONVERT(CHAR(8), PURCHASE_ARRIVAL.DOC_DATE, 112) AS DOC_DATE,
+               SUPPLIER.SUPPLIER_NAME,
+               SUPPLIER.SUPPLIER_CODE,
+               ITEM.ITEM_CODE,
+               PURCHASE_ARRIVAL_D.ITEM_DESCRIPTION,
+               PURCHASE_ARRIVAL_D.ITEM_SPECIFICATION,
+               SUM(PURCHASE_ARRIVAL_D.ACCEPTED_BUSINESS_QTY + PURCHASE_ARRIVAL_D.SP_RECEIPT_BUSINESS_QTY -
+                   PURCHASE_ARRIVAL_D.RECEIPTED_BUSINESS_QTY)   AS applyQty,
+               WAREHOUSE.WAREHOUSE_CODE,
+               WAREHOUSE.WAREHOUSE_NAME,
+               BIN.BIN_CODE,
+               BIN.BIN_NAME,
+               UNIT.UNIT_CODE
+        FROM PURCHASE_ARRIVAL
+                 LEFT JOIN SUPPLIER
+                           ON PURCHASE_ARRIVAL.SUPPLIER_ID = SUPPLIER.SUPPLIER_BUSINESS_ID
+                 LEFT JOIN PLANT
+                           ON PURCHASE_ARRIVAL.RECEIVE_Owner_Org_ROid = PLANT.PLANT_ID
+                 LEFT JOIN PURCHASE_ARRIVAL_D
+                           ON PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID = PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID
+                 LEFT JOIN ITEM
+                           ON PURCHASE_ARRIVAL_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                 LEFT JOIN BIN
+                           ON PURCHASE_ARRIVAL_D.BIN_ID = BIN.BIN_ID
+                 LEFT JOIN WAREHOUSE
+                           ON PURCHASE_ARRIVAL_D.WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+                 LEFT JOIN UNIT
+                           ON PURCHASE_ARRIVAL_D.BUSINESS_UNIT_ID = UNIT.UNIT_ID
+        WHERE PURCHASE_ARRIVAL.CATEGORY = N'37'
+          AND PURCHASE_ARRIVAL.DOC_NO = #{docNo}
+
+        GROUP BY PURCHASE_ARRIVAL.DOC_NO
+               , PURCHASE_ARRIVAL.DOC_DATE
+               , SUPPLIER.SUPPLIER_CODE
+               , SUPPLIER.SUPPLIER_NAME
+               , ITEM.ITEM_CODE
+               , PURCHASE_ARRIVAL_D.ITEM_DESCRIPTION
+               , PURCHASE_ARRIVAL_D.ITEM_SPECIFICATION
+               , WAREHOUSE.WAREHOUSE_CODE
+               , WAREHOUSE.WAREHOUSE_NAME
+               , BIN.BIN_CODE
+               , BIN.BIN_NAME
+               , UNIT.UNIT_CODE
+    </select>
+
+    <select id="getPurchaseReceiveInfo" resultType="com.mgkj.vo.PurchaseReceiveVo">
+        SELECT PURCHASE_ORDER.DOC_NO,
+               PURCHASE_ORDER_D.ITEM_DESCRIPTION,
+               PURCHASE_ORDER_D.ITEM_SPECIFICATION,
+               PURCHASE_ORDER_D.BUSINESS_QTY,
+               SUPPLIER.SUPPLIER_NAME,
+               SUPPLIER.SUPPLIER_CODE                                                       as SUPPLIER_NO,
+               PURCHASE_ORDER_D.PACKING_QTY1 + PURCHASE_ORDER_D.PACKING_QTY2 + PURCHASE_ORDER_D.PACKING_QTY3 +
+               PURCHASE_ORDER_D.PACKING_QTY4                                                AS ALL_Packing_QTY,
+               ITEM.ITEM_CODE,
+               ITEM_LOT.LOT_CODE,
+               CONVERT(CHAR(8), PURCHASE_ORDER.DOC_DATE, 112)                               AS DOC_DATE,
+               CAST(PURCHASE_ORDER.DOC_DATE AS DATE)                                        AS DOC_DATE,
+               UNIT.UNIT_CODE,
+               SUM(PURCHASE_ORDER_SD.BUSINESS_QTY - PURCHASE_ORDER_SD.ARRIVED_BUSINESS_QTY) AS RECORD_QTY,
+               PURCHASE_ORDER_D.SequenceNumber                                              as xh
+        from PURCHASE_ORDER_D
+                 LEFT JOIN PURCHASE_ORDER ON PURCHASE_ORDER_D.PURCHASE_ORDER_ID = PURCHASE_ORDER.PURCHASE_ORDER_ID
+                 LEFT JOIN SUPPLIER ON PURCHASE_ORDER.SUPPLIER_ID = SUPPLIER.SUPPLIER_BUSINESS_ID
+                 LEFT JOIN ITEM ON PURCHASE_ORDER_D.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                 LEFT JOIN ITEM_LOT ON ITEM_LOT.ITEM_ID = PURCHASE_ORDER_D.ITEM_ID
+                 LEFT JOIN UNIT ON PURCHASE_ORDER_D.BUSINESS_UNIT_ID = UNIT.UNIT_ID
+                 LEFT JOIN PURCHASE_ORDER_SD
+                           ON PURCHASE_ORDER_D.PURCHASE_ORDER_D_ID = PURCHASE_ORDER_SD.PURCHASE_ORDER_D_ID
+                 LEFT JOIN PURCHASE_ARRIVAL_D ON PURCHASE_ARRIVAL_D.PURCHASE_ORDER_ID = PURCHASE_ORDER.PURCHASE_ORDER_ID
+        where PURCHASE_ORDER.DOC_NO LIKE concat('%', #{docNo}, '%')
+          and ITEM.ITEM_CODE LIKE concat('%', #{itemCode}, '%')
+          AND PURCHASE_ORDER_SD.RECEIPT_CLOSE = '0'
+          AND PURCHASE_ORDER.[CLOSE] = '0'
+        group by PURCHASE_ORDER.DOC_NO,
+                 PURCHASE_ORDER_D.ITEM_DESCRIPTION,
+                 PURCHASE_ORDER_D.ITEM_SPECIFICATION,
+                 PURCHASE_ORDER_D.BUSINESS_QTY,
+                 SUPPLIER.SUPPLIER_NAME,
+                 PURCHASE_ORDER_D.PACKING_QTY1,
+                 PURCHASE_ORDER_D.PACKING_QTY2,
+                 PURCHASE_ORDER_D.PACKING_QTY3,
+                 PURCHASE_ORDER_D.PACKING_QTY4,
+                 ITEM.ITEM_CODE,
+                 ITEM_LOT.LOT_CODE,
+                 PURCHASE_ORDER.DOC_DATE,
+                 UNIT.UNIT_CODE,
+                 PURCHASE_ORDER_SD.BUSINESS_QTY,
+                 PURCHASE_ORDER_SD.ARRIVED_BUSINESS_QTY,
+                 SUPPLIER.SUPPLIER_CODE,
+                 PURCHASE_ORDER_D.SequenceNumber
+        order by PURCHASE_ORDER.DOC_DATE DESC,
+                 PURCHASE_ORDER.DOC_NO,
+                 PURCHASE_ORDER_D.SequenceNumber
+    </select>
+    <select id="ListPurchaseReturn" resultType="com.mgkj.vo.ListPurchaseReturnVo"
+            parameterType="com.mgkj.dto.ListPurchaseReturnDto">
+        SELECT DISTINCT TOP 10 A.DOC_NO                         AS docNo,
+                        CAST(A.DOC_DATE AS NVARCHAR(10)) AS docDate,
+                        ISNULL(D.ADMIN_UNIT_CODE, N'')   AS departmentNo,
+                        ISNULL(D.ADMIN_UNIT_NAME, N'')   AS departmentName,
+                        C.SUPPLIER_CODE                  AS supplierNo,
+                        C.SUPPLIER_NAME                  AS supplierName,
+                        ''                               AS customerNo,
+                        ''                               AS customerName,
+                        ''                               AS employeeNo,
+                        ''                               AS employeeName
+        FROM PURCHASE_RETURN AS A
+                 INNER JOIN PURCHASE_RETURN_D AS B
+                            ON A.PURCHASE_RETURN_ID = B.PURCHASE_RETURN_ID
+                 INNER JOIN PLANT
+                            ON A.PLANT_ID = PLANT.PLANT_ID
+                 INNER JOIN SUPPLIER AS C
+                            ON A.SUPPLIER_ID = C.SUPPLIER_BUSINESS_ID
+                 LEFT JOIN EMPLOYEE
+                           ON A.Owner_Emp = EMPLOYEE.EMPLOYEE_ID
+                 LEFT JOIN ADMIN_UNIT AS D
+                           ON A.Owner_Dept = D.ADMIN_UNIT_ID
+                 INNER JOIN ITEM
+                            ON B.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                 LEFT JOIN PURCHASE_ISSUE_D AS E ON E.SOURCE_ID_ROid = B.PURCHASE_RETURN_D_ID
+        WHERE PLANT.PLANT_CODE = '1'
+          AND A.ApproveStatus = N'Y'
+          -- AND A.ISSUE_STATUS IN (N'1', N'2')
+          -- AND E.PURCHASE_ISSUE_D_ID IS NULL
+        <if test="docNo!=null and docNo!=''">
+            A.DOC_NO like concat('%',#{docNo},'%')
+        </if>
+        UNION ALL
+        SELECT DISTINCT TOP 10 A.DOC_NO                         AS docNo,
+                        CAST(A.DOC_DATE AS NVARCHAR(10)) AS docDate,
+                        ISNULL(D.ADMIN_UNIT_CODE, N'')   AS departmentNo,
+                        ISNULL(D.ADMIN_UNIT_NAME, N'')   AS departmentName,
+                        C.SUPPLIER_CODE                  AS supplierNo,
+                        C.SUPPLIER_NAME                  AS supplierName,
+                        ''                               AS customerNo,
+                        ''                               AS customerName,
+                        ''                               AS employeeNo,
+                        ''                               AS employeeName
+        FROM PURCHASE_ISSUE AS A
+                 INNER JOIN PLANT
+                            ON A.Owner_Org_ROid = PLANT.PLANT_ID
+                 INNER JOIN SUPPLIER AS C
+                            ON A.SUPPLIER_ID = C.SUPPLIER_BUSINESS_ID
+                 LEFT JOIN EMPLOYEE AS E
+                           ON A.Owner_Emp = E.EMPLOYEE_ID
+                 LEFT JOIN ADMIN_UNIT AS D
+                           ON A.Owner_Dept = D.ADMIN_UNIT_ID
+                 INNER JOIN PURCHASE_ISSUE_D AS B
+                            ON A.PURCHASE_ISSUE_ID = B.PURCHASE_ISSUE_ID
+                 INNER JOIN ITEM
+                            ON B.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+        WHERE PLANT.PLANT_CODE = '1'
+          AND A.ApproveStatus = N'N'
+    </select>
+    <select id="ListPurchaseReturnDetail" resultType="com.mgkj.vo.ListPurchaseReturnDetailVo"
+            parameterType="java.lang.String">
+        SELECT [PURCHASE_RETURN].[DOC_NO]                                 AS [docNo]
+                , CAST([PURCHASE_RETURN].[DOC_DATE] AS NVARCHAR(10))         AS [docDate]
+                , [SUPPLIER].[SUPPLIER_CODE]                                 AS [supplierNo]
+                , [SUPPLIER].[SUPPLIER_NAME]                                 AS [supplierName]
+                , [ITEM].[ITEM_CODE]                                         AS [itemCode]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ')           AS [productCode]
+                , ''                                                         AS stockCode
+                , [PURCHASE_RETURN_D].[ITEM_DESCRIPTION]                     AS [itemName]
+                , [PURCHASE_RETURN_D].[ITEM_SPECIFICATION]                   AS [itemSpec]
+                , [UNIT].[UNIT_CODE]                                         AS [unitNo]
+                , [PURCHASE_RETURN_D].[applyQty]                             AS [applyQty]
+                , SUM(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_INVENTORY_QTY], 0)) AS [stockQty]
+                , sum(ISNULL([ITEM_WAREHOUSE_BIN].TOTAL_SECOND_QTY, 0))      AS referenceStockQty
+                , ISNULL(UNIT_02.UNIT_CODE, '')                              AS referenceStockUnitNo  --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '')                              AS referenceStockUnitName
+                , 0                                                          AS [scanSumQty]
+                , ''                                                         AS customerNo
+                , ''                                                         AS customerName
+                , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ')                 AS warehouseCode
+                , ISNULL([BIN].[BIN_CODE], N' ')                             AS binCode
+                , ISNULL([ITEM_LOT].[LOT_CODE], N' ')                        AS lotNo
+                , UNIT.UNIT_NAME                                             as unitName
+                , ISNULL(UNIT_02.UNIT_CODE, '')                              AS referenceUnitNo
+                , ISNULL(UNIT_02.UNIT_NAME, '')                              AS referenceUnitName
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_RETURN_D].[applyQty], ITEM.SECOND_UNIT_ID,
+            0)                                      AS referenceQty          --参考单位数量
+                , UNIT_03.UNIT_CODE                                          AS valuationUnitNo       --计价单位编码
+                , UNIT_03.UNIT_NAME                                          AS valuationUnitName     --计价单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_RETURN_D].[applyQty],
+            [PURCHASE_RETURN_D].PRICE_UNIT_ID, 0)   AS valuationQty          --计价单位数量
+                , UNIT_04.UNIT_CODE                                          AS stockUnitNo           --库存单位编码
+                , UNIT_04.UNIT_NAME                                          AS stockUnitName         --库存单位名称
+                , UNIT_04.DICIMAL_DIGIT                                      AS stockKeep             --库存单位小数位数
+            --,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,[PURCHASE_RETURN_D].[applyQty],ITEM.STOCK_UNIT_ID,0) AS   stockUnitQty  --库存单位数量
+                , [PURCHASE_RETURN_D].sourceDocQty                           AS sourceDocQty
+                , [PURCHASE_RETURN_D].sourceValuationQty                     AS sourceValuationQty
+                , CASE
+            WHEN dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID,
+            UNIT.UNIT_ID,
+            1,
+            ITEM.STOCK_UNIT_ID,
+            1) = '0' THEN 1
+            ELSE dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID,
+            UNIT.UNIT_ID,
+            1,
+            ITEM.STOCK_UNIT_ID,
+            1) END                           as rate
+                , ISNULL(UNIT.DICIMAL_DIGIT, 0)                              as [keep]
+        FROM [PURCHASE_RETURN] AS [PURCHASE_RETURN]
+            INNER JOIN [PLANT] ON [PURCHASE_RETURN].[PLANT_ID] = [PLANT].[PLANT_ID]
+            INNER JOIN
+            (select [PURCHASE_RETURN_D].[PURCHASE_RETURN_ID],
+            PURCHASE_RETURN_D.ITEM_ID,
+            PURCHASE_RETURN_D.ITEM_FEATURE_ID,
+            PURCHASE_RETURN_D.[WAREHOUSE_ID],
+            PURCHASE_RETURN_D.BIN_ID,
+            PURCHASE_RETURN_D.ITEM_LOT_ID,
+            [PURCHASE_RETURN_D].[ITEM_DESCRIPTION],
+            [PURCHASE_RETURN_D].[ITEM_SPECIFICATION],
+            [PURCHASE_RETURN_D].[BUSINESS_UNIT_ID],
+            [PURCHASE_RETURN_D].[ISSUE_CLOSE],
+            SUM([PURCHASE_RETURN_D].[BUSINESS_QTY] - [PURCHASE_RETURN_D].[ISSUED_BUSINESS_QTY]) AS [applyQty]
+            ,
+            [PURCHASE_RETURN_D].PRICE_UNIT_ID
+            ,
+            SUM([PURCHASE_RETURN_D].[BUSINESS_QTY])                                             AS sourceDocQty
+            ,
+            SUM([PURCHASE_RETURN_D].[PRICE_QTY])                                                AS sourceValuationQty
+            from [PURCHASE_RETURN_D]
+            WHERE [PURCHASE_RETURN_D].[ISSUE_CLOSE] = N'0'
+            GROUP BY [PURCHASE_RETURN_D].[PURCHASE_RETURN_ID],
+            PURCHASE_RETURN_D.ITEM_ID,
+            PURCHASE_RETURN_D.ITEM_FEATURE_ID,
+            PURCHASE_RETURN_D.[WAREHOUSE_ID],
+            PURCHASE_RETURN_D.BIN_ID,
+            PURCHASE_RETURN_D.ITEM_LOT_ID,
+            [PURCHASE_RETURN_D].[ITEM_DESCRIPTION],
+            [PURCHASE_RETURN_D].[ITEM_SPECIFICATION],
+            [PURCHASE_RETURN_D].[BUSINESS_UNIT_ID],
+            [PURCHASE_RETURN_D].[ISSUE_CLOSE]
+            , [PURCHASE_RETURN_D].PRICE_UNIT_ID)
+            AS [PURCHASE_RETURN_D] ON [PURCHASE_RETURN].[PURCHASE_RETURN_ID] = [PURCHASE_RETURN_D].[PURCHASE_RETURN_ID]
+            INNER JOIN [ITEM] ON [PURCHASE_RETURN_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_RETURN_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT] ON [PURCHASE_RETURN_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [SUPPLIER] ON [PURCHASE_RETURN].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT OUTER JOIN [WAREHOUSE] ON [PURCHASE_RETURN_D].[WAREHOUSE_ID] = [WAREHOUSE].[WAREHOUSE_ID]
+            LEFT OUTER JOIN [BIN] ON [PURCHASE_RETURN_D].[BIN_ID] = [BIN].[BIN_ID]
+            LEFT OUTER JOIN [ITEM_LOT] ON [PURCHASE_RETURN_D].[ITEM_LOT_ID] = [ITEM_LOT].[ITEM_LOT_ID]
+            LEFT OUTER JOIN (SELECT [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+            , [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+            , [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+            , [ITEM_WAREHOUSE_BIN].BIN_ID
+            , [ITEM_WAREHOUSE_BIN].ITEM_LOT_ID
+            , SUM([ITEM_WAREHOUSE_BIN].[INVENTORY_QTY]) AS [TOTAL_INVENTORY_QTY]
+            , SUM([ITEM_WAREHOUSE_BIN].[SECOND_QTY])    AS [TOTAL_SECOND_QTY]
+            FROM [ITEM_WAREHOUSE_BIN] AS [ITEM_WAREHOUSE_BIN]
+            INNER JOIN [PLANT] ON [ITEM_WAREHOUSE_BIN].[Owner_Org_ROid] = [PLANT].[PLANT_ID]
+            INNER JOIN [WAREHOUSE] ON [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+            WHERE ITEM_WAREHOUSE_BIN.BO_ID_RTK = 'OTHER'
+            AND ITEM_WAREHOUSE_BIN.BO_ID_ROid = '00000000-0000-0000-0000-000000000000'
+            GROUP BY [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+            , [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+            , [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+            , [ITEM_WAREHOUSE_BIN].BIN_ID
+            , [ITEM_WAREHOUSE_BIN].ITEM_LOT_ID) AS [ITEM_WAREHOUSE_BIN]
+            ON [ITEM_WAREHOUSE_BIN].[ITEM_ID] = [PURCHASE_RETURN_D].[ITEM_ID] AND
+            [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID] = [PURCHASE_RETURN_D].[ITEM_FEATURE_ID] AND
+            ([ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = [PURCHASE_RETURN_D].WAREHOUSE_ID OR
+            [PURCHASE_RETURN_D].WAREHOUSE_ID = '00000000-0000-0000-0000-000000000000') AND
+            ([ITEM_WAREHOUSE_BIN].BIN_ID = [PURCHASE_RETURN_D].BIN_ID OR
+            [PURCHASE_RETURN_D].BIN_ID = '00000000-0000-0000-0000-000000000000') AND
+            ([ITEM_WAREHOUSE_BIN].ITEM_LOT_ID = [PURCHASE_RETURN_D].ITEM_LOT_ID or
+            [PURCHASE_RETURN_D].ITEM_LOT_ID = '00000000-0000-0000-0000-000000000000')
+            LEFT JOIN [UNIT] AS UNIT_02
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03
+            ON [PURCHASE_RETURN_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04
+            ON ITEM.STOCK_UNIT_ID = UNIT_04.[UNIT_ID]
+            -- WHERE [PURCHASE_RETURN].[ApproveStatus] = N'Y'
+--   AND [PURCHASE_RETURN_D].[ISSUE_CLOSE] = N'0'
+            AND [PURCHASE_RETURN].[DOC_NO] = #{docNo}
+        GROUP BY [PURCHASE_RETURN].[DOC_NO]
+                , [PURCHASE_RETURN].[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , [PURCHASE_RETURN_D].[ITEM_DESCRIPTION]
+                , [PURCHASE_RETURN_D].[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , [PURCHASE_RETURN_D].[applyQty]
+                , [WAREHOUSE].[WAREHOUSE_CODE]
+                , [BIN].[BIN_CODE]
+                , [ITEM_LOT].[LOT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , [PURCHASE_RETURN_D].PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+                , [PURCHASE_RETURN_D].sourceDocQty
+                , [PURCHASE_RETURN_D].sourceValuationQty
+                , UNIT.DICIMAL_DIGIT
+
+        UNION ALL
+
+        SELECT [PURCHASE_ISSUE].[DOC_NO]                                  AS [docNo]
+                , CAST([PURCHASE_ISSUE].[DOC_DATE] AS NVARCHAR(10))          AS [docDate]
+                , [SUPPLIER].[SUPPLIER_CODE]                                 AS [supplierNo]
+                , [SUPPLIER].[SUPPLIER_NAME]                                 AS [supplierName]
+                , [ITEM].[ITEM_CODE]                                         AS [itemCode]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ')           AS [productCode]
+                , ''                                                         AS stockCode
+                , [PURCHASE_ISSUE_D].[ITEM_DESCRIPTION]                      AS [itemName]
+                , [PURCHASE_ISSUE_D].[ITEM_SPECIFICATION]                    AS [itemSpec]
+                , [UNIT].[UNIT_CODE]                                         AS [unitNo]
+                , SUM([PURCHASE_ISSUE_D].BUSINESS_QTY)                       AS [applyQty]
+                , SUM(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_INVENTORY_QTY], 0)) AS [stockQty]
+                , sum(ISNULL([ITEM_WAREHOUSE_BIN].TOTAL_SECOND_QTY, 0))      AS referenceStockQty
+                , ISNULL(UNIT_02.UNIT_CODE, '')                              AS referenceStockUnitNo  --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '')                              AS referenceStockUnitName--参考单位名称
+                , 0                                                          AS [scanSumQty]
+                , ''                                                         AS customerNo
+                , ''                                                         AS customerName
+                , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ')                 AS warehouseCode
+                , ISNULL([BIN].[BIN_CODE], N' ')                             AS binCode
+                , ISNULL([ITEM_LOT].[LOT_CODE], N' ')                        AS lotNo
+                , UNIT.UNIT_NAME                                             as unitName              --交易单位名称
+                , ISNULL(UNIT_02.UNIT_CODE, '')                              AS referenceUnitNo       --参考单位编码(第二单位)
+                , ISNULL(UNIT_02.UNIT_NAME, '')                              AS referenceUnitName--参考单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_ISSUE_D].BUSINESS_QTY, ITEM.SECOND_UNIT_ID,
+            0)                                      AS referenceQty          --参考单位数量
+                , UNIT_03.UNIT_CODE                                          AS valuationUnitNo       --计价单位编码
+                , UNIT_03.UNIT_NAME                                          AS valuationUnitName     --计价单位名称
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [PURCHASE_ISSUE_D].BUSINESS_QTY,
+            [PURCHASE_ISSUE_D].PRICE_UNIT_ID, 0)    AS valuationQty          --计价单位数量
+                , UNIT_04.UNIT_CODE                                          AS stockUnitNo           --库存单位编码
+                , UNIT_04.UNIT_NAME                                          AS stockUnitName         --库存单位名称
+                , UNIT_04.DICIMAL_DIGIT                                      AS stockKeep             --库存单位小数位数
+                , [PURCHASE_ISSUE_D].BUSINESS_QTY                            AS sourceDocQty
+                , [PURCHASE_ISSUE_D].PRICE_QTY                               AS sourceValuationQty
+                , CASE
+            WHEN dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID,
+            UNIT.UNIT_ID,
+            1,
+            ITEM.STOCK_UNIT_ID,
+            1) = '0' THEN 1
+            ELSE dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID,
+            UNIT.UNIT_ID,
+            1,
+            ITEM.STOCK_UNIT_ID,
+            1) END                           as rate
+                , ISNULL(UNIT.DICIMAL_DIGIT, 0)                              as [keep]
+        FROM [PURCHASE_ISSUE] AS [PURCHASE_ISSUE]
+            LEFT JOIN ADMIN_UNIT AS D
+        ON PURCHASE_ISSUE.Owner_Dept = D.ADMIN_UNIT_ID
+            INNER JOIN [PLANT] ON [PURCHASE_ISSUE].Owner_Org_ROid = [PLANT].[PLANT_ID]
+            INNER JOIN PURCHASE_ISSUE_D
+            ON [PURCHASE_ISSUE].[PURCHASE_ISSUE_ID] = [PURCHASE_ISSUE_D].[PURCHASE_ISSUE_ID]
+            INNER JOIN [ITEM] ON [PURCHASE_ISSUE_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_ISSUE_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT] ON [PURCHASE_ISSUE_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [SUPPLIER] ON [PURCHASE_ISSUE].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT OUTER JOIN [WAREHOUSE] ON [PURCHASE_ISSUE_D].[WAREHOUSE_ID] = [WAREHOUSE].[WAREHOUSE_ID]
+            LEFT OUTER JOIN [BIN] ON [PURCHASE_ISSUE_D].[BIN_ID] = [BIN].[BIN_ID]
+            LEFT OUTER JOIN [ITEM_LOT] ON [PURCHASE_ISSUE_D].[ITEM_LOT_ID] = [ITEM_LOT].[ITEM_LOT_ID]
+            LEFT OUTER JOIN (SELECT [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+            , [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+            , [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+            , [ITEM_WAREHOUSE_BIN].BIN_ID
+            , [ITEM_WAREHOUSE_BIN].ITEM_LOT_ID
+            , SUM([ITEM_WAREHOUSE_BIN].[INVENTORY_QTY]) AS [TOTAL_INVENTORY_QTY]
+            , SUM([ITEM_WAREHOUSE_BIN].[SECOND_QTY])    AS [TOTAL_SECOND_QTY]
+            FROM [ITEM_WAREHOUSE_BIN] AS [ITEM_WAREHOUSE_BIN]
+            INNER JOIN [PLANT] ON [ITEM_WAREHOUSE_BIN].[Owner_Org_ROid] = [PLANT].[PLANT_ID]
+            INNER JOIN [WAREHOUSE] ON [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+            WHERE ITEM_WAREHOUSE_BIN.BO_ID_RTK = 'OTHER'
+            AND ITEM_WAREHOUSE_BIN.BO_ID_ROid = '00000000-0000-0000-0000-000000000000'
+            GROUP BY [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+            , [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+            , [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+            , [ITEM_WAREHOUSE_BIN].BIN_ID
+            , [ITEM_WAREHOUSE_BIN].ITEM_LOT_ID) AS [ITEM_WAREHOUSE_BIN]
+            ON [ITEM_WAREHOUSE_BIN].[ITEM_ID] = [PURCHASE_ISSUE_D].[ITEM_ID] AND
+            [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID] = [PURCHASE_ISSUE_D].[ITEM_FEATURE_ID] AND
+            ([ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = [PURCHASE_ISSUE_D].WAREHOUSE_ID OR
+            [PURCHASE_ISSUE_D].WAREHOUSE_ID = '00000000-0000-0000-0000-000000000000') AND
+            ([ITEM_WAREHOUSE_BIN].BIN_ID = [PURCHASE_ISSUE_D].BIN_ID OR
+            [PURCHASE_ISSUE_D].BIN_ID = '00000000-0000-0000-0000-000000000000') AND
+            ([ITEM_WAREHOUSE_BIN].ITEM_LOT_ID = [PURCHASE_ISSUE_D].ITEM_LOT_ID or
+            [PURCHASE_ISSUE_D].ITEM_LOT_ID = '00000000-0000-0000-0000-000000000000')
+            LEFT JOIN [UNIT] AS UNIT_02
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03
+            ON [PURCHASE_ISSUE_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04
+            ON ITEM.STOCK_UNIT_ID = UNIT_04.[UNIT_ID]
+            -- WHERE [PURCHASE_ISSUE].[ApproveStatus] = N'N'
+            AND [PURCHASE_ISSUE].[DOC_NO] = #{docNo}
+        GROUP BY [PURCHASE_ISSUE].[DOC_NO]
+                , [PURCHASE_ISSUE].[DOC_DATE]
+                , [SUPPLIER].[SUPPLIER_CODE]
+                , [SUPPLIER].[SUPPLIER_NAME]
+                , [ITEM].[ITEM_CODE]
+                , [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , [PURCHASE_ISSUE_D].[ITEM_DESCRIPTION]
+                , [PURCHASE_ISSUE_D].[ITEM_SPECIFICATION]
+                , [UNIT].[UNIT_CODE]
+                , [PURCHASE_ISSUE_D].BUSINESS_QTY
+                , [WAREHOUSE].[WAREHOUSE_CODE]
+                , [BIN].[BIN_CODE]
+                , [ITEM_LOT].[LOT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , [PURCHASE_ISSUE_D].PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID
+                , [PURCHASE_ISSUE_D].BUSINESS_QTY
+                , [PURCHASE_ISSUE_D].PRICE_QTY
+                , UNIT.DICIMAL_DIGIT
+    </select>
+    <select id="getPurchaseDetail" resultType="com.mgkj.vo.PurchaseDetailVo">
+        SELECT [PURCHASE_ORDER].[DOC_NO]       AS [docNo]
+                ,CAST([PURCHASE_ORDER].[DOC_DATE] AS NVARCHAR(10))      AS [createDate]
+                ,[SUPPLIER].[SUPPLIER_CODE]      AS [supplierNo]
+                ,[SUPPLIER].[SUPPLIER_NAME]      AS [supplierName]
+                ,[ITEM].[ITEM_CODE]              AS [itemNo]
+                ,ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE] ,N' ') AS [productCode]
+                ,'' AS stockCode
+                ,[PURCHASE_ORDER_D].[ITEM_DESCRIPTION] AS [itemName]
+                ,[PURCHASE_ORDER_D].[ITEM_SPECIFICATION] AS [itemSpec]
+                ,[UNIT].[UNIT_CODE]              AS [unitNo]
+                ,0 AS stockQty
+                ,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY])AS [applyQty]
+                ,0           AS [scanSumQty]
+                ,'' AS customerNo
+                ,'' AS customerName
+                ,'' AS  warehouseNo
+                ,'' AS  storageSpacesNo
+                ,'' AS  lotNo
+                ,UNIT.UNIT_NAME as   unitName   --交易单位名称
+                ,ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceUnitNo  --参考单位编码(第二单位)
+                ,ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceUnitName--参考单位名称
+                ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]),ITEM.SECOND_UNIT_ID,0) AS referenceQty  --参考单位数量
+                ,UNIT_03.UNIT_CODE AS   valuationUnitNo  --计价单位编码
+                ,UNIT_03.UNIT_NAME AS   valuationUnitName --计价单位名称
+                ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]) ,PURCHASE_ORDER_D.PRICE_UNIT_ID,0) AS  valuationQty  --计价单位数量
+                ,UNIT_04.UNIT_CODE AS   stockUnitNo  --库存单位编码
+                ,UNIT_04.UNIT_NAME AS   stockUnitName  --库存单位名称
+                ,UNIT_04.DICIMAL_DIGIT AS   stockKeep   --库存单位小数位数
+            --,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]),ITEM.STOCK_UNIT_ID,0) AS   stockUnitQty  --库存单位数量
+                ,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]) AS sourceDocQty
+                ,SUM([PURCHASE_ORDER_SD].[PRICE_QTY]) AS sourceValuationQty
+                ,1 as rate,0 as [keep]
+        FROM   [PURCHASE_ORDER]                AS [PURCHASE_ORDER]
+            INNER JOIN [PURCHASE_ORDER_D]   AS [PURCHASE_ORDER_D]
+        ON  [PURCHASE_ORDER].[PURCHASE_ORDER_ID] = [PURCHASE_ORDER_D].[PURCHASE_ORDER_ID]
+            INNER JOIN [ITEM]
+            ON  [PURCHASE_ORDER_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            INNER JOIN [PURCHASE_ORDER_SD]  AS [PURCHASE_ORDER_SD]
+            ON  [PURCHASE_ORDER_D].[PURCHASE_ORDER_D_ID] = [PURCHASE_ORDER_SD].[PURCHASE_ORDER_D_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE]    AS [ITEM_FEATURE]
+            ON  [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_ORDER_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON  [PURCHASE_ORDER_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [PLANT]
+            ON  [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_RTK]=N'PLANT'
+            AND [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_ROid]=[PLANT].[PLANT_ID]
+            INNER JOIN [SUPPLIER]
+            ON  [PURCHASE_ORDER].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON  ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON  [PURCHASE_ORDER_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04  --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+            LEFT JOIN WAREHOUSE
+            ON WAREHOUSE.WAREHOUSE_ID = PURCHASE_ORDER_SD.WAREHOUSE_ID
+        WHERE  [PLANT].[PLANT_CODE]='1'
+          AND [PURCHASE_ORDER].[ApproveStatus]=N'Y'
+          AND [PURCHASE_ORDER].[DOC_NO]=#{docNo}
+          AND [PURCHASE_ORDER_SD].[BUSINESS_QTY]>[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]
+          AND     [PURCHASE_ORDER_SD].[RECEIPT_CLOSE] = '0'
+          AND  [PURCHASE_ORDER].[CLOSE]= '0'
+        GROUP BY
+            [PURCHASE_ORDER].[DOC_NO]
+                ,[PURCHASE_ORDER].[DOC_DATE]
+                ,[SUPPLIER].[SUPPLIER_CODE]
+                ,[SUPPLIER].[SUPPLIER_NAME]
+                ,[ITEM].[ITEM_CODE]
+                ,[ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                ,[PURCHASE_ORDER_D].[ITEM_DESCRIPTION]
+                ,[PURCHASE_ORDER_D].[ITEM_SPECIFICATION]
+                ,[UNIT].[UNIT_CODE]
+                ,UNIT.UNIT_NAME
+                ,UNIT_02.UNIT_CODE
+                ,UNIT_02.UNIT_NAME
+                ,UNIT_03.UNIT_CODE
+                ,UNIT_03.UNIT_NAME
+                ,UNIT_04.UNIT_CODE
+                ,UNIT_04.UNIT_NAME
+                ,UNIT_04.DICIMAL_DIGIT
+                ,ITEM.SECOND_UNIT_ID
+                ,UNIT.UNIT_ID
+                ,ITEM.ITEM_BUSINESS_ID
+                ,PURCHASE_ORDER_D.PRICE_UNIT_ID
+                ,ITEM.STOCK_UNIT_ID
+
+        UNION ALL
+                SELECT A.[DOC_NO]       AS [docNo]
+        ,CAST(A.[DOC_DATE] AS NVARCHAR(10))      AS [createDate]
+        ,[SUPPLIER].[SUPPLIER_CODE]      AS [supplierNo]
+        ,[SUPPLIER].[SUPPLIER_NAME]      AS [supplierName]
+        ,[ITEM].[ITEM_CODE]              AS [itemNo]
+        ,ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE] ,N' ') AS [productCode]
+        ,'' AS stockCode
+        ,B.[ITEM_DESCRIPTION] AS [itemName]
+        ,B.[ITEM_SPECIFICATION] AS [itemSpec]
+        ,[UNIT].[UNIT_CODE]              AS [unitNo]
+        ,0 AS stockQty
+        ,SUM(B.[BUSINESS_QTY])AS [applyQty]
+        ,0           AS [scanSumQty]
+        ,'' AS customerNo
+        ,'' AS customerName
+        ,'' AS  warehouseNo
+        ,'' AS  storageSpacesNo
+        ,'' AS  lotNo
+        ,UNIT.UNIT_NAME as   unitName   --交易单位名称
+        ,ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceUnitNo  --参考单位编码(第二单位)
+        ,ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceUnitName--参考单位名称
+        ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),ITEM.SECOND_UNIT_ID,0) AS referenceQty  --参考单位数量
+        ,UNIT_03.UNIT_CODE AS   valuationUnitNo  --计价单位编码
+        ,UNIT_03.UNIT_NAME AS   valuationUnitName --计价单位名称
+        ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),B.PRICE_UNIT_ID,0)AS  valuationQty  --计价单位数量
+        ,UNIT_04.UNIT_CODE AS   stockUnitNo  --库存单位编码
+        ,UNIT_04.UNIT_NAME AS   stockUnitName  --库存单位名称
+        ,UNIT_04.DICIMAL_DIGIT AS   stockKeep   --库存单位小数位数
+        --,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),ITEM.STOCK_UNIT_ID,0) AS   stockUnitQty  --库存单位数量
+        ,SUM(B.[BUSINESS_QTY]) AS sourceDocQty
+        ,SUM(B.[PRICE_QTY]) AS sourceValuationQty
+        ,1 as rate,0 as [keep]
+        FROM   SALES_ISSUE   AS A
+            INNER JOIN SALES_ISSUE_D   AS B
+        ON B.SALES_ISSUE_ID = A.SALES_ISSUE_ID
+            INNER JOIN SUPPLY_SYNERGY  AS SUPPLY_SYNERGY
+            ON  B.[SYNERGY_ID] = SUPPLY_SYNERGY.[SUPPLY_SYNERGY_ID]
+            LEFT  JOIN [SUPPLY_SYNERGY_FI_D] AS [SUPPLY_SYNERGY_FI_D]
+            ON B.[SYNERGY_D_ID] = [SUPPLY_SYNERGY_FI_D].[SUPPLY_SYNERGY_FI_D_ID]
+            INNER JOIN [ITEM]
+            ON  B.[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE]    AS [ITEM_FEATURE]
+            ON  [ITEM_FEATURE].[ITEM_FEATURE_ID] = B.[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON  B.[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [PLANT]
+            ON  [SUPPLY_SYNERGY_FI_D].[TO_Owner_Org_RTK] =N'PLANT'
+            AND [SUPPLY_SYNERGY_FI_D].[TO_Owner_Org_ROid] =[PLANT].[PLANT_ID]
+            INNER JOIN [SUPPLIER]
+            ON  SUPPLY_SYNERGY_FI_D.SUPPLIER_ID = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON  ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON  B.PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04  --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+            LEFT JOIN WAREHOUSE
+            ON WAREHOUSE.WAREHOUSE_ID = B.WAREHOUSE_ID
+        WHERE
+            [PLANT].[PLANT_CODE]='2'
+          AND A.[ApproveStatus]=N'Y'
+          AND A.[DOC_NO]=#{docNo}
+          AND B.[BUSINESS_QTY]>'0'
+          AND  SUPPLY_SYNERGY.[SUPPLY_TYPE] IN (N'2', N'4')
+          AND B.[PURCHASE_ARRIVALED]= '0'
+        GROUP BY
+            A.[DOC_NO]
+                ,A.[DOC_DATE]
+                ,[SUPPLIER].[SUPPLIER_CODE]
+                ,[SUPPLIER].[SUPPLIER_NAME]
+                ,[ITEM].[ITEM_CODE]
+                ,[ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                ,B.[ITEM_DESCRIPTION]
+                ,B.[ITEM_SPECIFICATION]
+                ,[UNIT].[UNIT_CODE]
+                ,UNIT.UNIT_NAME
+                ,UNIT_02.UNIT_CODE
+                ,UNIT_02.UNIT_NAME
+                ,UNIT_03.UNIT_CODE
+                ,UNIT_03.UNIT_NAME
+                ,UNIT_04.UNIT_CODE
+                ,UNIT_04.UNIT_NAME
+                ,UNIT_04.DICIMAL_DIGIT
+                ,ITEM.SECOND_UNIT_ID
+                ,UNIT.UNIT_ID
+                ,ITEM.ITEM_BUSINESS_ID
+                ,B.PRICE_UNIT_ID
+                ,ITEM.STOCK_UNIT_ID
+    </select>
+    <select id="getPurchaseDeliveryDetail" resultType="com.mgkj.vo.PurchaseDetailVo">
+        SELECT [PURCHASE_ORDER].[DOC_NO]       AS [docNo]
+                ,CAST([PURCHASE_ORDER].[DOC_DATE] AS NVARCHAR(10))      AS [createDate]
+                ,[SUPPLIER].[SUPPLIER_CODE]      AS [supplierNo]
+                ,[SUPPLIER].[SUPPLIER_NAME]      AS [supplierName]
+                ,[ITEM].[ITEM_CODE]              AS [itemNo]
+                ,ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE] ,N' ') AS [productCode]
+                ,'' AS stockCode
+                ,[PURCHASE_ORDER_D].[ITEM_DESCRIPTION] AS [itemName]
+                ,[PURCHASE_ORDER_D].[ITEM_SPECIFICATION] AS [itemSpec]
+                ,[UNIT].[UNIT_CODE]              AS [unitNo]
+                ,0 AS stockQty
+                ,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY])AS [applyQty]
+                ,0           AS [scanSumQty]
+                ,'' AS customerNo
+                ,'' AS customerName
+                ,'' AS  warehouseNo
+                ,'' AS  storageSpacesNo
+                ,'' AS  lotNo
+                ,UNIT.UNIT_NAME as   unitName   --交易单位名称
+                ,ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceUnitNo  --参考单位编码(第二单位)
+                ,ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceUnitName--参考单位名称
+                ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]),ITEM.SECOND_UNIT_ID,0) AS referenceQty  --参考单位数量
+                ,UNIT_03.UNIT_CODE AS   valuationUnitNo  --计价单位编码
+                ,UNIT_03.UNIT_NAME AS   valuationUnitName --计价单位名称
+                ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]) ,PURCHASE_ORDER_D.PRICE_UNIT_ID,0) AS  valuationQty  --计价单位数量
+                ,UNIT_04.UNIT_CODE AS   stockUnitNo  --库存单位编码
+                ,UNIT_04.UNIT_NAME AS   stockUnitName  --库存单位名称
+                ,UNIT_04.DICIMAL_DIGIT AS   stockKeep   --库存单位小数位数
+            --,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]-[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]),ITEM.STOCK_UNIT_ID,0) AS   stockUnitQty  --库存单位数量
+                ,SUM([PURCHASE_ORDER_SD].[BUSINESS_QTY]) AS sourceDocQty
+                ,SUM([PURCHASE_ORDER_SD].[PRICE_QTY]) AS sourceValuationQty
+                ,1 as rate,0 as [keep]
+        FROM   [PURCHASE_ORDER]                AS [PURCHASE_ORDER]
+            INNER JOIN [PURCHASE_ORDER_D]   AS [PURCHASE_ORDER_D]
+        ON  [PURCHASE_ORDER].[PURCHASE_ORDER_ID] = [PURCHASE_ORDER_D].[PURCHASE_ORDER_ID]
+            INNER JOIN [ITEM]
+            ON  [PURCHASE_ORDER_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            INNER JOIN [PURCHASE_ORDER_SD]  AS [PURCHASE_ORDER_SD]
+            ON  [PURCHASE_ORDER_D].[PURCHASE_ORDER_D_ID] = [PURCHASE_ORDER_SD].[PURCHASE_ORDER_D_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE]    AS [ITEM_FEATURE]
+            ON  [ITEM_FEATURE].[ITEM_FEATURE_ID] = [PURCHASE_ORDER_D].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON  [PURCHASE_ORDER_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [PLANT]
+            ON  [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_RTK]=N'PLANT'
+            AND [PURCHASE_ORDER_SD].[RECEIVE_Owner_Org_ROid]=[PLANT].[PLANT_ID]
+            INNER JOIN [SUPPLIER]
+            ON  [PURCHASE_ORDER].[SUPPLIER_ID] = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON  ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON  [PURCHASE_ORDER_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04  --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+            LEFT JOIN WAREHOUSE
+            ON WAREHOUSE.WAREHOUSE_ID = PURCHASE_ORDER_SD.WAREHOUSE_ID
+        WHERE  [PLANT].[PLANT_CODE]='1'
+          AND [PURCHASE_ORDER].[ApproveStatus]=N'Y'
+          AND [PURCHASE_ORDER].[DOC_NO]=#{docNo}
+          AND [PURCHASE_ORDER_SD].[BUSINESS_QTY]>[PURCHASE_ORDER_SD].[ARRIVED_BUSINESS_QTY]
+          AND     [PURCHASE_ORDER_SD].[RECEIPT_CLOSE] = '0'
+          AND  [PURCHASE_ORDER].[CLOSE]= '0'
+        GROUP BY
+            [PURCHASE_ORDER].[DOC_NO]
+                ,[PURCHASE_ORDER].[DOC_DATE]
+                ,[SUPPLIER].[SUPPLIER_CODE]
+                ,[SUPPLIER].[SUPPLIER_NAME]
+                ,[ITEM].[ITEM_CODE]
+                ,[ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                ,[PURCHASE_ORDER_D].[ITEM_DESCRIPTION]
+                ,[PURCHASE_ORDER_D].[ITEM_SPECIFICATION]
+                ,[UNIT].[UNIT_CODE]
+                ,UNIT.UNIT_NAME
+                ,UNIT_02.UNIT_CODE
+                ,UNIT_02.UNIT_NAME
+                ,UNIT_03.UNIT_CODE
+                ,UNIT_03.UNIT_NAME
+                ,UNIT_04.UNIT_CODE
+                ,UNIT_04.UNIT_NAME
+                ,UNIT_04.DICIMAL_DIGIT
+                ,ITEM.SECOND_UNIT_ID
+                ,UNIT.UNIT_ID
+                ,ITEM.ITEM_BUSINESS_ID
+                ,PURCHASE_ORDER_D.PRICE_UNIT_ID
+                ,ITEM.STOCK_UNIT_ID
+
+        UNION ALL
+        SELECT A.[DOC_NO]       AS [docNo]
+        ,CAST(A.[DOC_DATE] AS NVARCHAR(10))      AS [createDate]
+        ,[SUPPLIER].[SUPPLIER_CODE]      AS [supplierNo]
+        ,[SUPPLIER].[SUPPLIER_NAME]      AS [supplierName]
+        ,[ITEM].[ITEM_CODE]              AS [itemNo]
+        ,ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE] ,N' ') AS [productCode]
+        ,'' AS stockCode
+        ,B.[ITEM_DESCRIPTION] AS [itemName]
+        ,B.[ITEM_SPECIFICATION] AS [itemSpec]
+        ,[UNIT].[UNIT_CODE]              AS [unitNo]
+        ,0 AS stockQty
+        ,SUM(B.[BUSINESS_QTY])AS [applyQty]
+        ,0           AS [scanSumQty]
+        ,'' AS customerNo
+        ,'' AS customerName
+        ,'' AS  warehouseNo
+        ,'' AS  storageSpacesNo
+        ,'' AS  lotNo
+        ,UNIT.UNIT_NAME as   unitName   --交易单位名称
+        ,ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceUnitNo  --参考单位编码(第二单位)
+        ,ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceUnitName--参考单位名称
+        ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),ITEM.SECOND_UNIT_ID,0) AS referenceQty  --参考单位数量
+        ,UNIT_03.UNIT_CODE AS   valuationUnitNo  --计价单位编码
+        ,UNIT_03.UNIT_NAME AS   valuationUnitName --计价单位名称
+        ,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),B.PRICE_UNIT_ID,0)AS  valuationQty  --计价单位数量
+        ,UNIT_04.UNIT_CODE AS   stockUnitNo  --库存单位编码
+        ,UNIT_04.UNIT_NAME AS   stockUnitName  --库存单位名称
+        ,UNIT_04.DICIMAL_DIGIT AS   stockKeep   --库存单位小数位数
+        --,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,SUM(B.[BUSINESS_QTY]),ITEM.STOCK_UNIT_ID,0) AS   stockUnitQty  --库存单位数量
+        ,SUM(B.[BUSINESS_QTY]) AS sourceDocQty
+        ,SUM(B.[PRICE_QTY]) AS sourceValuationQty
+        ,1 as rate,0 as [keep]
+        FROM   SALES_ISSUE   AS A
+            INNER JOIN SALES_ISSUE_D   AS B
+        ON B.SALES_ISSUE_ID = A.SALES_ISSUE_ID
+            INNER JOIN SUPPLY_SYNERGY  AS SUPPLY_SYNERGY
+            ON  B.[SYNERGY_ID] = SUPPLY_SYNERGY.[SUPPLY_SYNERGY_ID]
+            LEFT  JOIN [SUPPLY_SYNERGY_FI_D] AS [SUPPLY_SYNERGY_FI_D]
+            ON B.[SYNERGY_D_ID] = [SUPPLY_SYNERGY_FI_D].[SUPPLY_SYNERGY_FI_D_ID]
+            INNER JOIN [ITEM]
+            ON  B.[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE]    AS [ITEM_FEATURE]
+            ON  [ITEM_FEATURE].[ITEM_FEATURE_ID] = B.[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON  B.[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [PLANT]
+            ON  [SUPPLY_SYNERGY_FI_D].[TO_Owner_Org_RTK] =N'PLANT'
+            AND [SUPPLY_SYNERGY_FI_D].[TO_Owner_Org_ROid] =[PLANT].[PLANT_ID]
+            INNER JOIN [SUPPLIER]
+            ON  SUPPLY_SYNERGY_FI_D.SUPPLIER_ID = [SUPPLIER].[SUPPLIER_BUSINESS_ID]
+            LEFT JOIN [UNIT] AS UNIT_02 --第二单位(参考单位)
+            ON  ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03 --计价单位
+            ON  B.PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04  --库存单位
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+            LEFT JOIN WAREHOUSE
+            ON WAREHOUSE.WAREHOUSE_ID = B.WAREHOUSE_ID
+        WHERE
+            [PLANT].[PLANT_CODE]='1'
+          AND A.[ApproveStatus]=N'Y'
+          AND A.[DOC_NO]=#{docNo}
+          AND B.[BUSINESS_QTY]>'0'
+          AND  SUPPLY_SYNERGY.[SUPPLY_TYPE] IN (N'2', N'4')
+          AND B.[PURCHASE_ARRIVALED]= '0'
+        GROUP BY
+            A.[DOC_NO]
+                ,A.[DOC_DATE]
+                ,[SUPPLIER].[SUPPLIER_CODE]
+                ,[SUPPLIER].[SUPPLIER_NAME]
+                ,[ITEM].[ITEM_CODE]
+                ,[ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                ,B.[ITEM_DESCRIPTION]
+                ,B.[ITEM_SPECIFICATION]
+                ,[UNIT].[UNIT_CODE]
+                ,UNIT.UNIT_NAME
+                ,UNIT_02.UNIT_CODE
+                ,UNIT_02.UNIT_NAME
+                ,UNIT_03.UNIT_CODE
+                ,UNIT_03.UNIT_NAME
+                ,UNIT_04.UNIT_CODE
+                ,UNIT_04.UNIT_NAME
+                ,UNIT_04.DICIMAL_DIGIT
+                ,ITEM.SECOND_UNIT_ID
+                ,UNIT.UNIT_ID
+                ,ITEM.ITEM_BUSINESS_ID
+                ,B.PRICE_UNIT_ID
+                ,ITEM.STOCK_UNIT_ID
+
+    </select>
+    <select id="getBarCodeByDeliveryNo" resultType="com.mgkj.vo.PurchaseReceiptStorageVo">
+        SELECT DISTINCT
+        D.parentId,
+        Z.UDF003 containerQty,
+        Z.UDF024 containerName,
+        CAST(CAST(Z.LONG AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.HIGH AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.WIDE AS FLOAT) AS VARCHAR(20)) AS containerDetail,
+        D.purchaseOrder,
+        deliveryNumber,
+        purchaseOrder docNo,
+        ISNULL(lot_att04, '') arrivalNo,
+        ISNULL(lot_att30,'') lot_att30,
+
+        FORMAT(create_date, 'yyyyMMdd') docDate,
+        vendorCode supplierNo,
+        delivery supplierName,
+        item_no itemCode,
+        M.ITEM_NAME itemName,
+        M.ITEM_SPECIFICATION itemSpec,
+        W.WAREHOUSE_CODE warehouseCode,
+        ISNULL(Z.UDF021,'') binCode,
+        qty matchQty,
+        barcode,
+        B.UDF021 customerNo,
+        bm_barcode_detail.unit_no unitCode,
+        bm_barcode_detail.unit_name unitName,
+        consignee shjg
+        FROM bm_barcode_detail
+        LEFT JOIN deliveryNoteDetails D ON source_no = D.uuid
+        LEFT JOIN PURCHASE_ORDER A ON D.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+        LEFT JOIN PURCHASE_ORDER_D B ON D.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+        LEFT JOIN ITEM M ON B.ITEM_ID = M.ITEM_BUSINESS_ID
+        LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = M.ITEM_BUSINESS_ID AND A.REV_ORG_SOURCE_ID_ROid=Z.Owner_Org_ROid
+        LEFT JOIN UNIT U ON B.BUSINESS_UNIT_ID = UNIT_ID
+        LEFT JOIN PURCHASE_ORDER_SD SD ON B.PURCHASE_ORDER_D_ID = SD.PURCHASE_ORDER_D_ID
+        LEFT JOIN WAREHOUSE W ON SD.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN BIN ON BIN.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN SUPPLIER S ON A.SUPPLIER_ID = S.SUPPLIER_BUSINESS_ID
+        LEFT JOIN deliveryList SS ON SS.uuid = D.parentId
+        WHERE bar_type = 4
+        <if test="number!=null and number!=''">
+            and deliveryNumber = #{number}
+        </if>
+        ORDER BY item_no
+    </select>
+    <select id="ListPurchaseArrivalCheckHeader" resultType="com.mgkj.vo.PurchaseArrivalCheckHeader">
+        SELECT
+        A.UDF001 defectRepairQty,
+        A.UDF025 defectNumReason,
+        (SELECT TOP 1 UDF021 FROM PURCHASE_ORDER_D WHERE PURCHASE_ORDER_ID = C.PURCHASE_ORDER_ID) customerNum,
+            A.PO_ARRIVAL_INSPECTION_ID inspectionUuid,
+            PLANT.PLANT_CODE AS plantCode,
+            DOC.DOC_NAME AS checkName,
+            A.DOC_NO AS checkDocNo,
+            D.DOC_NO AS arrivalDocNo,
+            C.PURCHASE_ARRIVAL_D_ID AS arrivalDUuid,
+            C.SequenceNumber AS arrivalDSequenceNumber,
+            SUPPLIER.SUPPLIER_CODE AS supplierCode,
+            SUPPLIER.SUPPLIER_NAME AS supplierName,
+            ADMIN_UNIT.ADMIN_UNIT_NAME AS departmentName,
+            EMPLOYEE.EMPLOYEE_NAME AS employeeName,
+            D.SUPPLIER_ORDER_NO AS receiptNo,
+            CONVERT(varchar(10), CONVERT(datetime, A.CreateDate), 120) AS createDate,
+            CONVERT(varchar(10), CONVERT(datetime, D.DOC_DATE), 120) AS receiptDate,
+            ITEM.ITEM_CODE AS itemCode,
+            C.ITEM_DESCRIPTION AS itemName,
+            C.ITEM_SPECIFICATION AS itemSpec,
+            ITEM_FEATURE.ITEM_FEATURE_ID AS itemFeatureId,
+            ITEM_LOT.LOT_CODE AS lotCode,
+            ITEM_LOT.LOT_DESCRIPTION AS lotDescription,
+            ITEM_LOT.EFFECTIVE_DATE AS effectiveDate,
+            ITEM_LOT.INEFFECTIVE_DATE AS ineffectiveDate,
+            A.INSPECTION_QTY AS inspectionQty,
+            A.STRICTNESS_DEGREE AS strictnessDegree,
+            A.ACCEPTABLE_QTY AS acceptableQty,
+            A.UNQUALIFIED_QTY AS unqualifiedQty,
+            A.DESTROYED_QTY AS destroyedQty,
+            A.DECISION AS decision,
+            A.REINSPECTION AS reinspection,
+            A.RESULT_STATUS AS resultStatus,
+            A.DECISION_DESCRIPTION AS decisionDescription,
+            CASE
+            WHEN A.UDF026 IS NULL OR A.UDF026 = '' THEN 'true'
+            ELSE A.UDF026
+            END AS UDF026
+        FROM PO_ARRIVAL_INSPECTION AS A
+                 LEFT JOIN PO_ARRIVAL_INSPECTION_D AS B ON B.PO_ARRIVAL_INSPECTION_D_ID = A.PO_ARRIVAL_INSPECTION_ID
+                 LEFT JOIN PURCHASE_ARRIVAL_D AS C ON C.PURCHASE_ARRIVAL_D_ID = A.SOURCE_ID
+                 LEFT JOIN PURCHASE_ARRIVAL AS D ON D.PURCHASE_ARRIVAL_ID = C.PURCHASE_ARRIVAL_ID
+                 LEFT JOIN SUPPLIER ON SUPPLIER.SUPPLIER_BUSINESS_ID = D.SUPPLIER_ID
+                 LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = C.ITEM_ID
+                 LEFT JOIN UNIT ON UNIT.UNIT_ID = C.BUSINESS_UNIT_ID
+                 LEFT JOIN PLANT ON PLANT.PLANT_ID = A.Owner_Org_ROid
+                 LEFT JOIN DOC ON DOC.DOC_ID = A.DOC_ID
+                 LEFT JOIN ITEM_FEATURE ON ITEM_FEATURE.ITEM_FEATURE_ID = A.ITEM_FEATURE_ID
+                 LEFT JOIN ITEM_LOT ON ITEM_LOT.ITEM_LOT_ID = A.ITEM_LOT_ID
+                 LEFT JOIN INSPECTION_ITEM ON INSPECTION_ITEM.INSPECTION_ITEM_ID = B.INSPECTION_ITEM_ID
+                 LEFT JOIN DEFECTIVE_REASONS ON DEFECTIVE_REASONS.DEFECTIVE_REASONS_ID = B.DEFECTIVE_REASONS_ID
+                 LEFT OUTER JOIN ADMIN_UNIT ON ADMIN_UNIT.ADMIN_UNIT_ID = A.Owner_Dept
+                 LEFT OUTER JOIN EMPLOYEE ON EMPLOYEE.EMPLOYEE_ID = A.Owner_Emp
+        <where>
+            <if test="arrivalDocNo!=null and arrivalDocNo!=''">
+                D.DOC_NO = #{arrivalDocNo}
+            </if>
+            <if test="itemCode!=null and itemCode!=''">
+                AND ITEM.ITEM_CODE = #{itemCode}
+            </if>
+            <if test="checkDocNo!=null and checkDocNo!=''">
+                AND A.DOC_NO = #{checkDocNo}
+            </if>
+
+        </where>
+
+
+    </select>
+    <select id="ListPurchaseArrivalCheckLine" resultType="com.mgkj.vo.PurchaseArrivalCheckLine">
+        SELECT
+                B.SequenceNumber AS sequenceNumber,
+                B.PO_ARRIVAL_INSPECTION_D_ID AS uuid,
+                B.SEQUENCE AS sequence,
+               INSPECTION_ITEM.INSPECTION_ITEM_CODE AS inspectionItemCode,
+               INSPECTION_ITEM.INSPECTION_ITEM_NAME AS inspectionItemName,
+               INSPECTION_ITEM.ITEM_DESCRIPTION AS inspectionItemDescription,
+               B.DEFECT_CLASS AS defectClass,
+               B.INSPECTION_QTY AS inspectionQty,
+               B.INSPECTION_AC AS inspectionAc,
+               B.INSPECTION_RE AS inspectionRe,
+               B.INSPECTION_QQ AS defectiveQty,
+               DEFECTIVE_REASONS.DESCRIPTION AS defectiveReasonDescription,
+               DEFECTIVE_REASONS.DEFECTIVE_REASONS_ID defectReasonUuid,
+               B.DECISION AS decision,
+               B.IMPACT_RESULT AS impactResult,
+               B.STANDARD_VALUE AS standardValue,
+               B.STANDARD_MAX AS standardMax,
+               B.STANDARD_MIN AS standardMin,
+               B.QC_MAX AS qcMax,
+               B.QC_MIN AS qcMin,
+               B.REMARK AS remark,
+               ISNULL(B.UDF026,'') AS UDF026
+        FROM PO_ARRIVAL_INSPECTION_D B
+                 LEFT OUTER JOIN PO_ARRIVAL_INSPECTION A ON B.PO_ARRIVAL_INSPECTION_ID = A.PO_ARRIVAL_INSPECTION_ID
+                 LEFT JOIN INSPECTION_ITEM ON INSPECTION_ITEM.INSPECTION_ITEM_ID = B.INSPECTION_ITEM_ID
+                 LEFT JOIN DEFECTIVE_REASONS ON DEFECTIVE_REASONS.DEFECTIVE_REASONS_ID = B.DEFECTIVE_REASONS_ID
+        WHERE A.DOC_NO = #{checkDocNo}
+    </select>
+    <select id="getBarCodeOperation" resultType="com.mgkj.vo.PurchaseReceiptStorageVo"></select>
+    <select id="ListDefectiveReasons" resultType="com.mgkj.vo.DefectiveReasons">
+        SELECT
+            DEFECTIVE_REASONS_ID defectReasonUuid,
+            DEFECTIVE_REASONS_CODE AS defectiveReasonsCode,
+            DESCRIPTION AS description,
+            DEFECTIVE_TYPE AS defectiveType
+        FROM DEFECTIVE_REASONS
+        WHERE
+            DESCRIPTION LIKE CONCAT('%', #{reason}, '%')
+           OR DEFECTIVE_REASONS_CODE LIKE CONCAT('%', #{reason}, '%')
+           OR DEFECTIVE_TYPE LIKE CONCAT('%',  #{reason}, '%')
+    </select>
+    <select id="getArrivalNo" resultType="com.mgkj.vo.PurchaseReceiptStorageVo">
+        SELECT
+        Z.UDF003 containerQty,
+        Z.UDF024 containerName,
+        CAST(CAST(Z.LONG AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.HIGH AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.WIDE AS FLOAT) AS VARCHAR(20)) AS containerDetail,
+        lot_att04 arrivalNo,
+        D.purchaseOrder,
+        deliveryNumber,
+        purchaseOrder docNo,
+        FORMAT(create_date, 'yyyyMMdd') docDate,
+        vendorCode supplierNo,
+        delivery supplierName,
+        item_no itemCode,
+        M.ITEM_NAME itemName,
+        B.ITEM_SPECIFICATION itemSpec,
+        W.WAREHOUSE_CODE warehouseCode,
+        Z.UDF021 binCode,
+        qty matchQty,
+        barcode,
+        B.UDF021 customerNo,
+        U.UNIT_CODE unitCode,
+        U.UNIT_NAME unitName,
+        consignee shjg
+        FROM bm_barcode_detail
+        LEFT JOIN deliveryNoteDetails D ON source_no = D.uuid
+        LEFT JOIN PURCHASE_ORDER A ON D.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+        LEFT JOIN PURCHASE_ORDER_D B ON D.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+        LEFT JOIN ITEM M ON B.ITEM_ID = M.ITEM_BUSINESS_ID
+        LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = M.ITEM_BUSINESS_ID AND A.REV_ORG_SOURCE_ID_ROid = Z.Owner_Org_ROid
+        LEFT JOIN UNIT U ON B.BUSINESS_UNIT_ID = UNIT_ID
+        LEFT JOIN PURCHASE_ORDER_SD SD ON B.PURCHASE_ORDER_D_ID = SD.PURCHASE_ORDER_D_ID
+        LEFT JOIN WAREHOUSE W ON SD.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN BIN ON BIN.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN SUPPLIER S ON A.SUPPLIER_ID = S.SUPPLIER_BUSINESS_ID
+        LEFT JOIN deliveryList SS ON SS.uuid = D.parentId
+        <where>
+        <if test="number!=null and number!=''">
+             barcode = #{number}
+        </if>
+        </where>
+    </select>
+
+
+    <!--插入LSMD_T中间表-->
+    <insert id="insertMiddleTable">
+        insert into LSMD_T (LSMD_T_ID, LSMD001, LSMD002, LSMD003, LSMD004, LSMD005, LSMD006, LSMD007,
+                            LSMD013, LSMD014, LSMD015, LSMD019, LSMD024, LSMD025, LSMD026, LSMD027, LSMD028, LSMD029,
+                            LSMD030, LSMD031,
+                            LSMD033, LSMD039, LSMD042, LSMD046, LSMD047, LSMD053, LSMD055, LSMD058, LSMD083, LSMD084,
+                            LSMD085, LSMD086,
+                            LSMDCRTDT, LSMDCRTID, LSMDENT, LSMDMODDT, LSMDMODID, LSMDOWNDP, LSMDOWNID, LSMDSITE,
+                            LSMDSTUS)
+        values (#{lsmdTId}, #{lsmd001},
+                #{lsmd002}, #{lsmd003}, #{lsmd004}, #{lsmd005}, #{lsmd006}, #{lsmd007}, #{lsmd013}, #{lsmd014},
+                #{lsmd015}, #{lsmd019}, #{lsmd024},
+                #{lsmd025}, #{lsmd026}, #{lsmd027}, #{lsmd028}, #{lsmd029}, #{lsmd030}, #{lsmd031}, #{lsmd033},
+                #{lsmd039}, #{lsmd042}, #{lsmd046},
+                #{lsmd047}, #{lsmd053}, #{lsmd055}, #{lsmd058}, #{lsmd083}, #{lsmd084}, #{lsmd085}, #{lsmd086},
+                #{lsmdcrtdt}, #{lsmdcrtid}, #{lsmdent},
+                #{lsmdmoddt}, #{lsmdmodid}, #{lsmdowndp}, #{lsmdownid}, #{lsmdsite}, #{lsmdstus})
+    </insert>
+    <insert id="PurchaseToStorageInsertMiddleTable">
+        insert into LSMD_T (LSMD_T_ID, LSMD001, LSMD002, LSMD003, LSMD004, LSMD005, LSMD006, LSMD007,
+                            LSMD013, LSMD014, LSMD015, LSMD019, LSMD024, LSMD025, LSMD026, LSMD027, LSMD028, LSMD029,
+                            LSMD030, LSMD031,
+                            LSMD033, LSMD039, LSMD042, LSMD046, LSMD047, LSMD053, LSMD055, LSMD058, LSMD083, LSMD084,
+                            LSMD085, LSMD086,
+                            LSMDCRTDT, LSMDCRTID, LSMDENT, LSMDMODDT, LSMDMODID, LSMDOWNDP, LSMDOWNID, LSMDSITE,
+                            LSMDSTUS)
+        values (#{lsmdTId}, #{lsmd001},
+                #{lsmd002}, #{lsmd003}, #{lsmd004}, #{lsmd005}, #{lsmd006}, #{lsmd007}, #{lsmd013}, #{lsmd014},
+                #{lsmd015}, #{lsmd019}, #{lsmd024},
+                #{lsmd025}, #{lsmd026}, #{lsmd027}, #{lsmd028}, #{lsmd029}, #{lsmd030}, #{lsmd031}, #{lsmd033},
+                #{lsmd039}, #{lsmd042}, #{lsmd046},
+                #{lsmd047}, #{lsmd053}, #{lsmd055}, #{lsmd058}, #{lsmd083}, #{lsmd084}, #{lsmd085}, #{lsmd086},
+                #{lsmdcrtdt}, #{lsmdcrtid}, #{lsmdent},
+                #{lsmdmoddt}, #{lsmdmodid}, #{lsmdowndp}, #{lsmdownid}, #{lsmdsite}, #{lsmdstus})
+
+
+    </insert>
+    <insert id="insertMiddleTable2">
+        insert into LSMD_T (
+            LSMD_T_ID, LSMD001, LSMD002, LSMD003, LSMD004, LSMD005, LSMD006, LSMD007, LSMD008, LSMD010,
+            LSMD013, LSMD014, LSMD015, LSMD019, LSMD024, LSMD025, LSMD026, LSMD027, LSMD028, LSMD029,
+            LSMD030, LSMD031, LSMD033, LSMD037, LSMD039, LSMD042, LSMD045, LSMD046, LSMD047, LSMD053,
+            LSMD054, LSMD055, LSMD058, LSMD081, LSMD083, LSMD084, LSMD085, LSMD086, LSMD906, LSMD907,
+            LSMDCRTDT, LSMDCRTID, LSMDENT, LSMDMODDT, LSMDMODID, LSMDOWNDP, LSMDOWNID, LSMDSITE,
+            LSMDSTUS, LSMD036
+        ) values (
+                     #{lsmdTId}, #{lsmd001}, #{lsmd002}, #{lsmd003}, #{lsmd004}, #{lsmd005}, #{lsmd006}, #{lsmd007},
+                     #{lsmd008}, #{lsmd010}, #{lsmd013}, #{lsmd014}, #{lsmd015}, #{lsmd019}, #{lsmd024},
+                     #{lsmd025}, #{lsmd026}, #{lsmd027}, #{lsmd028}, #{lsmd029}, #{lsmd030}, #{lsmd031}, #{lsmd033},
+                     #{lsmd037}, #{lsmd039}, #{lsmd042}, #{lsmd045}, #{lsmd046}, #{lsmd047}, #{lsmd053},
+                     #{lsmd054}, #{lsmd055}, #{lsmd058}, #{lsmd081}, #{lsmd083}, #{lsmd084}, #{lsmd085}, #{lsmd086},
+                     #{lsmd906}, #{lsmd907}, #{lsmdcrtdt}, #{lsmdcrtid}, #{lsmdent}, #{lsmdmoddt}, #{lsmdmodid},
+                     #{lsmdowndp}, #{lsmdownid}, #{lsmdsite}, #{lsmdstus}, #{lsmd036}
+                 )
+    </insert>
+    <insert id="insertMiddleTable3">
+        insert into LSMD_T (
+            LSMD_T_ID, LSMD001, LSMD002, LSMD003, LSMD004, LSMD005, LSMD006, LSMD007, LSMD008, LSMD010,
+            LSMD013, LSMD014, LSMD015, LSMD019, LSMD024, LSMD025, LSMD026, LSMD027, LSMD028, LSMD029,
+            LSMD030, LSMD033, LSMD037, LSMD038,LSMD039, LSMD042, LSMD045, LSMD046, LSMD047,LSMD048, LSMD053,
+            LSMD054, LSMD055, LSMD058, LSMD081, LSMD083, LSMD084, LSMD085, LSMD086, LSMD906, LSMD907,
+            LSMDCRTDT, LSMDCRTID, LSMDENT, LSMDMODDT, LSMDMODID, LSMDOWNDP, LSMDOWNID, LSMDSITE,
+            LSMDSTUS, LSMD036
+        ) values (
+                     #{lsmdTId}, #{lsmd001}, #{lsmd002}, #{lsmd003}, #{lsmd004}, #{lsmd005}, #{lsmd006}, #{lsmd007},
+                     #{lsmd008}, #{lsmd010}, #{lsmd013}, #{lsmd014}, #{lsmd015}, #{lsmd019}, #{lsmd024},
+                     #{lsmd025}, #{lsmd026}, #{lsmd027}, #{lsmd028}, #{lsmd029}, #{lsmd030},  #{lsmd033},
+                     #{lsmd037}, #{lsmd038},#{lsmd039}, #{lsmd042}, #{lsmd045}, #{lsmd046}, #{lsmd047},#{lsmd048}, #{lsmd053},
+                     #{lsmd054}, #{lsmd055}, #{lsmd058}, #{lsmd081}, #{lsmd083}, #{lsmd084}, #{lsmd085}, #{lsmd086},
+                     #{lsmd906}, #{lsmd907}, #{lsmdcrtdt}, #{lsmdcrtid}, #{lsmdent}, #{lsmdmoddt}, #{lsmdmodid},
+                     #{lsmdowndp}, #{lsmdownid}, #{lsmdsite}, #{lsmdstus}, #{lsmd036}
+                 )
+    </insert>
+    <insert id="inserinvBarcodeOperation" parameterType="java.util.List">
+        INSERT INTO WMS..inv_barcode_operation (
+        id, doc_org_no, org_no, warehouse_no, cell_no, item_no, barcode,
+        create_by, create_date, update_by, create_flag, lot_att02, lot_att03,
+        lot_att04, lot_att05, lot_att06
+        )
+        VALUES
+        <foreach collection="invBarcodeOperationList" item="item" separator=",">
+            (
+            #{item.id}, #{item.docOrgNo}, #{item.orgNo}, #{item.warehouseNo},
+            #{item.cellNo}, #{item.itemNo}, #{item.barcode}, #{item.createBy},
+            #{item.createDate}, #{item.updateBy}, #{item.createFlag},
+            #{item.lotAtt02}, #{item.lotAtt03}, #{item.lotAtt04},
+            #{item.lotAtt05}, #{item.lotAtt06}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getAttachments" resultType="com.mgkj.entity.Attachment">
+        SELECT
+            DisplayName fileName,
+            CONVERT(VARCHAR(MAX), CONVERT(VARBINARY(MAX), A.Content), 2) AS content
+        FROM INSPECTION_PLAN P
+         LEFT JOIN ITEM ON P.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+                CROSS APPLY (
+            SELECT LTRIM(RTRIM(Split.GUID.value('.', 'NVARCHAR(MAX)'))) AS GUID
+            FROM (
+            SELECT CAST(<![CDATA[
+                    '<x>' + REPLACE(
+                            SUBSTRING(
+                                    CONVERT(NVARCHAR(MAX), P.Attachments),
+                                    CHARINDEX(':', CONVERT(NVARCHAR(MAX), P.Attachments)) + 1,
+                                    LEN(CONVERT(NVARCHAR(MAX), P.Attachments))
+                            ),
+                            ';', '</x><x>'
+                    ) + '</x>'
+            ]]> AS XML) AS String
+            ) AS A
+            CROSS APPLY A.String.nodes('/x') AS Split(GUID)
+            ) AS Split
+            LEFT JOIN BigObjectInfo B ON Split.GUID = B.BigObjectInfoId
+            LEFT JOIN ContentBlock A ON A.ContentBlockId = B.Code
+        WHERE ITEM.ITEM_CODE = #{itemCode}
+    </select>
+    <select id="ListPurchaseArrivalWaitCheckHeader" resultType="com.mgkj.vo.PurchaseArrivalCheckHeader">
+        SELECT
+        A.CreateDate,
+        RESULT_STATUS,
+        A.PO_ARRIVAL_INSPECTION_ID inspectionUuid,
+        PLANT.PLANT_CODE AS plantCode,
+        DOC.DOC_NAME AS checkName,
+        A.DOC_NO AS checkDocNo,
+        D.DOC_NO AS arrivalDocNo,
+        C.PURCHASE_ARRIVAL_D_ID AS arrivalDUuid,
+        C.SequenceNumber AS arrivalDSequenceNumber,
+        SUPPLIER.SUPPLIER_CODE AS supplierCode,
+        SUPPLIER.SUPPLIER_NAME AS supplierName,
+        ADMIN_UNIT.ADMIN_UNIT_NAME AS departmentName,
+        EMPLOYEE.EMPLOYEE_NAME AS employeeName,
+        D.SUPPLIER_ORDER_NO AS receiptNo,
+        CONVERT(varchar(10), CONVERT(datetime, A.CreateDate), 120) AS createDate,
+        CONVERT(varchar(10), CONVERT(datetime, D.DOC_DATE), 120) AS receiptDate,
+        ITEM.ITEM_CODE AS itemCode,
+        C.ITEM_DESCRIPTION AS itemName,
+        C.ITEM_SPECIFICATION AS itemSpec,
+        ITEM_FEATURE.ITEM_FEATURE_ID AS itemFeatureId,
+        ITEM_LOT.LOT_CODE AS lotCode,
+        ITEM_LOT.LOT_DESCRIPTION AS lotDescription,
+        ITEM_LOT.EFFECTIVE_DATE AS effectiveDate,
+        ITEM_LOT.INEFFECTIVE_DATE AS ineffectiveDate,
+        A.STRICTNESS_DEGREE AS strictnessDegree,
+        A.INSPECTION_QTY AS inspectionQty,
+        A.ACCEPTABLE_QTY AS acceptableQty,
+        A.UNQUALIFIED_QTY AS unqualifiedQty,
+        A.DESTROYED_QTY AS destroyedQty,
+        A.DECISION AS decision,
+        A.REINSPECTION AS reinspection,
+        A.RESULT_STATUS AS resultStatus,
+        A.DECISION_DESCRIPTION AS decisionDescription,
+        Y.UDF021 customerNum,
+        CASE
+        WHEN A.UDF026 IS NULL OR A.UDF026 = '' THEN 'false'
+        ELSE A.UDF026
+        END AS UDF026
+        FROM PO_ARRIVAL_INSPECTION AS A
+        LEFT JOIN PO_ARRIVAL_INSPECTION_D AS B ON B.PO_ARRIVAL_INSPECTION_D_ID = A.PO_ARRIVAL_INSPECTION_ID
+        LEFT JOIN PURCHASE_ARRIVAL_D AS C ON C.PURCHASE_ARRIVAL_D_ID = A.SOURCE_ID
+        LEFT JOIN PURCHASE_ARRIVAL AS D ON D.PURCHASE_ARRIVAL_ID = C.PURCHASE_ARRIVAL_ID
+        LEFT JOIN PURCHASE_ORDER_SD Z ON Z.PURCHASE_ORDER_SD_ID=C.SOURCE_ID_ROid
+        LEFT JOIN PURCHASE_ORDER_D Y ON Y.PURCHASE_ORDER_D_ID=Z.PURCHASE_ORDER_D_ID
+        LEFT JOIN PURCHASE_ORDER E ON E.PURCHASE_ORDER_ID =Y.PURCHASE_ORDER_ID
+        LEFT JOIN SUPPLIER ON SUPPLIER.SUPPLIER_BUSINESS_ID = D.SUPPLIER_ID
+        LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = C.ITEM_ID
+        LEFT JOIN UNIT ON UNIT.UNIT_ID = C.BUSINESS_UNIT_ID
+        LEFT JOIN PLANT ON PLANT.PLANT_ID = A.Owner_Org_ROid
+        LEFT JOIN DOC ON DOC.DOC_ID = A.DOC_ID
+        LEFT JOIN ITEM_FEATURE ON ITEM_FEATURE.ITEM_FEATURE_ID = A.ITEM_FEATURE_ID
+        LEFT JOIN ITEM_LOT ON ITEM_LOT.ITEM_LOT_ID = A.ITEM_LOT_ID
+        LEFT JOIN INSPECTION_ITEM ON INSPECTION_ITEM.INSPECTION_ITEM_ID = B.INSPECTION_ITEM_ID
+        LEFT JOIN DEFECTIVE_REASONS ON DEFECTIVE_REASONS.DEFECTIVE_REASONS_ID = B.DEFECTIVE_REASONS_ID
+        LEFT OUTER JOIN ADMIN_UNIT ON ADMIN_UNIT.ADMIN_UNIT_ID = A.Owner_Dept
+        LEFT OUTER JOIN EMPLOYEE ON EMPLOYEE.EMPLOYEE_ID = A.Owner_Emp
+        WHERE
+        <if test="resultStatusList != null and resultStatusList.size() > 0">
+             A.RESULT_STATUS IN
+            <foreach collection="resultStatusList" item="status" open="(" separator="," close=")">
+                #{status}
+            </foreach>
+        </if>
+        <if test="dto.start != null and dto.start != '' and dto.end != null and dto.end != ''">
+            AND CONVERT(varchar(10), CONVERT(datetime, A.CreateDate), 120) BETWEEN #{dto.start} AND #{dto.end}
+        </if>
+        <if test="dto.shjg != null and dto.shjg != ''">
+            AND PLANT.PLANT_CODE = #{dto.shjg}
+        </if>
+        <if test="dto.supplierName != null and dto.supplierName != ''">
+            AND SUPPLIER.SUPPLIER_NAME LIKE CONCAT('%', #{dto.supplierName}, '%')
+        </if>
+        <if test="dto.checkName != null and dto.checkName != ''">
+            AND DOC.DOC_NAME LIKE CONCAT('%', #{dto.checkName}, '%')
+        </if>
+        <if test="dto.checkDocNo != null and dto.checkDocNo != ''">
+            AND A.DOC_NO LIKE CONCAT('%', #{dto.checkDocNo}, '%')
+        </if>
+        <if test="dto.arrivalDocNo != null and dto.arrivalDocNo != ''">
+            AND D.DOC_NO LIKE CONCAT('%', #{dto.arrivalDocNo}, '%')
+        </if>
+</select>
+    <select id="selectOddNumber" resultType="com.mgkj.vo.WaitToStorageVo">
+        SELECT
+            C.DOC_NO AS oddNumber,C.SUPPLIER_FULL_NAME AS supplierFullName,D.UDF021 AS customerNumber,WAREHOUSE_CODE warehouseCode
+        FROM PO_ARRIVAL_INSPECTION A
+                 LEFT JOIN PURCHASE_ARRIVAL_D B ON B.PURCHASE_ARRIVAL_D_ID = A.SOURCE_ID
+                 LEFT JOIN WAREHOUSE W ON B.WAREHOUSE_ID = W.WAREHOUSE_ID
+                 LEFT JOIN PURCHASE_ORDER C ON B.PURCHASE_ORDER_ID = C.PURCHASE_ORDER_ID
+                 LEFT JOIN PURCHASE_ORDER_D D ON D.PURCHASE_ORDER_ID =  C.PURCHASE_ORDER_ID AND A.ITEM_ID = D.ITEM_ID
+        WHERE A.PO_ARRIVAL_INSPECTION_ID = #{inspectionUuid}  AND A.ApproveStatus = 'Y' AND A.DECISION = '1'
+
+    </select>
+    <select id="getWaitToInspected" resultType="com.mgkj.vo.WaitToInspectedVo">
+        SELECT DOC_NO deliveryNo,FORMAT(DOC_DATE, 'yyyy-MM-dd') deliveryDate,SUPPLIER_FULL_NAME supplierName,SUPPLIER_ADDR_NAME
+        FROM PURCHASE_ARRIVAL
+        WHERE DOC_NO = #{docNo}
+    </select>
+    <select id="getWaitToInspectedD" resultType="com.mgkj.vo.PurchaseArrivalDVo">
+        SELECT DISTINCT B.SequenceNumber xh,D.UDF021 AS customerNo,C.DOC_NO AS purchaseNo,ITEM.ITEM_CODE itemCode,ITEM.ITEM_NAME itemName,WAREHOUSE_CODE warehouseCode,WAREHOUSE_NAME warehouseName
+        FROM PURCHASE_ARRIVAL A
+                 LEFT JOIN PURCHASE_ARRIVAL_D B ON A.PURCHASE_ARRIVAL_ID = B.PURCHASE_ARRIVAL_ID
+                 LEFT JOIN WAREHOUSE W ON B.WAREHOUSE_ID = W.WAREHOUSE_ID
+                 LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = B.ITEM_ID
+                 LEFT JOIN PURCHASE_ORDER C ON B.PURCHASE_ORDER_ID = C.PURCHASE_ORDER_ID
+                 LEFT JOIN PURCHASE_ORDER_D D ON D.PURCHASE_ORDER_ID =  C.PURCHASE_ORDER_ID
+        WHERE A.DOC_NO = #{docNo}
+        ORDER BY B.SequenceNumber
+    </select>
+
+
+    <select id="getDeliveryUuid" resultType="java.lang.String">
+        SELECT SS.uuid
+        FROM deliveryList SS
+                 LEFT JOIN deliveryNoteDetails D ON SS.uuid = D.parentId
+        WHERE purchaseOrder LIKE CONCAT('%', #{docNo}, '%')
+    </select>
+    <select id="getArrivalNoByChildlist" resultType="com.mgkj.vo.PurchaseReceiptStorageVo">
+        SELECT
+        Z.UDF003 containerQty,
+        Z.UDF024 containerName,
+        CAST(CAST(Z.LONG AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.HIGH AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.WIDE AS FLOAT) AS VARCHAR(20)) AS containerDetail,
+        lot_att04 arrivalNo,
+        D.purchaseOrder,
+        deliveryNumber,
+        purchaseOrder docNo,
+        lot_att04 arrivalNo,
+        FORMAT(create_date, 'yyyyMMdd') docDate,
+        vendorCode supplierNo,
+        delivery supplierName,
+        item_no itemCode,
+        M.ITEM_NAME itemName,
+        B.ITEM_SPECIFICATION itemSpec,
+        W.WAREHOUSE_CODE warehouseCode,
+        Z.UDF021 binCode,
+        qty matchQty,
+        barcode,
+        B.UDF021 customerNo,
+        U.UNIT_CODE unitCode,
+        U.UNIT_NAME unitName,
+        consignee shjg
+        FROM bm_barcode_detail
+        LEFT JOIN deliveryNoteDetails D ON source_no = D.uuid
+        LEFT JOIN PURCHASE_ORDER A ON D.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+        LEFT JOIN PURCHASE_ORDER_D B ON D.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+        LEFT JOIN ITEM M ON B.ITEM_ID = M.ITEM_BUSINESS_ID
+        LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = M.ITEM_BUSINESS_ID AND A.REV_ORG_SOURCE_ID_ROid = Z.Owner_Org_ROid
+        LEFT JOIN UNIT U ON B.BUSINESS_UNIT_ID = UNIT_ID
+        LEFT JOIN PURCHASE_ORDER_SD SD ON B.PURCHASE_ORDER_D_ID = SD.PURCHASE_ORDER_D_ID
+        LEFT JOIN WAREHOUSE W ON SD.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN BIN ON BIN.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN SUPPLIER S ON A.SUPPLIER_ID = S.SUPPLIER_BUSINESS_ID
+        LEFT JOIN deliveryList SS ON SS.uuid = D.parentId
+        WHERE
+        barcode IN
+        <foreach item="item" collection="childList" open="(" separator="," close=")">
+            #{item}
+        </foreach>;
+    </select>
+
+    <select id="getDeliveryUuidsByDocNos" resultType="java.lang.String">
+        SELECT DISTINCT SS.uuid
+        FROM deliveryList SS
+        LEFT JOIN deliveryNoteDetails D ON SS.uuid = D.parentId
+        WHERE
+        <foreach collection="docNoList" item="docNo" separator=" OR ">
+            D.purchaseOrder LIKE CONCAT('%',#{docNo}, '%')
+        </foreach>
+    </select>
+    <select id="ListPurchaseReceiptStorageWaitCheck" resultType="com.mgkj.vo.PurchaseReceiptStorageWaitCheckVo">
+        SELECT DISTINCT
+        A.DOC_NO arrivalNo,
+        C.UDF021 customerNum,
+        SUPPLIER.SUPPLIER_CODE AS supplierCode,
+        SUPPLIER.SUPPLIER_NAME AS supplierName,
+        B.INSPECTION_STATUS inspectionStatus,
+        CONVERT ( VARCHAR ( 10 ), CONVERT ( datetime, A.DOC_DATE ), 120 ) AS docDate
+        FROM
+        PURCHASE_ARRIVAL A
+        LEFT JOIN PURCHASE_ARRIVAL_D B ON A.PURCHASE_ARRIVAL_ID = B.PURCHASE_ARRIVAL_ID
+        LEFT JOIN PURCHASE_ORDER_D C ON C.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+        LEFT JOIN SUPPLIER ON SUPPLIER.SUPPLIER_BUSINESS_ID = A.SUPPLIER_ID
+        LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = B.ITEM_ID
+        LEFT JOIN UNIT ON UNIT.UNIT_ID = B.BUSINESS_UNIT_ID
+        <where>
+            <if test="start!=null and start!='' and end!=null and end!=''">
+                AND CONVERT(varchar(10), CONVERT(datetime, A.CreateDate), 120) BETWEEN  #{start} AND #{end}
+            </if>
+            <if test="inspectionStatus!=null and inspectionStatus!=''">
+                AND B.INSPECTION_STATUS = #{inspectionStatus}
+            </if>
+            <if test="receiptClose!=null and receiptClose!=''">
+                AND B.RECEIPT_CLOSE = #{receiptClose}
+            </if>
+        </where>
+        ORDER BY A.DOC_DATE DESC
+    </select>
+    <select id="ListPurchaseReceiptStorageWaitCheckItem"
+            resultType="com.mgkj.vo.PurchaseReceiptStorageWaitCheckItemVo">
+        SELECT
+            I.ITEM_CODE itemCode,
+            I.ITEM_NAME itemName,
+            I.ITEM_SPECIFICATION itemSpec
+        FROM
+            PURCHASE_ARRIVAL A
+                LEFT JOIN PURCHASE_ARRIVAL_D B ON A.PURCHASE_ARRIVAL_ID = B.PURCHASE_ARRIVAL_ID
+                LEFT JOIN ITEM I ON I.ITEM_BUSINESS_ID = B.ITEM_ID
+        WHERE A.DOC_NO = #{arrivalNo}
+    </select>
+    <select id="getInspectorByWarehouse" resultType="java.lang.String">
+        SELECT DISTINCT
+            Q.帐号
+        FROM WMS..warehouseStaff W
+                 LEFT JOIN QYWX Q ON Q.姓名 = W.employeeName
+        WHERE W.type = 'QC' AND W.warehouseCode IN
+        <foreach collection="warehouseList" item="warehouseCode" index="index" open="(" separator=", " close=")">
+            #{warehouseCode}
+        </foreach>
+    </select>
+    <select id="getCGQWByWarehouse" resultType="java.lang.String">
+        SELECT DISTINCT
+        Q.帐号
+        FROM WMS..warehouseStaff W
+        LEFT JOIN QYWX Q ON Q.姓名 = W.employeeName
+        WHERE W.type = 'CG' AND W.warehouseCode IN
+        <foreach collection="warehouseList" item="warehouseCode" index="index" open="(" separator=", " close=")">
+            #{warehouseCode}
+        </foreach>
+    </select>
+    <select id="selectAllInspectionHeadersByDocNoAndItemCode"
+            resultType="com.mgkj.vo.PurchaseArrivalCheckHeader">
+        SELECT
+            A.PO_ARRIVAL_INSPECTION_ID inspectionUuid,
+            PLANT.PLANT_CODE AS plantCode,
+            DOC.DOC_NAME AS checkName,
+            A.DOC_NO AS checkDocNo,
+            D.DOC_NO AS arrivalDocNo,
+            C.PURCHASE_ARRIVAL_D_ID AS arrivalDUuid,
+            C.SequenceNumber AS arrivalDSequenceNumber,
+            SUPPLIER.SUPPLIER_CODE AS supplierCode,
+            SUPPLIER.SUPPLIER_NAME AS supplierName,
+            ADMIN_UNIT.ADMIN_UNIT_NAME AS departmentName,
+            EMPLOYEE.EMPLOYEE_NAME AS employeeName,
+            D.SUPPLIER_ORDER_NO AS receiptNo,
+            CONVERT(varchar(10), CONVERT(datetime, A.CreateDate), 120) AS createDate,
+            CONVERT(varchar(10), CONVERT(datetime, D.DOC_DATE), 120) AS receiptDate,
+            ITEM.ITEM_CODE AS itemCode,
+            C.ITEM_DESCRIPTION AS itemName,
+            C.ITEM_SPECIFICATION AS itemSpec,
+            ITEM_FEATURE.ITEM_FEATURE_ID AS itemFeatureId,
+            ITEM_LOT.LOT_CODE AS lotCode,
+            ITEM_LOT.LOT_DESCRIPTION AS lotDescription,
+            ITEM_LOT.EFFECTIVE_DATE AS effectiveDate,
+            ITEM_LOT.INEFFECTIVE_DATE AS ineffectiveDate,
+            A.INSPECTION_QTY AS inspectionQty,
+            A.STRICTNESS_DEGREE AS strictnessDegree,
+            A.ACCEPTABLE_QTY AS acceptableQty,
+            A.UNQUALIFIED_QTY AS unqualifiedQty,
+            A.DESTROYED_QTY AS destroyedQty,
+            A.DECISION AS decision,
+            A.REINSPECTION AS reinspection,
+            A.RESULT_STATUS AS resultStatus,
+            A.DECISION_DESCRIPTION AS decisionDescription,
+            QC_TIMES AS qcTimes,
+            CASE
+                WHEN A.UDF026 IS NULL OR A.UDF026 = '' THEN 'true'
+                ELSE A.UDF026
+                END AS UDF026
+        FROM PO_ARRIVAL_INSPECTION AS A
+                 LEFT JOIN PO_ARRIVAL_INSPECTION_D AS B ON B.PO_ARRIVAL_INSPECTION_D_ID = A.PO_ARRIVAL_INSPECTION_ID
+                 LEFT JOIN PURCHASE_ARRIVAL_D AS C ON C.PURCHASE_ARRIVAL_D_ID = A.SOURCE_ID
+                 LEFT JOIN PURCHASE_ARRIVAL AS D ON D.PURCHASE_ARRIVAL_ID = C.PURCHASE_ARRIVAL_ID
+                 LEFT JOIN SUPPLIER ON SUPPLIER.SUPPLIER_BUSINESS_ID = D.SUPPLIER_ID
+                 LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = C.ITEM_ID
+                 LEFT JOIN UNIT ON UNIT.UNIT_ID = C.BUSINESS_UNIT_ID
+                 LEFT JOIN PLANT ON PLANT.PLANT_ID = A.Owner_Org_ROid
+                 LEFT JOIN DOC ON DOC.DOC_ID = A.DOC_ID
+                 LEFT JOIN ITEM_FEATURE ON ITEM_FEATURE.ITEM_FEATURE_ID = A.ITEM_FEATURE_ID
+                 LEFT JOIN ITEM_LOT ON ITEM_LOT.ITEM_LOT_ID = A.ITEM_LOT_ID
+                 LEFT JOIN INSPECTION_ITEM ON INSPECTION_ITEM.INSPECTION_ITEM_ID = B.INSPECTION_ITEM_ID
+                 LEFT JOIN DEFECTIVE_REASONS ON DEFECTIVE_REASONS.DEFECTIVE_REASONS_ID = B.DEFECTIVE_REASONS_ID
+                 LEFT OUTER JOIN ADMIN_UNIT ON ADMIN_UNIT.ADMIN_UNIT_ID = A.Owner_Dept
+                 LEFT OUTER JOIN EMPLOYEE ON EMPLOYEE.EMPLOYEE_ID = A.Owner_Emp
+        WHERE D.DOC_NO = #{arrivalDocNo}
+          AND ITEM.ITEM_CODE = #{itemCode}
+
+
+
+    </select>
+    <select id="ListSupplierCode" resultType="com.mgkj.vo.Supplier">
+        SELECT
+            SUPPLIER.SUPPLIER_CODE AS supplierCode,
+            SUPPLIER.SUPPLIER_NAME AS supplierName
+        FROM SUPPLIER
+        <where>
+        <if test="supplierName!=null and supplierName!='' ">
+            SUPPLIER.SUPPLIER_NAME LIKE concat('%',#{supplierName},'%')
+        </if>
+        </where>
+
+
+    </select>
+
+    <select id="getContainerBarcodeByChildBarcode" resultType="java.lang.String">
+        SELECT A.barcode FROM bm_barcode_detail A
+        LEFT JOIN bm_barcode_detail B on B.standard_col10 = A.id
+        WHERE A.bar_type = 5 AND B.barcode = #{barcode}
+    </select>
+    <select id="getArrivalInfo" resultType="com.mgkj.vo.PRSVo">
+        SELECT DISTINCT
+        A.DOC_NO arrivalNo,
+        SUPPLIER.SUPPLIER_CODE AS supplierCode,
+        SUPPLIER.SUPPLIER_NAME AS supplierName,
+        CONVERT ( VARCHAR ( 10 ), CONVERT ( datetime, A.DOC_DATE ), 120 ) AS docDate
+        FROM PURCHASE_ARRIVAL A
+        LEFT JOIN SUPPLIER ON SUPPLIER.SUPPLIER_BUSINESS_ID = A.SUPPLIER_ID
+        WHERE A.PURCHASE_ARRIVAL_ID IN (SELECT PURCHASE_ARRIVAL_ID FROM PURCHASE_ARRIVAL_D WHERE INSPECTION_STATUS = '4' AND RECEIPT_CLOSE = '0' )
+        <if test="start!=null and start!='' and end!=null and end!=''">
+            AND CONVERT(varchar(10), CONVERT(datetime, A.CreateDate), 120) BETWEEN  #{start} AND #{end}
+        </if>
+        ORDER BY CONVERT ( VARCHAR ( 10 ), CONVERT ( datetime, A.DOC_DATE ), 120 ) DESC
+    </select>
+    <select id="getArrivalInfoD" resultType="com.mgkj.dto.PRSDVo">
+        SELECT			C.UDF021 customerNum,
+                          D.DOC_NO purchaseNo,
+                          I.ITEM_CODE itemCode,
+                          I.ITEM_NAME itemName,
+                          I.ITEM_SPECIFICATION itemSpec,
+                          B.BUSINESS_QTY qty,
+                          UNIT.UNIT_NAME unitName,
+                          W.WAREHOUSE_NAME warehouseName
+        FROM
+            PURCHASE_ARRIVAL A
+                LEFT JOIN PURCHASE_ARRIVAL_D B ON A.PURCHASE_ARRIVAL_ID = B.PURCHASE_ARRIVAL_ID
+                LEFT JOIN PURCHASE_ORDER_D C ON C.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+                LEFT JOIN PURCHASE_ORDER D ON B.PURCHASE_ORDER_ID = D.PURCHASE_ORDER_ID
+                LEFT JOIN ITEM I ON I.ITEM_BUSINESS_ID = B.ITEM_ID
+                LEFT JOIN UNIT ON UNIT.UNIT_ID = B.BUSINESS_UNIT_ID
+                LEFT JOIN WAREHOUSE W ON W.WAREHOUSE_ID = B.WAREHOUSE_ID
+        WHERE A.DOC_NO = #{arrivalNo} AND INSPECTION_STATUS = '4' AND RECEIPT_CLOSE = '0'
+    </select>
+
+    <select id="selectArrivalBarcode" resultType="java.lang.String">
+        SELECT barcode FROM bm_barcode_detail WHERE lot_att04 = #{arrivalDocNo} AND item_no = #{itemCode}
+    </select>
+    <select id="getWmsCheckByArrivalDocNo" resultType="com.mgkj.vo.WmsMeasurementValue">
+        SELECT
+            A.checkDocNo,
+            B.id,
+            C.wpid_id,
+            C.udf01,
+            C.udf02,
+            C.udf03
+        FROM WMS_PO_ARRIVAL_INSPECTION A
+                 LEFT JOIN WMS_PO_ARRIVAL_INSPECTION_D B ON A.checkDocNo = B.checkDocNo
+                 LEFT JOIN WMS_PO_ARRIVAL_INSPECTION_D_MEASUREMENT_VALUE C ON C.wpid_id = B.id
+        WHERE
+            B.id= #{checkDUuid}
+          --A.checkDocNo = 'Q100-202506230056'
+          AND (
+                C.udf01 IS NOT NULL
+                OR C.udf02 IS NOT NULL
+                OR C.udf03 IS NOT NULL
+            );
+
+    </select>
+    <select id="selectDeOrBa" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM deliveryList WHERE deliveryNumber = #{number}
+    </select>
+    <select id="getPurcharsedeliveryBarcode" resultType="com.mgkj.vo.PurchaseReceiptStorageVo">
+        SELECT DISTINCT
+        Z.UDF003 containerQty,
+        Z.UDF024 containerName,
+        CAST(CAST(Z.LONG AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.HIGH AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.WIDE AS FLOAT) AS VARCHAR(20)) AS containerDetail,
+        D.purchaseOrder,
+        deliveryNumber,
+        purchaseOrder docNo,
+        ISNULL(lot_att04,'') arrivalNo,
+        ISNULL(lot_att30,'') lot_att30,
+        FORMAT(create_date, 'yyyyMMdd') docDate,
+        vendorCode supplierNo,
+        delivery supplierName,
+        item_no itemCode,
+        M.ITEM_NAME itemName,
+        M.ITEM_SPECIFICATION itemSpec,
+        W.WAREHOUSE_CODE warehouseCode,
+        ISNULL(Z.UDF021,'') binCode,
+        qty matchQty,
+        barcode,
+        B.UDF021 customerNo,
+        bm_barcode_detail.unit_no unitCode,
+        bm_barcode_detail.unit_name unitName,
+        consignee shjg
+        FROM bm_barcode_detail
+        LEFT JOIN deliveryNoteDetails D ON source_no = D.uuid
+        LEFT JOIN PURCHASE_ORDER A ON D.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+        LEFT JOIN PURCHASE_ORDER_D B ON D.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+        LEFT JOIN ITEM M ON B.ITEM_ID = M.ITEM_BUSINESS_ID
+        LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = M.ITEM_BUSINESS_ID AND A.REV_ORG_SOURCE_ID_ROid=Z.Owner_Org_ROid
+        LEFT JOIN UNIT U ON B.BUSINESS_UNIT_ID = UNIT_ID
+        LEFT JOIN PURCHASE_ORDER_SD SD ON B.PURCHASE_ORDER_D_ID = SD.PURCHASE_ORDER_D_ID
+        LEFT JOIN WAREHOUSE W ON SD.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN BIN ON BIN.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN SUPPLIER S ON A.SUPPLIER_ID = S.SUPPLIER_BUSINESS_ID
+        LEFT JOIN deliveryList SS ON SS.uuid = D.parentId
+        WHERE bar_type = 4 AND lot_att30 = '2' AND (lot_att08 = '1' OR lot_att08 IS NULL)
+        <if test="number!=null and number!=''">
+            and deliveryNumber = #{number}
+        </if>
+    </select>
+    <select id="getPurcharseByBarcode" resultType="com.mgkj.vo.PurchaseReceiptStorageVo">
+        SELECT DISTINCT
+        D.parentId,
+        bar_type,
+        Z.UDF003 containerQty,
+        Z.UDF024 containerName,
+        CAST(CAST(Z.LONG AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.HIGH AS FLOAT) AS VARCHAR(20)) + '*' +
+        CAST(CAST(Z.WIDE AS FLOAT) AS VARCHAR(20)) AS containerDetail,
+        D.purchaseOrder,
+        deliveryNumber,
+        purchaseOrder docNo,
+        ISNULL(lot_att04,'') arrivalNo,
+        ISNULL(lot_att30,'') lot_att30,
+        FORMAT(create_date, 'yyyyMMdd') docDate,
+        vendorCode supplierNo,
+        delivery supplierName,
+        item_no itemCode,
+        M.ITEM_NAME itemName,
+        M.ITEM_SPECIFICATION itemSpec,
+        W.WAREHOUSE_CODE warehouseCode,
+        ISNULL(Z.UDF021,'') binCode,
+        qty matchQty,
+        barcode,
+        B.UDF021 customerNo,
+        bm_barcode_detail.unit_no unitCode,
+        bm_barcode_detail.unit_name unitName,
+        consignee shjg
+        FROM bm_barcode_detail
+        LEFT JOIN deliveryNoteDetails D ON source_no = D.uuid
+        LEFT JOIN PURCHASE_ORDER A ON D.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+        LEFT JOIN PURCHASE_ORDER_D B ON D.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+        LEFT JOIN ITEM M ON B.ITEM_ID = M.ITEM_BUSINESS_ID
+        LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = M.ITEM_BUSINESS_ID AND A.REV_ORG_SOURCE_ID_ROid=Z.Owner_Org_ROid
+        LEFT JOIN UNIT U ON B.BUSINESS_UNIT_ID = UNIT_ID
+        LEFT JOIN PURCHASE_ORDER_SD SD ON B.PURCHASE_ORDER_D_ID = SD.PURCHASE_ORDER_D_ID
+        LEFT JOIN WAREHOUSE W ON SD.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN BIN ON BIN.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN SUPPLIER S ON A.SUPPLIER_ID = S.SUPPLIER_BUSINESS_ID
+        LEFT JOIN deliveryList SS ON SS.uuid = D.parentId
+        WHERE 1=1 AND lot_att30 IS NULL
+        <if test="number!=null and number!=''">
+            and barcode = #{number}
+        </if>
+        ORDER BY item_no
+    </select>
+    <select id="getPurcharseByChildBarcode" resultType="com.mgkj.vo.PurchaseReceiptStorageVo">
+        SELECT DISTINCT
+            standard_col10,
+            D.parentId,
+            bar_type,
+            Z.UDF003 containerQty,
+            Z.UDF024 containerName,
+            CAST(CAST(Z.LONG AS FLOAT) AS VARCHAR(20)) + '*' +
+            CAST(CAST(Z.HIGH AS FLOAT) AS VARCHAR(20)) + '*' +
+            CAST(CAST(Z.WIDE AS FLOAT) AS VARCHAR(20)) AS containerDetail,
+            D.purchaseOrder,
+            deliveryNumber,
+            purchaseOrder docNo,
+            ISNULL(lot_att04,'') arrivalNo,
+            ISNULL(lot_att30,'') lot_att30,
+            FORMAT(create_date, 'yyyyMMdd') docDate,
+            vendorCode supplierNo,
+            delivery supplierName,
+            item_no itemCode,
+            M.ITEM_NAME itemName,
+            M.ITEM_SPECIFICATION itemSpec,
+            W.WAREHOUSE_CODE warehouseCode,
+            ISNULL(Z.UDF021,'') binCode,
+            qty matchQty,
+            barcode,
+            B.UDF021 customerNo,
+            bm_barcode_detail.unit_no unitCode,
+            bm_barcode_detail.unit_name unitName,
+            consignee shjg
+        FROM bm_barcode_detail
+                 LEFT JOIN deliveryNoteDetails D ON source_no = D.uuid
+                 LEFT JOIN PURCHASE_ORDER A ON D.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+                 LEFT JOIN PURCHASE_ORDER_D B ON D.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+                 LEFT JOIN ITEM M ON B.ITEM_ID = M.ITEM_BUSINESS_ID
+                 LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = M.ITEM_BUSINESS_ID AND A.REV_ORG_SOURCE_ID_ROid=Z.Owner_Org_ROid
+                 LEFT JOIN UNIT U ON B.BUSINESS_UNIT_ID = UNIT_ID
+                 LEFT JOIN PURCHASE_ORDER_SD SD ON B.PURCHASE_ORDER_D_ID = SD.PURCHASE_ORDER_D_ID
+                 LEFT JOIN WAREHOUSE W ON SD.WAREHOUSE_ID = W.WAREHOUSE_ID
+                 LEFT JOIN BIN ON BIN.WAREHOUSE_ID = W.WAREHOUSE_ID
+                 LEFT JOIN SUPPLIER S ON A.SUPPLIER_ID = S.SUPPLIER_BUSINESS_ID
+                 LEFT JOIN deliveryList SS ON SS.uuid = D.parentId
+        WHERE bar_type = 4 AND lot_att30 IS NULL
+          and standard_col10 = (SELECT id FROM bm_barcode_detail WHERE barcode = #{barcode})
+        ORDER BY item_no
+    </select>
+
+    <select id="selectDistinct" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT parentId)
+        FROM bm_barcode_detail
+        LEFT JOIN deliveryNoteDetails D ON source_no = D.uuid
+        WHERE barcode IN
+        <foreach collection="barcodes" item="barcode" open="(" separator="," close=")">
+            #{barcode}
+        </foreach>
+    </select>
+    <select id="getInvBarcodeOperationVo" resultType="com.mgkj.vo.PurchaseReceiptStorageVo">
+        SELECT
+            id,
+            lot_att01 AS parentId,
+            lot_att02 AS arrivalNo,
+            lot_att03 AS deliveryNumber,
+            lot_att04 AS docNo,
+            lot_att05 AS supplierNo,
+            lot_att06 AS supplierName,
+            lot_att07 AS customerNo,
+            standard_col11 AS containerQty,
+            lot_att08 AS containerName,
+            lot_att09 AS containerDetail,
+            lot_att10 AS standard_col10,
+            lot_att11 AS bar_type,
+            barcode,
+            org_no AS shjg,
+            qty AS matchQty,
+            warehouse_no AS warehouseCode,
+            cell_no AS binCode,
+            combination_lot_no AS docDate,
+            item_no AS itemCode,
+            item_name AS itemName,
+            item_spec AS itemSpec,
+            unit_no AS unitCode,
+            unit_name AS unitName,
+            create_by AS createBy
+        FROM purchase_summary
+        WHERE create_by = #{createBy}
+          AND status_code = 0
+          AND chag_type = 100
+        <if test="deliveryNumber!=null and deliveryNumber!=''">
+            AND lot_att03 like '%' + #{deliveryNumber} + '%'
+        </if>
+        ORDER BY create_date DESC
+    </select>
+    <select id="isScanningCodeRecord" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM purchase_summary
+        WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = 100
+    </select>
+
+    <select id="getPlantByPURCHASE_ARRIVAL_D_ID" resultType="java.lang.String">
+        SELECT RECEIVE_Owner_Org_ROid FROM PURCHASE_ARRIVAL_D LEFT JOIN PURCHASE_ARRIVAL ON PURCHASE_ARRIVAL_D.PURCHASE_ARRIVAL_ID = PURCHASE_ARRIVAL.PURCHASE_ARRIVAL_ID
+        WHERE PURCHASE_ARRIVAL_D_ID = #{arrivalDUuid}
+    </select>
+    <select id="selectOddNumberUndecision" resultType="com.mgkj.vo.WaitToStorageVo">
+        SELECT
+            C.DOC_NO AS oddNumber,C.SUPPLIER_FULL_NAME AS supplierFullName,D.UDF021 AS customerNumber,WAREHOUSE_CODE warehouseCode
+        FROM PO_ARRIVAL_INSPECTION A
+                 LEFT JOIN PURCHASE_ARRIVAL_D B ON B.PURCHASE_ARRIVAL_D_ID = A.SOURCE_ID
+                 LEFT JOIN WAREHOUSE W ON B.WAREHOUSE_ID = W.WAREHOUSE_ID
+                 LEFT JOIN PURCHASE_ORDER C ON B.PURCHASE_ORDER_ID = C.PURCHASE_ORDER_ID
+                 LEFT JOIN PURCHASE_ORDER_D D ON D.PURCHASE_ORDER_ID =  C.PURCHASE_ORDER_ID AND A.ITEM_ID = D.ITEM_ID
+        WHERE A.PO_ARRIVAL_INSPECTION_ID = #{inspectionUuid}  AND A.ApproveStatus = 'Y' AND A.DECISION = '2'
+
+
+    </select>
+    <select id="SelectBarcode" resultType="com.mgkj.entity.BmBarcodeDetail">
+        SELECT barcode,lot_att30 lotAtt30, lot_att08 lotAtt08 FROM bm_barcode_detail
+        WHERE barcode = #{barcode}
+
+    </select>
+    <select id="getBarcodeDetails" resultType="com.mgkj.entity.BarcodeDetails">
+        SELECT
+            D.purchaseOrder,
+            B.UDF021 customerNo,
+            item_no itemCode,
+            item_name itemName,
+            B.PRICE_QTY priceQty,
+            B.PRICE price,
+            SUBSTRING(CAST(B.PLAN_ARRIVAL_DATE AS VARCHAR(255)),1,25) planArrivalDate,
+            W.WAREHOUSE_CODE warehouseCode,
+            W.WAREHOUSE_NAME warehouseName,
+            E.EMPLOYEE_NAME employeeName,
+            lot_att30
+        FROM bm_barcode_detail
+                 LEFT JOIN deliveryNoteDetails D ON source_no = D.uuid
+                 LEFT JOIN PURCHASE_ORDER A ON D.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+                 LEFT JOIN PURCHASE_ORDER_D B ON D.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+                 LEFT JOIN EMPLOYEE E ON E.EMPLOYEE_ID = A.Owner_Emp
+                 LEFT JOIN PURCHASE_ORDER_SD SD ON B.PURCHASE_ORDER_D_ID = SD.PURCHASE_ORDER_D_ID
+                 LEFT JOIN WAREHOUSE W ON SD.WAREHOUSE_ID = W.WAREHOUSE_ID
+                 LEFT JOIN deliveryList SS ON SS.uuid = D.parentId
+        WHERE barcode = #{barcode}
+    </select>
+    <select id="getByDeliveryNo" resultType="com.mgkj.entity.DeliverySummary">
+        SELECT dd.uuid,deliveryNumber,dd.purchaseOrder,M.ITEM_CODE itemCode,M.ITEM_NAME itemName,M.ITEM_SPECIFICATION itemSpec,dd.deliveryNum
+        FROM deliveryNoteDetails dd
+                 LEFT JOIN deliveryList d on dd.parentId = d.uuid
+                 LEFT JOIN PURCHASE_ORDER A ON dd.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+                 LEFT JOIN PURCHASE_ORDER_D B ON dd.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+                 LEFT JOIN ITEM M ON B.ITEM_ID = M.ITEM_BUSINESS_ID
+        WHERE deliveryNumber = #{number}
+    </select>
+    <select id="getByDeliveryNoC" resultType="com.mgkj.entity.DeliverySummary">
+        SELECT dd.uuid,deliveryNumber,dd.purchaseOrder,M.ITEM_CODE itemCode,M.ITEM_NAME itemName,M.ITEM_SPECIFICATION itemSpec,dd.deliveryNum
+        FROM deliveryNoteDetails dd
+                 LEFT JOIN deliveryList d on dd.parentId = d.uuid
+                 LEFT JOIN PURCHASE_ORDER A ON dd.purchaseOrder LIKE CONCAT(A.DOC_NO, '-', '%')
+                 LEFT JOIN PURCHASE_ORDER_D B ON dd.purchaseOrder = CONCAT(A.DOC_NO, '-', B.SequenceNumber) AND A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+                 LEFT JOIN ITEM M ON B.ITEM_ID = M.ITEM_BUSINESS_ID
+        WHERE deliveryNumber = #{number} AND dd.arrivalNo IS  NULL
+    </select>
+    <select id="selectIsClude" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM delivery_summary D LEFT JOIN bm_barcode_detail  ON source_no = D.uuid WHERE barcode = #{number} AND creator = #{createBy}
+    </select>
+
+    <select id="getPurchaseDByBarcode" resultType="java.lang.String">
+        SELECT CASE
+                   WHEN CHARINDEX('-', REVERSE(deliveryNoteDetails.purchaseOrder)) > 0
+                       THEN REVERSE(SUBSTRING(REVERSE(deliveryNoteDetails.purchaseOrder), 1, CHARINDEX('-', REVERSE(deliveryNoteDetails.purchaseOrder)) - 1))
+                   ELSE deliveryNoteDetails.purchaseOrder  -- 如果没有横杠返回原值
+                   END AS last_part FROM bm_barcode_detail
+                   LEFT JOIN deliveryNoteDetails ON uuid = source_no
+        WHERE barcode = #{barcode}
+    </select>
+    <select id="queryPurchaseInfo" resultType="com.mgkj.entity.PurchaseInfo">
+        SELECT
+            B.BUSINESS_QTY AS businessQty,
+            E.EMPLOYEE_CODE AS employeeCode,
+            AU.ADMIN_UNIT_CODE AS adminUnitCode,
+            AU.START_DATE AS startDate,
+            MO.DOC_NO AS moDoc,
+            A.DOC_NO                     AS docNo,
+            (SELECT DOC_CODE FROM DOC WHERE DOC_ID = A.DOC_ID) AS purchaseOrderCode,
+            (SELECT DOC_CODE FROM DOC WHERE DOC.DOC_ID = PARA_DOC_ALS.DOC_ID) AS arrivalOrderCode,
+            (SELECT UNIT_CODE FROM UNIT WHERE UNIT_ID = B.BUSINESS_UNIT_ID) AS businessUnitCode,
+            (SELECT UNIT_CODE FROM UNIT WHERE UNIT_ID = B.PRICE_UNIT_ID) AS priceUnitCode,
+            B.SequenceNumber             AS sequenceNumberD,
+            C.SequenceNumber             AS sequenceNumberSD,
+            S.SUPPLIER_CODE              AS supplierCode,
+            S.SUPPLIER_FULL_NAME         AS supplierFullName,
+            A.TAX_BC                     AS taxBc,
+            A.TAX_INCLUDED               AS taxIncluded,
+            A.TAX_OC                     AS taxOc,
+            TAX.TAX_RATE                 AS taxRate,
+            TC.DEDUCTIBLE_INDICATOR AS vatDeductible,
+            A.PURCHASE_TYPE              AS purchaseType,
+            CURRENCY.CURRENCY_CODE       AS currencyCode,
+            B.STANDARD_PRICE             AS standardPrice,
+            SUPPLY_CENTER.SUPPLY_CENTER_CODE AS supplyCenterCode,
+            PLANT.PLANT_CODE AS plantCode,
+            ITEM.ITEM_CODE AS itemCode,
+            B.ITEM_DESCRIPTION AS itemName,
+            B.ITEM_TYPE AS itemType,
+            B.ITEM_SPECIFICATION AS itemSpec,
+            B.PRICE AS price,
+            TAX.TAX_CODE AS taxCode,
+            B.INVENTORY_QTY AS inventoryQty,
+            B.DISCOUNTED_PRICE AS discountedPrice,
+            PAYMENT_TERM.PAYMENT_TERM_CODE AS paymentCode,
+            PAYMENT_TERM.PAYMENT_TERM_TYPE AS paymentType,
+            ISNULL(ITEM_PLANT.INSPECT_MODE, 0) AS inspectMode,
+            A.EXCHANGE_RATE AS exchangeRate,
+            TIC.TAX_INVOICE_CATEGORY_CODE AS taxInvoiceCategoryCode
+        FROM PURCHASE_ORDER A
+             LEFT JOIN TAX_INVOICE_CATEGORY TIC ON TIC.TAX_INVOICE_CATEGORY_ID = A.TAX_INVOICE_CATEGORY_ID
+             LEFT JOIN ADMIN_UNIT AU ON AU.ADMIN_UNIT_ID = A.Owner_Dept
+             LEFT JOIN EMPLOYEE E ON E.EMPLOYEE_ID = A.Owner_Emp
+             LEFT JOIN PARA_DOC_ALS ON PARA_DOC_ALS.SOURCE_DOC_ID = A.DOC_ID
+             LEFT JOIN PURCHASE_ORDER_D B ON A.PURCHASE_ORDER_ID = B.PURCHASE_ORDER_ID
+             LEFT JOIN MO ON MO.MO_ID = B.SOURCE_ID_ROid
+             LEFT JOIN PAYMENT_TERM ON A.PAYMENT_TERM_ID = PAYMENT_TERM.PAYMENT_TERM_ID
+             LEFT JOIN TAX ON TAX.TAX_ID = B.TAX_ID
+             LEFT JOIN TAX_INVOICE_CATEGORY TC ON TAX.TAX_CODE = TC.TAX_INVOICE_CATEGORY_CODE
+             LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = B.ITEM_ID
+             LEFT JOIN ITEM_PLANT ON ITEM.ITEM_BUSINESS_ID = ITEM_PLANT.ITEM_ID AND A.REV_ORG_SOURCE_ID_ROid = ITEM_PLANT.Owner_Org_ROid
+             LEFT JOIN PURCHASE_ORDER_SD C ON B.PURCHASE_ORDER_D_ID = C.PURCHASE_ORDER_D_ID
+             LEFT JOIN PLANT ON C.RECEIVE_Owner_Org_ROid=PLANT.PLANT_ID
+             LEFT JOIN SUPPLIER S ON A.SUPPLIER_ID = S.SUPPLIER_BUSINESS_ID
+             LEFT JOIN CURRENCY ON CURRENCY.CURRENCY_ID = A.CURRENCY_ID
+             LEFT JOIN SUPPLY_CENTER ON SUPPLY_CENTER.SUPPLY_CENTER_ID = A.Owner_Org_ROid
+        WHERE A.DOC_NO = #{docNo} AND B.SequenceNumber = #{orderNum}
+    </select>
+    <select id="queryQcUserByWarehouseCode" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT TOP 1 B.EMPLOYEE_CODE
+        FROM WMS..warehouseStaff A
+                 LEFT JOIN EMPLOYEE B ON A.employeeName = B.EMPLOYEE_NAME
+        WHERE warehouseCode = #{warehouseCode} AND type = 'QC'
+        ORDER BY A.employeeName
+    </select>
+    <select id="getCGQWBySupplierCode" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT A.[帐号] AS qywx
+        FROM QYWX A
+            LEFT JOIN [USER] ON [USER].USER_NAME = A.[姓名]
+            LEFT JOIN V_EMPLOYEE_SUPPLIER V ON [USER].LOGONNAME = V.EMPLOYEE_CODE
+        WHERE V.EMPLOYEE_CODE IS NOT NULL AND V.SUPPLIER_CODE = #{supplierCode}
+    </select>
+
+
+    <update id="batchUpdateBarcode">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE bm_barcode_detail
+            SET lot_att04 = #{item.docNo}
+            WHERE barcode = #{item.barcode}
+        </foreach>
+    </update>
+
+    <update id="batchUpdateDeliveryUuid">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE deliveryList
+            SET arrivalNo = CASE
+            -- 当arrivalNo为空或null时，直接设置为新值
+            WHEN arrivalNo IS NULL OR arrivalNo = '' THEN #{item.docNo}
+            -- 当arrivalNo已有值时，在原有值后追加新值（用逗号分隔）
+            ELSE CONCAT(arrivalNo, ',', #{item.docNo})
+            END
+            WHERE uuid = #{item.uuid}
+        </foreach>
+    </update>
+    <update id="UpdateBarcodeLotatt30ByList">
+        <foreach collection="barcodeList" item="item" separator=";">
+            UPDATE bm_barcode_detail
+            SET lot_att30 = '2'
+            WHERE barcode = #{item}
+        </foreach>
+
+    </update>
+
+    <update id="UpdateBarcodeDecisionLotatt30ByList">
+        UPDATE bm_barcode_detail
+        SET lot_att08 = #{lotatt08},
+            lot_att30 = #{lotatt30}
+        WHERE barcode IN
+        <foreach collection="barcodeList" item="barcode" open="(" separator="," close=")">
+            #{barcode}
+        </foreach>
+    </update>
+
+    <update id="updateLotatt30To1AndLot_att04">
+        UPDATE bm_barcode_detail
+        SET lot_att30 = '1', lot_att31 ='2', lot_att04 = #{docNo}
+        WHERE barcode = #{barcode}
+    </update>
+    <update id="updatelotAtt31">
+        update bm_barcode_detail
+        set lot_att31 = '1'
+        where barcode = #{barcode}
+    </update>
+    <update id="updateLotAtt31Null">
+        UPDATE bm_barcode_detail
+        SET lot_att31 = NULL
+        WHERE barcode IN (
+            SELECT barcode FROM purchase_summary
+            WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = 100
+        )
+    </update>
+    <update id="updateLotAtt31NullSingle">
+        UPDATE bm_barcode_detail
+        SET lot_att31 = NULL
+        WHERE barcode = (
+            SELECT barcode FROM purchase_summary
+            WHERE id = #{id}  AND status_code = 0 AND chag_type = 100
+        )
+    </update>
+    <update id="updateDeliveryNoteDetails">
+        UPDATE deliveryNoteDetails
+        SET arrivalNo = #{docNo}
+        WHERE uuid = (
+            SELECT DISTINCT source_no FROM bm_barcode_detail WHERE barcode = #{barcode}
+        )
+
+    </update>
+    <update id="updateCreateByDocNo">
+        WITH UserCTE AS (
+            SELECT TOP 1 USER_ID FROM [USER] WHERE LOGONNAME = #{createBy} ORDER BY USER_ID
+        )
+        UPDATE PA SET PA.CreateBy = [USER].USER_ID, PA.ModifiedBy = U.USER_ID, PA.LastModifiedBy = U.USER_ID,ApproveBy = U.USER_ID
+        FROM PURCHASE_ARRIVAL PA
+        CROSS APPLY UserCTE U
+        LEFT JOIN EMPLOYEE ON EMPLOYEE.EMPLOYEE_ID = PA.Owner_Emp
+        LEFT JOIN [USER] ON [USER].USER_NAME = EMPLOYEE.EMPLOYEE_NAME
+        WHERE PA.DOC_NO = #{docNo}
+    </update>
+    <update id="updatePoArrivalInspectionCreateByDocNo">
+        UPDATE PO_ARRIVAL_INSPECTION
+        SET CreateBy = #{createBy}, ModifiedBy = #{createBy}, LastModifiedBy = #{createBy}, ApproveBy = #{createBy}
+        WHERE DOC_NO = #{docNo}
+    </update>
+
+
+</mapper>

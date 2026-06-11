@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.mgkj.mapper.IHeadMapper">
+
+
+    <insert id="add"  useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO inspectionHead
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ta001 != null">TA001,</if>
+            <if test="ta002 != null">TA002,</if>
+            <if test="ta004 != null">TA004,</if>
+            <if test="ta024 != null">TA024,</if>
+            <if test="ta006 != null">TA006,</if>
+            <if test="mb002 != null">MB002,</if>
+            <if test="mb003 != null">MB003,</if>
+            <if test="udf01 != null">UDF01,</if>
+            <if test="ta015 != null">TA015,</if>
+            <if test="udf66 != null">UDF66,</if>
+            <if test="udf88 != null">UDF88,</if>
+            <if test="result != null">result,</if>
+            <if test="creatTime != null">creatTime,</if>
+            <if test="endTime != null">endTime,</if>
+            <if test="startTime != null">startTime,</if>
+            <if test="updateTime != null">updateTime,</if>
+            <if test="type != null">type,</if>
+            <if test="people != null">people,</if>
+            <if test="address != null">address,</if>
+            <if test="arriveSgetsu != null">arriveSgetsu,</if>
+            <if test="arriveOddNmber != null">arriveOddNmber,</if>
+            <if test="udf06 != null">udf06,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ta001 != null">#{ta001},</if>
+            <if test="ta002 != null">#{ta002},</if>
+            <if test="ta004 != null">#{ta004},</if>
+            <if test="ta024 != null">#{ta024},</if>
+            <if test="ta006 != null">#{ta006},</if>
+            <if test="mb002 != null">#{mb002},</if>
+            <if test="mb003 != null">#{mb003},</if>
+            <if test="udf01 != null">#{udf01},</if>
+            <if test="ta015 != null">#{ta015},</if>
+            <if test="udf66 != null">#{udf66},</if>
+            <if test="udf88 != null">#{udf88},</if>
+            <if test="result != null">#{result},</if>
+            <if test="creatTime != null">#{creatTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="type != null">#{type},</if>
+            <if test="people != null">#{people},</if>
+            <if test="address != null">#{address},</if>
+            <if test="arriveSgetsu != null">#{arriveSgetsu},</if>
+            <if test="arriveOddNmber != null">#{arriveOddNmber},</if>
+            <if test="udf06 != null">#{udf06},</if>
+        </trim>
+    </insert>
+    <select id="page" resultType="com.mgkj.entity.IHead">
+        select *,(SELECT TOP 1 MG020 FROM inspectionBody WHERE i_uid = uid) AS MG020 from inspectionHead
+        where 1 = 1
+        <if test="type !=null">and type like '%' + #{type} + '%' </if>
+        <if test="ta001 !=null">and TA001 like '%' + #{ta001} +'%'</if>
+        <if test="ta002 !=null">and TA002 like '%' + #{ta002} + '%'</if>
+        <if test="ta006 !=null">and TA006 like '%' + #{ta006} + '%'</if>
+        <if test="mb002 !=null">and MB002 like '%' + #{mb002} + '%'</if>
+        <if test="address !=null">and address like '%' + #{address} + '%'</if>
+        <if test="people !=null">and people like '%' + #{people} + '%'</if>
+        <if test="udf06 !=null">and people like '%' + #{udf06} + '%'</if>
+
+        order by creatTime desc
+    </select>
+    <select id="getByUid" resultType="com.mgkj.entity.IHead">
+        select * from inspectionHead where uid = #{uid}
+    </select>
+
+    <select id="getbgd" resultType="com.mgkj.entity.IHead">
+        select * from inspectionHead where TA001 = #{dt} AND TA002 = #{ds} AND TA004 = #{gx}
+    </select>
+
+    <delete id="del">
+        delete from inspectionHead where uid = #{uid}
+    </delete>
+
+    <select id="getByUidS" resultType="com.mgkj.entity.IHead">
+        select * from inspectionHead where TA006 = #{uid} AND startTime BETWEEN #{ks} AND #{js}
+    </select>
+
+    <select id="getByUidWithType" resultType="com.mgkj.entity.IHead">
+        select * from inspectionHead where uid = #{uid} and type = #{type}
+    </select>
+
+    <select id="queryTa001IHeadList" resultType="com.mgkj.entity.IHead">
+        select * from inspectionHead where TA001 = #{TA001} AND TA002 = #{TA002}  order by startTime DESC
+    </select>
+
+</mapper>

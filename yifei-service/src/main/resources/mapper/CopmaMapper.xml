@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.CopmaMapper">
+
+    <select id="getCustomerInfoByTerm" resultType="com.mgkj.vo.CustomVo">
+        select MA001,MA002,MA005,MA016,MV002,MA097
+        FROM COPMA LEFT JOIN CMSMV
+        ON MV001 = MA016
+        <where>
+            <if test="searchValue!=null and searchValue!='' ">
+                AND (MA001 LIKE CONCAT('%', #{searchValue}, '%')
+                OR MA002 LIKE CONCAT('%', #{searchValue}, '%')
+                OR MA102 LIKE CONCAT('%', #{searchValue}, '%')
+                OR MA016 LIKE CONCAT('%', #{searchValue}, '%'))
+            </if>
+            <if test="status != null and status != ''">
+                AND MA097 = #{status}
+            </if>
+        </where>
+    </select>
+</mapper>

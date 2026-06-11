@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.CapitalFlowMapper">
+
+
+    <select id="getCapitalFlowInfo" resultType="com.mgkj.vo.CapitalFlowVo">
+        SELECT MA003, SUM(LE014 + LE021 - LE017 - LE024) capitalFlow
+        FROM ACTLE
+                 LEFT JOIN ACTMA ON LE001 = MA001
+        WHERE MA023 = 'Y'
+          AND LE002 = SUBSTRING(CONVERT(CHAR(8), DATEADD(MONTH, 0, GETDATE()), 112), 1, 4)
+          AND LE003 = SUBSTRING(CONVERT(CHAR(8), DATEADD(MONTH, 0, GETDATE()), 112), 5, 2)
+        GROUP BY MA003
+    </select>
+
+    <select id="getSumCapitalFlow" resultType="com.mgkj.vo.CapitalFlowVo">
+        SELECT CONCAT(LE002, LE003) AS MandY, SUM(LE014+LE021-LE017-LE024) AS capitalFlow
+        FROM ACTLE
+                 LEFT JOIN ACTMA ON LE001=MA001
+        WHERE MA023='Y'
+          AND LE002=SUBSTRING(CONVERT(CHAR(8), GETDATE(), 112), 1, 4)
+          AND LE003=SUBSTRING(CONVERT(CHAR(8), GETDATE(), 112), 5, 2)
+        GROUP BY LE002, LE003
+
+        UNION ALL
+
+        SELECT CONCAT(LE002, LE003) AS MandY, SUM(LE014+LE021-LE017-LE024) AS 资金流
+        FROM ACTLE
+                 LEFT JOIN ACTMA ON LE001=MA001
+        WHERE MA023='Y'
+          AND LE002=SUBSTRING(CONVERT(CHAR(8), DATEADD(MONTH, -1, GETDATE()), 112), 1, 4)
+          AND LE003=SUBSTRING(CONVERT(CHAR(8), DATEADD(MONTH, -1, GETDATE()), 112), 5, 2)
+        GROUP BY LE002, LE003
+
+    </select>
+</mapper>

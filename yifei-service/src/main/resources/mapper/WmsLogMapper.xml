@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.WmsLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.WmsLog">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="requestPath" column="request_path" jdbcType="VARCHAR"/>
+            <result property="requestMethod" column="request_method" jdbcType="VARCHAR"/>
+            <result property="requestTime" column="request_time" jdbcType="TIMESTAMP"/>
+            <result property="sourceIp" column="source_ip" jdbcType="VARCHAR"/>
+            <result property="serviceInfo" column="service_info" jdbcType="VARCHAR"/>
+            <result property="requestParams" column="request_params" jdbcType="VARCHAR"/>
+            <result property="responseBody" column="response_body" jdbcType="VARCHAR"/>
+            <result property="durationMs" column="duration_ms" jdbcType="INTEGER"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,request_path,request_method,
+        request_time,source_ip,service_info,
+        request_params,response_body,duration_ms,
+        remark
+    </sql>
+</mapper>

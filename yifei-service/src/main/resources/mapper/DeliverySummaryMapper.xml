@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.DeliverySummaryMapper">
+    <update id="updateQty">
+        UPDATE delivery_summary SET matchQty = #{qty}
+        WHERE uuid  =
+              (SELECT source_no FROM
+                  purchase_summary P LEFT JOIN bm_barcode_detail B ON P.barcode = B.barcode
+               where P.id = #{id})
+    </update>
+    <delete id="deleteByDeliveryNumer">
+        DELETE FROM delivery_summary WHERE deliveryNumber = #{deliveryNumer}
+    </delete>
+    <select id="deliveryIsExist" resultType="com.mgkj.entity.DeliverySummary">
+        SELECT * FROM delivery_summary WHERE  deliveryNumber = #{number}
+    </select>
+    <select id="getDeliverySummary" resultType="com.mgkj.entity.DeliverySummary">
+        SELECT D.* FROM delivery_summary D LEFT JOIN bm_barcode_detail  ON source_no = D.uuid WHERE barcode = #{barcode}
+    </select>
+    <select id="getDeliveryDetailsBarcode" resultType="com.mgkj.vo.DeliveryDetailsBarcodeVo">
+        SELECT barcode,qty,
+               CASE
+                   WHEN (SELECT COUNT(*)
+                         FROM purchase_summary
+                         WHERE purchase_summary.barcode = bm_barcode_detail.barcode
+                           AND chag_type = '100'
+                           AND status_code = '0') > 0
+                       THEN '1'
+                   ELSE '0'
+                   END AS lotAtt31
+        FROM bm_barcode_detail WHERE source_no = #{uuid}
+    </select>
+    <select id="selectQty" resultType="java.math.BigDecimal">
+        SELECT matchQty FROM delivery_summary WHERE uuid  =
+        (SELECT source_no FROM
+        purchase_summary P LEFT JOIN bm_barcode_detail B ON P.barcode = B.barcode
+        where P.id = #{id})
+    </select>
+    <select id="isDeliverySummaryRecord" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM purchase_summary WHERE lot_att03 = #{deliveryNumer}
+    </select>
+
+</mapper>

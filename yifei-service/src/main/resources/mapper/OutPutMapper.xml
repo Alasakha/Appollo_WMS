@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.OutPutMapper">
+
+    <select id="getOutPut" resultType="com.mgkj.vo.OutPutVo">
+        SELECT SUBSTRING(TF003, 1, ${type}) AS warehousingDate, MD002 AS workShop, SUM(CAST(TG011 AS DECIMAL(10, 2))) AS warehousingQuantity
+        FROM MOCTF
+                 LEFT JOIN MOCTG ON TF001 = TG001 AND TF002 = TG002
+                 LEFT JOIN CMSMD ON TF004 = MD003 AND TF011 = MD001
+        <where>
+            TF006 = 'Y'
+            <if test="workShop != null and workShop!='' and workShop != 'null'">
+                AND MD002 = #{workShop}
+            </if>
+        </where>
+        GROUP BY SUBSTRING(TF003, 1, ${type}), CMSMD.MD002
+        ORDER BY SUBSTRING(TF003, 1, ${type}) DESC, CMSMD.MD002 ASC;
+    </select>
+
+    <select id="getOutPutInfo" resultType="com.mgkj.vo.OutPutVo">
+        SELECT * FROM (
+                SELECT TG001 AS warehousingSingle, TG002 AS warehousingNumber, TF003 AS warehousingDate,CMSMD.MD002 AS workShop, TG004 AS productNumber,
+                         TG005 AS productName, TG006 AS specification, TG007 AS unit, CAST(TG011 AS DECIMAL(10, 2)) AS warehousingQuantity,
+                            ROW_NUMBER() OVER (ORDER BY TG001) AS RowNum
+                     FROM MOCTF
+                             LEFT JOIN MOCTG ON TF001 = TG001 AND TF002 = TG002
+                             LEFT JOIN CMSMD ON TF004 = MD003 AND TF011 = MD001
+                    WHERE TF006 = 'Y'
+                      AND SUBSTRING(TF003, 1, ${type}) = SUBSTRING(#{warehousingDate},1,${type})
+                      AND MD002 = #{workShop}
+                ) AS SubQuery
+        WHERE RowNum BETWEEN (#{page}-1) * #{pageSize} + 1 AND (#{page}-1) * #{pageSize} + #{pageSize};
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM MOCTF
+                 LEFT JOIN MOCTG ON TF001 = TG001 AND TF002 = TG002
+                 LEFT JOIN CMSMD ON TF004 = MD003 AND TF011 = MD001
+        WHERE TF006 = 'Y'
+          AND SUBSTRING(TF003, 1, ${type}) = SUBSTRING(#{warehousingDate},1,${type})
+          AND MD002 = #{workShop}
+    </select>
+
+    <select id="getOutPutCount" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM MOCTF
+                 LEFT JOIN MOCTG ON TF001 = TG001 AND TF002 = TG002
+                 LEFT JOIN CMSMD ON TF004 = MD003 AND TF011 = MD001
+        WHERE TF006 = 'Y'
+    </select>
+    <select id="getAllWorkShop" resultType="com.mgkj.vo.OutPutVo">
+        SELECT MD002 as workShop FROM CMSMD
+    </select>
+
+</mapper>

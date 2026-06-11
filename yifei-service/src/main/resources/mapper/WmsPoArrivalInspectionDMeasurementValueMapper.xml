@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.WmsPoArrivalInspectionDMeasurementValueMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.WmsPoArrivalInspectionDMeasurementValue">
+            <id property="id" column="id" jdbcType="OTHER"/>
+            <result property="udf01" column="udf01" jdbcType="DECIMAL"/>
+            <result property="udf02" column="udf02" jdbcType="DECIMAL"/>
+            <result property="udf03" column="udf03" jdbcType="DECIMAL"/>
+            <result property="udf04" column="udf04" jdbcType="DECIMAL"/>
+            <result property="udf05" column="udf05" jdbcType="DECIMAL"/>
+            <result property="udf06" column="udf06" jdbcType="DECIMAL"/>
+            <result property="udf07" column="udf07" jdbcType="DECIMAL"/>
+            <result property="udf08" column="udf08" jdbcType="DECIMAL"/>
+            <result property="udf09" column="udf09" jdbcType="DECIMAL"/>
+            <result property="udf010" column="udf010" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,udf01,udf02,
+        udf03,udf04,udf05,
+        udf06,udf07,udf08,
+        udf09,udf010
+    </sql>
+</mapper>

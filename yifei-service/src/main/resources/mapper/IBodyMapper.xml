@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.mgkj.mapper.IBodyMapper">
+
+
+    <insert id="add"  useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO inspectionBody
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="i_uid != null">i_uid,</if>
+            <if test="mg003 != null">MG003,</if>
+            <if test="udf01 != null">UDF01,</if>
+            <if test="udf02 != null">UDF02,</if>
+            <if test="mg016 != null">MG016,</if>
+            <if test="udf03 != null">UDF03,</if>
+            <if test="mg006 != null">MG006,</if>
+            <if test="mg009 != null">MG009,</if>
+            <if test="udf05 != null">UDF05,</if>
+            <if test="mg012 != null">MG012,</if>
+            <if test="mg013 != null">MG013,</if>
+            <if test="mg020 != null">MG020,</if>
+            <if test="mg008 != null">MG008,</if>
+            <if test="result != null">result</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="i_uid != null">#{i_uid},</if>
+            <if test="mg003 != null">#{mg003},</if>
+            <if test="udf01 != null">#{udf01},</if>
+            <if test="udf02 != null">#{udf02},</if>
+            <if test="mg016 != null">#{mg016},</if>
+            <if test="udf03 != null">#{udf03},</if>
+            <if test="mg006 != null">#{mg006},</if>
+            <if test="mg009 != null">#{mg009},</if>
+            <if test="udf05 != null">#{udf05},</if>
+            <if test="mg012 != null">#{mg012},</if>
+            <if test="mg013 != null">#{mg013},</if>
+            <if test="mg020 != null">#{mg020},</if>
+            <if test="mg008 != null">#{mg008},</if>
+            <if test="result != null">#{result}</if>
+        </trim>
+    </insert>
+
+
+    <select id="getAllByI_uid" resultType="com.mgkj.entity.IBody">
+        select * from inspectionBody where i_uid = #{i_uid}
+    </select>
+
+    <select id="getAllByI_uids" resultType="com.mgkj.entity.IBody">
+        select * from inspectionBody where i_uid = #{i_uid} AND UDF05 = 'Y'
+    </select>
+
+    <delete id="del">
+        delete from inspectionBody where i_uid = #{i_uid}
+    </delete>
+</mapper>

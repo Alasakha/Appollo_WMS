@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.AgvWarehouseMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.AgvWarehouse">
+        <id property="id" column="id"/>
+        <result property="positionCode" column="positionCode"/>
+        <result property="shelfCode" column="shelfCode"/>
+        <result property="stationCode" column="stationCode"/>
+        <result property="siteName" column="siteName"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        positionCode
+        ,shelfCode,stationCode,siteName,id,status
+    </sql>
+</mapper>

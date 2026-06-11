@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.InvBarcodeTransactionMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.InvBarcodeTransaction">
+            <id property="id" column="id" jdbcType="VARCHAR"/>
+            <result property="docOrgNo" column="doc_org_no" jdbcType="VARCHAR"/>
+            <result property="orgNo" column="org_no" jdbcType="VARCHAR"/>
+            <result property="classifyType" column="classify_type" jdbcType="VARCHAR"/>
+            <result property="docType" column="doc_type" jdbcType="VARCHAR"/>
+            <result property="warehouseNo" column="warehouse_no" jdbcType="VARCHAR"/>
+            <result property="cellNo" column="cell_no" jdbcType="VARCHAR"/>
+            <result property="itemNo" column="item_no" jdbcType="VARCHAR"/>
+            <result property="docItemNo" column="doc_item_no" jdbcType="VARCHAR"/>
+            <result property="barcode" column="barcode" jdbcType="VARCHAR"/>
+            <result property="barType" column="bar_type" jdbcType="TINYINT"/>
+            <result property="stockRate" column="stock_rate" jdbcType="DECIMAL"/>
+            <result property="stockKeep" column="stock_keep" jdbcType="DECIMAL"/>
+            <result property="sourceNo" column="source_no" jdbcType="VARCHAR"/>
+            <result property="docNo" column="doc_no" jdbcType="VARCHAR"/>
+            <result property="docSeqNo" column="doc_seq_no" jdbcType="VARCHAR"/>
+            <result property="wmsNo" column="wms_no" jdbcType="VARCHAR"/>
+            <result property="wmsSeqNo" column="wms_seq_no" jdbcType="INTEGER"/>
+            <result property="qty" column="qty" jdbcType="DECIMAL"/>
+            <result property="unitNo" column="unit_no" jdbcType="VARCHAR"/>
+            <result property="referenceQty" column="reference_qty" jdbcType="DECIMAL"/>
+            <result property="referenceUnitNo" column="reference_unit_no" jdbcType="VARCHAR"/>
+            <result property="toWarehouseNo" column="to_warehouse_no" jdbcType="VARCHAR"/>
+            <result property="toCellNo" column="to_cell_no" jdbcType="VARCHAR"/>
+            <result property="chagType" column="chag_type" jdbcType="TINYINT"/>
+            <result property="docReturnFlag" column="doc_return_flag" jdbcType="TINYINT"/>
+            <result property="statusCode" column="status_code" jdbcType="TINYINT"/>
+            <result property="deviceNo" column="device_no" jdbcType="VARCHAR"/>
+            <result property="moduleNo" column="module_no" jdbcType="VARCHAR"/>
+            <result property="boxNo" column="box_no" jdbcType="VARCHAR"/>
+            <result property="combinationLotNo" column="combination_lot_no" jdbcType="VARCHAR"/>
+            <result property="wmsLotNo" column="wms_lot_no" jdbcType="VARCHAR"/>
+            <result property="lotAtt01" column="lot_att01" jdbcType="VARCHAR"/>
+            <result property="lotAtt02" column="lot_att02" jdbcType="VARCHAR"/>
+            <result property="lotAtt03" column="lot_att03" jdbcType="VARCHAR"/>
+            <result property="lotAtt04" column="lot_att04" jdbcType="VARCHAR"/>
+            <result property="lotAtt05" column="lot_att05" jdbcType="VARCHAR"/>
+            <result property="lotAtt06" column="lot_att06" jdbcType="VARCHAR"/>
+            <result property="lotAtt07" column="lot_att07" jdbcType="VARCHAR"/>
+            <result property="lotAtt08" column="lot_att08" jdbcType="VARCHAR"/>
+            <result property="lotAtt09" column="lot_att09" jdbcType="VARCHAR"/>
+            <result property="lotAtt10" column="lot_att10" jdbcType="VARCHAR"/>
+            <result property="lotAtt11" column="lot_att11" jdbcType="VARCHAR"/>
+            <result property="lotAtt12" column="lot_att12" jdbcType="VARCHAR"/>
+            <result property="lotAtt13" column="lot_att13" jdbcType="VARCHAR"/>
+            <result property="lotAtt14" column="lot_att14" jdbcType="VARCHAR"/>
+            <result property="lotAtt15" column="lot_att15" jdbcType="VARCHAR"/>
+            <result property="lotAtt16" column="lot_att16" jdbcType="VARCHAR"/>
+            <result property="lotAtt17" column="lot_att17" jdbcType="VARCHAR"/>
+            <result property="lotAtt18" column="lot_att18" jdbcType="VARCHAR"/>
+            <result property="lotAtt19" column="lot_att19" jdbcType="VARCHAR"/>
+            <result property="lotAtt20" column="lot_att20" jdbcType="VARCHAR"/>
+            <result property="lotAtt21" column="lot_att21" jdbcType="VARCHAR"/>
+            <result property="lotAtt22" column="lot_att22" jdbcType="VARCHAR"/>
+            <result property="lotAtt23" column="lot_att23" jdbcType="VARCHAR"/>
+            <result property="lotAtt24" column="lot_att24" jdbcType="VARCHAR"/>
+            <result property="lotAtt25" column="lot_att25" jdbcType="VARCHAR"/>
+            <result property="lotAtt26" column="lot_att26" jdbcType="VARCHAR"/>
+            <result property="lotAtt27" column="lot_att27" jdbcType="VARCHAR"/>
+            <result property="lotAtt28" column="lot_att28" jdbcType="VARCHAR"/>
+            <result property="lotAtt29" column="lot_att29" jdbcType="VARCHAR"/>
+            <result property="lotAtt30" column="lot_att30" jdbcType="VARCHAR"/>
+            <result property="lotAtt31" column="lot_att31" jdbcType="VARCHAR"/>
+            <result property="lotAtt32" column="lot_att32" jdbcType="VARCHAR"/>
+            <result property="lotAtt33" column="lot_att33" jdbcType="VARCHAR"/>
+            <result property="lotAtt34" column="lot_att34" jdbcType="VARCHAR"/>
+            <result property="lotAtt35" column="lot_att35" jdbcType="VARCHAR"/>
+            <result property="lotAtt36" column="lot_att36" jdbcType="VARCHAR"/>
+            <result property="lotAtt37" column="lot_att37" jdbcType="VARCHAR"/>
+            <result property="lotAtt38" column="lot_att38" jdbcType="VARCHAR"/>
+            <result property="lotAtt39" column="lot_att39" jdbcType="VARCHAR"/>
+            <result property="lotAtt40" column="lot_att40" jdbcType="VARCHAR"/>
+            <result property="lotAtt41" column="lot_att41" jdbcType="VARCHAR"/>
+            <result property="lotAtt42" column="lot_att42" jdbcType="VARCHAR"/>
+            <result property="lotAtt43" column="lot_att43" jdbcType="VARCHAR"/>
+            <result property="lotAtt44" column="lot_att44" jdbcType="VARCHAR"/>
+            <result property="lotAtt45" column="lot_att45" jdbcType="VARCHAR"/>
+            <result property="lotAtt46" column="lot_att46" jdbcType="VARCHAR"/>
+            <result property="lotAtt47" column="lot_att47" jdbcType="VARCHAR"/>
+            <result property="lotAtt48" column="lot_att48" jdbcType="VARCHAR"/>
+            <result property="lotAtt49" column="lot_att49" jdbcType="VARCHAR"/>
+            <result property="lotAtt50" column="lot_att50" jdbcType="VARCHAR"/>
+            <result property="remark" column="remark" jdbcType="VARCHAR"/>
+            <result property="pdaOpCode" column="pda_op_code" jdbcType="VARCHAR"/>
+            <result property="createBy" column="create_by" jdbcType="VARCHAR"/>
+            <result property="createName" column="create_name" jdbcType="VARCHAR"/>
+            <result property="createDate" column="create_date" jdbcType="TIMESTAMP"/>
+            <result property="updateBy" column="update_by" jdbcType="VARCHAR"/>
+            <result property="updateName" column="update_name" jdbcType="VARCHAR"/>
+            <result property="updateDate" column="update_date" jdbcType="TIMESTAMP"/>
+            <result property="createFlag" column="create_flag" jdbcType="TINYINT"/>
+            <result property="standardCol01" column="standard_col01" jdbcType="VARCHAR"/>
+            <result property="standardCol02" column="standard_col02" jdbcType="VARCHAR"/>
+            <result property="standardCol03" column="standard_col03" jdbcType="VARCHAR"/>
+            <result property="standardCol04" column="standard_col04" jdbcType="VARCHAR"/>
+            <result property="standardCol05" column="standard_col05" jdbcType="VARCHAR"/>
+            <result property="standardCol06" column="standard_col06" jdbcType="VARCHAR"/>
+            <result property="standardCol07" column="standard_col07" jdbcType="VARCHAR"/>
+            <result property="standardCol08" column="standard_col08" jdbcType="VARCHAR"/>
+            <result property="standardCol09" column="standard_col09" jdbcType="VARCHAR"/>
+            <result property="standardCol10" column="standard_col10" jdbcType="VARCHAR"/>
+            <result property="standardCol11" column="standard_col11" jdbcType="DECIMAL"/>
+            <result property="standardCol12" column="standard_col12" jdbcType="DECIMAL"/>
+            <result property="standardCol13" column="standard_col13" jdbcType="DECIMAL"/>
+            <result property="standardCol14" column="standard_col14" jdbcType="TIMESTAMP"/>
+            <result property="standardCol15" column="standard_col15" jdbcType="TIMESTAMP"/>
+            <result property="guestCol01" column="guest_col01" jdbcType="VARCHAR"/>
+            <result property="guestCol02" column="guest_col02" jdbcType="VARCHAR"/>
+            <result property="guestCol03" column="guest_col03" jdbcType="VARCHAR"/>
+            <result property="guestCol04" column="guest_col04" jdbcType="VARCHAR"/>
+            <result property="guestCol05" column="guest_col05" jdbcType="VARCHAR"/>
+            <result property="guestCol06" column="guest_col06" jdbcType="VARCHAR"/>
+            <result property="guestCol07" column="guest_col07" jdbcType="DECIMAL"/>
+            <result property="guestCol08" column="guest_col08" jdbcType="DECIMAL"/>
+            <result property="guestCol09" column="guest_col09" jdbcType="TIMESTAMP"/>
+            <result property="guestCol10" column="guest_col10" jdbcType="TIMESTAMP"/>
+            <result property="docWoNo" column="doc_wo_no" jdbcType="VARCHAR"/>
+            <result property="orgName" column="org_name" jdbcType="VARCHAR"/>
+            <result property="orgShortName" column="org_short_name" jdbcType="VARCHAR"/>
+            <result property="docOrgName" column="doc_org_name" jdbcType="VARCHAR"/>
+            <result property="docOrgShortName" column="doc_org_short_name" jdbcType="VARCHAR"/>
+            <result property="classifyTypeName" column="classify_type_name" jdbcType="VARCHAR"/>
+            <result property="docTypeName" column="doc_type_name" jdbcType="VARCHAR"/>
+            <result property="warehouseName" column="warehouse_name" jdbcType="VARCHAR"/>
+            <result property="cellName" column="cell_name" jdbcType="VARCHAR"/>
+            <result property="itemName" column="item_name" jdbcType="VARCHAR"/>
+            <result property="itemSpec" column="item_spec" jdbcType="VARCHAR"/>
+            <result property="unitName" column="unit_name" jdbcType="VARCHAR"/>
+            <result property="referenceUnitName" column="reference_unit_name" jdbcType="VARCHAR"/>
+            <result property="toWarehouseName" column="to_warehouse_name" jdbcType="VARCHAR"/>
+            <result property="toCellName" column="to_cell_name" jdbcType="VARCHAR"/>
+            <result property="snFromWarehouseName" column="sn_from_warehouse_name" jdbcType="VARCHAR"/>
+            <result property="snFromCellName" column="sn_from_cell_name" jdbcType="VARCHAR"/>
+            <result property="snToCellName" column="sn_to_cell_name" jdbcType="VARCHAR"/>
+            <result property="version" column="version" jdbcType="BIGINT"/>
+            <result property="tenantsid" column="tenantsid" jdbcType="BIGINT"/>
+            <result property="transactionNo" column="transaction_no" jdbcType="VARCHAR"/>
+            <result property="snFromWarehouseNo" column="sn_from_warehouse_no" jdbcType="VARCHAR"/>
+            <result property="snFromCellNo" column="sn_from_cell_no" jdbcType="VARCHAR"/>
+            <result property="snFromStatus" column="sn_from_status" jdbcType="VARCHAR"/>
+            <result property="snToWarehouseNo" column="sn_to_warehouse_no" jdbcType="VARCHAR"/>
+            <result property="snToCellNo" column="sn_to_cell_no" jdbcType="VARCHAR"/>
+            <result property="snToStatus" column="sn_to_status" jdbcType="VARCHAR"/>
+            <result property="checkDataSource" column="check_data_source" jdbcType="VARCHAR"/>
+            <result property="cellOutsideNo" column="cell_outside_no" jdbcType="VARCHAR"/>
+            <result property="isToErp" column="is_to_erp" jdbcType="TINYINT"/>
+            <result property="isToErpAtt01" column="is_to_erp_att01" jdbcType="TINYINT"/>
+            <result property="isToErpAtt02" column="is_to_erp_att02" jdbcType="TINYINT"/>
+            <result property="isToErpAtt03" column="is_to_erp_att03" jdbcType="TINYINT"/>
+            <result property="isToErpAtt04" column="is_to_erp_att04" jdbcType="TINYINT"/>
+            <result property="isToErpAtt05" column="is_to_erp_att05" jdbcType="TINYINT"/>
+            <result property="isToErpAtt06" column="is_to_erp_att06" jdbcType="TINYINT"/>
+            <result property="isToErpAtt07" column="is_to_erp_att07" jdbcType="TINYINT"/>
+            <result property="isToErpAtt08" column="is_to_erp_att08" jdbcType="TINYINT"/>
+            <result property="isToErpAtt09" column="is_to_erp_att09" jdbcType="TINYINT"/>
+            <result property="isToErpAtt10" column="is_to_erp_att10" jdbcType="TINYINT"/>
+            <result property="isToErpAtt11" column="is_to_erp_att11" jdbcType="TINYINT"/>
+            <result property="isToErpAtt12" column="is_to_erp_att12" jdbcType="TINYINT"/>
+            <result property="isToErpAtt13" column="is_to_erp_att13" jdbcType="TINYINT"/>
+            <result property="isToErpAtt14" column="is_to_erp_att14" jdbcType="TINYINT"/>
+            <result property="isToErpAtt15" column="is_to_erp_att15" jdbcType="TINYINT"/>
+            <result property="isToErpAtt16" column="is_to_erp_att16" jdbcType="TINYINT"/>
+            <result property="isToErpAtt17" column="is_to_erp_att17" jdbcType="TINYINT"/>
+            <result property="isToErpAtt18" column="is_to_erp_att18" jdbcType="TINYINT"/>
+            <result property="isToErpAtt19" column="is_to_erp_att19" jdbcType="TINYINT"/>
+            <result property="isToErpAtt20" column="is_to_erp_att20" jdbcType="TINYINT"/>
+            <result property="isToErpAtt21" column="is_to_erp_att21" jdbcType="TINYINT"/>
+            <result property="isToErpAtt22" column="is_to_erp_att22" jdbcType="TINYINT"/>
+            <result property="isToErpAtt23" column="is_to_erp_att23" jdbcType="TINYINT"/>
+            <result property="isToErpAtt24" column="is_to_erp_att24" jdbcType="TINYINT"/>
+            <result property="isToErpAtt25" column="is_to_erp_att25" jdbcType="TINYINT"/>
+            <result property="isToErpAtt26" column="is_to_erp_att26" jdbcType="TINYINT"/>
+            <result property="isToErpAtt27" column="is_to_erp_att27" jdbcType="TINYINT"/>
+            <result property="isToErpAtt28" column="is_to_erp_att28" jdbcType="TINYINT"/>
+            <result property="isToErpAtt29" column="is_to_erp_att29" jdbcType="TINYINT"/>
+            <result property="isToErpAtt30" column="is_to_erp_att30" jdbcType="TINYINT"/>
+            <result property="isToErpAtt31" column="is_to_erp_att31" jdbcType="TINYINT"/>
+            <result property="isToErpAtt32" column="is_to_erp_att32" jdbcType="TINYINT"/>
+            <result property="isToErpAtt33" column="is_to_erp_att33" jdbcType="TINYINT"/>
+            <result property="isToErpAtt34" column="is_to_erp_att34" jdbcType="TINYINT"/>
+            <result property="isToErpAtt35" column="is_to_erp_att35" jdbcType="TINYINT"/>
+            <result property="isToErpAtt36" column="is_to_erp_att36" jdbcType="TINYINT"/>
+            <result property="isToErpAtt37" column="is_to_erp_att37" jdbcType="TINYINT"/>
+            <result property="isToErpAtt38" column="is_to_erp_att38" jdbcType="TINYINT"/>
+            <result property="isToErpAtt39" column="is_to_erp_att39" jdbcType="TINYINT"/>
+            <result property="isToErpAtt40" column="is_to_erp_att40" jdbcType="TINYINT"/>
+            <result property="isToErpAtt41" column="is_to_erp_att41" jdbcType="TINYINT"/>
+            <result property="isToErpAtt42" column="is_to_erp_att42" jdbcType="TINYINT"/>
+            <result property="isToErpAtt43" column="is_to_erp_att43" jdbcType="TINYINT"/>
+            <result property="isToErpAtt44" column="is_to_erp_att44" jdbcType="TINYINT"/>
+            <result property="isToErpAtt45" column="is_to_erp_att45" jdbcType="TINYINT"/>
+            <result property="isToErpAtt46" column="is_to_erp_att46" jdbcType="TINYINT"/>
+            <result property="isToErpAtt47" column="is_to_erp_att47" jdbcType="TINYINT"/>
+            <result property="isToErpAtt48" column="is_to_erp_att48" jdbcType="TINYINT"/>
+            <result property="isToErpAtt49" column="is_to_erp_att49" jdbcType="TINYINT"/>
+            <result property="isToErpAtt50" column="is_to_erp_att50" jdbcType="TINYINT"/>
+            <result property="unitDicimalDigit" column="unit_dicimal_digit" jdbcType="TINYINT"/>
+            <result property="stockUnitNo" column="stock_unit_no" jdbcType="VARCHAR"/>
+            <result property="stockUnitName" column="stock_unit_name" jdbcType="VARCHAR"/>
+            <result property="stockDicimalDigit" column="stock_dicimal_digit" jdbcType="TINYINT"/>
+            <result property="referenceDicimalDigit" column="reference_dicimal_digit" jdbcType="TINYINT"/>
+            <result property="fromUnitPt" column="from_unit_pt" jdbcType="DECIMAL"/>
+            <result property="toUnitPt" column="to_unit_pt" jdbcType="DECIMAL"/>
+            <result property="fromRefunitPt" column="from_refunit_pt" jdbcType="DECIMAL"/>
+            <result property="toRefunitPt" column="to_refunit_pt" jdbcType="DECIMAL"/>
+            <result property="saveId" column="save_id" jdbcType="VARCHAR"/>
+            <result property="lotDesc" column="lot_desc" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,doc_org_no,org_no,
+        classify_type,doc_type,warehouse_no,
+        cell_no,item_no,doc_item_no,
+        barcode,bar_type,stock_rate,
+        stock_keep,source_no,doc_no,
+        doc_seq_no,wms_no,wms_seq_no,
+        qty,unit_no,reference_qty,
+        reference_unit_no,to_warehouse_no,to_cell_no,
+        chag_type,doc_return_flag,status_code,
+        device_no,module_no,box_no,
+        combination_lot_no,wms_lot_no,lot_att01,
+        lot_att02,lot_att03,lot_att04,
+        lot_att05,lot_att06,lot_att07,
+        lot_att08,lot_att09,lot_att10,
+        lot_att11,lot_att12,lot_att13,
+        lot_att14,lot_att15,lot_att16,
+        lot_att17,lot_att18,lot_att19,
+        lot_att20,lot_att21,lot_att22,
+        lot_att23,lot_att24,lot_att25,
+        lot_att26,lot_att27,lot_att28,
+        lot_att29,lot_att30,lot_att31,
+        lot_att32,lot_att33,lot_att34,
+        lot_att35,lot_att36,lot_att37,
+        lot_att38,lot_att39,lot_att40,
+        lot_att41,lot_att42,lot_att43,
+        lot_att44,lot_att45,lot_att46,
+        lot_att47,lot_att48,lot_att49,
+        lot_att50,remark,pda_op_code,
+        create_by,create_name,create_date,
+        update_by,update_name,update_date,
+        create_flag,standard_col01,standard_col02,
+        standard_col03,standard_col04,standard_col05,
+        standard_col06,standard_col07,standard_col08,
+        standard_col09,standard_col10,standard_col11,
+        standard_col12,standard_col13,standard_col14,
+        standard_col15,guest_col01,guest_col02,
+        guest_col03,guest_col04,guest_col05,
+        guest_col06,guest_col07,guest_col08,
+        guest_col09,guest_col10,doc_wo_no,
+        org_name,org_short_name,doc_org_name,
+        doc_org_short_name,classify_type_name,doc_type_name,
+        warehouse_name,cell_name,item_name,
+        item_spec,unit_name,reference_unit_name,
+        to_warehouse_name,to_cell_name,sn_from_warehouse_name,
+        sn_from_cell_name,sn_to_cell_name,version,
+        tenantsid,transaction_no,sn_from_warehouse_no,
+        sn_from_cell_no,sn_from_status,sn_to_warehouse_no,
+        sn_to_cell_no,sn_to_status,check_data_source,
+        cell_outside_no,is_to_erp,is_to_erp_att01,
+        is_to_erp_att02,is_to_erp_att03,is_to_erp_att04,
+        is_to_erp_att05,is_to_erp_att06,is_to_erp_att07,
+        is_to_erp_att08,is_to_erp_att09,is_to_erp_att10,
+        is_to_erp_att11,is_to_erp_att12,is_to_erp_att13,
+        is_to_erp_att14,is_to_erp_att15,is_to_erp_att16,
+        is_to_erp_att17,is_to_erp_att18,is_to_erp_att19,
+        is_to_erp_att20,is_to_erp_att21,is_to_erp_att22,
+        is_to_erp_att23,is_to_erp_att24,is_to_erp_att25,
+        is_to_erp_att26,is_to_erp_att27,is_to_erp_att28,
+        is_to_erp_att29,is_to_erp_att30,is_to_erp_att31,
+        is_to_erp_att32,is_to_erp_att33,is_to_erp_att34,
+        is_to_erp_att35,is_to_erp_att36,is_to_erp_att37,
+        is_to_erp_att38,is_to_erp_att39,is_to_erp_att40,
+        is_to_erp_att41,is_to_erp_att42,is_to_erp_att43,
+        is_to_erp_att44,is_to_erp_att45,is_to_erp_att46,
+        is_to_erp_att47,is_to_erp_att48,is_to_erp_att49,
+        is_to_erp_att50,unit_dicimal_digit,stock_unit_no,
+        stock_unit_name,stock_dicimal_digit,reference_dicimal_digit,
+        from_unit_pt,to_unit_pt,from_refunit_pt,
+        to_refunit_pt,save_id,lot_desc
+    </sql>
+</mapper>

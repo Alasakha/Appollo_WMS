@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.COPTDMapper">
+
+    <select id="getNumberOfOverdueOrders" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM COPTC
+        LEFT JOIN COPTD ON TC001=TD001 AND TC002=TD002
+        LEFT JOIN COPMA ON MA001 = TC004
+        WHERE TC027 = 'Y'
+        AND TD013 &lt; SUBSTRING(CONVERT(CHAR(8), DATEADD(MONTH, 0, GETDATE()), 112), 1, 8)
+        AND TD016 = 'N'
+    </select>
+
+        <select id="getWorkOrderOverdue" resultType="com.mgkj.vo.SalesOrderVo">
+            SELECT TD003 AS orderSerialNumber,
+            COPTC.TC001 AS orderSingle,
+            COPTC.TC003 AS orderDate,
+            TC002 AS orderNumber,
+            COPTD.UDF01 AS controlNumber,
+            MA002 AS customerName,
+            TD014 AS customerNumber,
+            TD004 AS orderNum,
+            TD005 AS orderName,
+            TD006 AS specification,
+            CAST(TD008 AS DECIMAL(10, 2)) AS orderQuantity,
+            CAST(TD009 AS DECIMAL(10, 2)) AS deliveredQuantity,
+            TD013 AS estimateDeliveryDate
+            FROM COPTC
+            LEFT JOIN COPTD ON COPTC.TC001 = COPTD.TD001 AND COPTC.TC002 = COPTD.TD002
+            LEFT JOIN COPMA ON COPTC.TC004 = COPMA.MA001
+            WHERE COPTC.TC027 = 'Y'
+            AND COPTD.TD013 &lt; SUBSTRING(CONVERT(CHAR(8), DATEADD(MONTH, 0, GETDATE()), 112), 1, 8)
+            AND COPTD.TD016 = 'N'
+            ORDER BY COPTC.TC003 DESC
+        </select>
+    <select id="getWorkOrderOverdueInfo" resultType="com.mgkj.vo.SalesOrderVo">
+        SELECT TC001 orderSingle,TC003 orderDate,TC002 orderNumber,COPTD.UDF01 controlNumber,MA002 customerName,TD014 customerNumber,
+               TD004 orderNum,TD005 orderName,TD006 specification,CAST(TD008 AS DECIMAL(10, 2)) orderQuantity,CAST(TD009 AS DECIMAL(10, 2)) deliveredQuantity,TD013 estimateDeliveryDate
+        FROM COPTC
+                 LEFT JOIN COPTD ON TC001=TD001 AND TC002=TD002
+                 LEFT JOIN COPMA ON MA001 = TC004
+        WHERE TC027 = 'Y'
+          AND TD013 &lt; SUBSTRING(CONVERT(CHAR(8), DATEADD(MONTH, 0, GETDATE()), 112), 1, 8)
+          AND TD016 = 'N'
+        AND TD001 = #{orderSingle}
+        AND TD002 = #{orderNumber}
+        AND TD003 = #{orderSerialNumber}
+    </select>
+</mapper>

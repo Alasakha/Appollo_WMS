@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.PickingMapper">
+    <insert id="saveMoPickingSummary" parameterType="com.mgkj.dto.MoPickingSummary">
+        INSERT INTO mo_picking_summary (id, doc_no, item_code, business_qty, match_qty, current_num, warehouse_code, warehouse_name, bin_code, unit_code, unit_name, barcode, item_name, item_spec, remark, create_by, create_time, shjg)
+        VALUES (#{id}, #{docNo}, #{itemCode}, #{businessQty}, #{matchQty}, #{currentNum}, #{warehouseCode}, #{warehouseName}, #{binCode}, #{unitCode}, #{unitName}, #{barcode}, #{itemName}, #{itemSpec}, #{remark}, #{createBy}, #{createTime}, #{shjg});
+    </insert>
+    <update id="updateMoSummaryOfMatchQty">
+        UPDATE mo_picking_summary SET match_qty = match_qty + #{qty}, barcode = #{barcode}, current_num = current_num + #{qty}
+        WHERE id = #{id} AND create_by = #{createBy}
+    </update>
+    <update id="updateQtySubtraction">
+        UPDATE mo_picking_summary SET match_qty = match_qty - #{qty}, current_num = current_num - #{qty}
+        WHERE id = #{id} AND create_by = #{createBy}
+    </update>
+    <update id="updateQtyZero">
+        UPDATE mo_picking_summary SET match_qty = match_qty - #{qty}, current_num = 0.0
+        WHERE id = #{id} AND create_by = #{createBy}
+    </update>
+    <update id="updateIssueReceiptD">
+        UPDATE ISSUE_RECEIPT_D SET UDF023 = 'Y', UDF001 = UDF001 + #{qty}
+        WHERE ISSUE_RECEIPT_D_ID = #{issueReceiptId}
+    </update>
+    <update id="updateMoReceiptD">
+        UPDATE MO SET UDF001 = #{qty}
+        WHERE DOC_NO = #{docNo}
+    </update>
+    <update id="updateAcceptedQty">
+        UPDATE MO_RECEIPT_D SET ACCEPTED_QTY = #{qty}
+        WHERE MO_RECEIPT_D_ID = #{docDNoID}
+    </update>
+    <delete id="deleteMoPickingSummary" parameterType="java.lang.String">
+        DELETE FROM mo_picking_summary WHERE create_by = #{createBy};
+    </delete>
+    <delete id="deleteInvBarcodeOperationByCreateBy">
+        DELETE FROM inv_barcode_operation WHERE create_by = #{createBy} AND chag_type = 4
+    </delete>
+    <delete id="deleteMoPickingSummaryById">
+        DELETE FROM mo_picking_summary WHERE id = #{id}
+    </delete>
+    <select id="getWorkInfoToWmsVo" resultType="com.mgkj.vo.WorkInfoToWmsTempVo">
+        SELECT RTRIM(TY001) TY001, RTRIM(TY002) TY002, TY003, TY004, MOCTY.UDF01, RTRIM(MOCTY.UDF02) UDF02,
+               RTRIM(MOCTY.UDF05) UDF05, B.ITEM_CODE productId, UNIT_NAME unit,
+               A.ITEM_DESCRIPTION productName, A.ITEM_SPECIFICATION specification,
+               ISNULL(F.WORK_CENTER_CODE, '') workCenterId, MD002 workCenterName
+        FROM MOCTY
+                 LEFT JOIN MO A ON A.DOC_NO = CONCAT(RTRIM(TY001  COLLATE Chinese_PRC_CS_AS), '-', RTRIM(TY002  COLLATE Chinese_PRC_CS_AS))
+                 LEFT JOIN dbo.WORK_CENTER AS F ON A.SOURCE_ID_ROid = F.WORK_CENTER_ID
+                 LEFT JOIN CMSMD ON MD001 = ISNULL(F.WORK_CENTER_CODE, '')
+                 LEFT OUTER JOIN dbo.ITEM AS B ON A.ITEM_ID = B.ITEM_BUSINESS_ID
+                 LEFT JOIN UNIT ON UNIT.UNIT_ID = A.BUSINESS_UNIT_ID
+                 LEFT JOIN MOCTYADDINFO ON MOCTY.UDF05 = MOCTYADDINFO.moctyuuid COLLATE Chinese_PRC_CS_AS
+        WHERE
+            TY004 > 0
+          AND A.STATUS != 'Y' AND A.STATUS != 'y' AND A.ApproveStatus = 'Y'
+        <if test="docNo != null and docNo != ''">
+            AND A.DOC_NO IN (SELECT DISTINCT RTRIM(TE006)+'-'+RTRIM(TE007) FROM SFCTE2 WHERE RTRIM(TE001)+'-'+RTRIM(TE002) = #{docNo})
+        </if>
+        UNION
+        SELECT RTRIM(TY001) TY001, RTRIM(TY002) TY002, TY003, TY004, MOCTY.UDF01, RTRIM(MOCTY.UDF02) UDF02,
+        RTRIM(MOCTY.UDF05) UDF05, B.ITEM_CODE productId, UNIT_NAME unit,
+        A.ITEM_DESCRIPTION productName, A.ITEM_SPECIFICATION specification,
+        ISNULL(F.WORK_CENTER_CODE, '') workCenterId, MD002 workCenterName
+        FROM MOCTY
+        LEFT JOIN MO A ON A.DOC_NO = CONCAT(RTRIM(TY001  COLLATE Chinese_PRC_CS_AS), '-', RTRIM(TY002  COLLATE Chinese_PRC_CS_AS))
+        LEFT JOIN dbo.WORK_CENTER AS F ON A.SOURCE_ID_ROid = F.WORK_CENTER_ID
+        LEFT JOIN CMSMD ON MD001 = ISNULL(F.WORK_CENTER_CODE, '')
+        LEFT OUTER JOIN dbo.ITEM AS B ON A.ITEM_ID = B.ITEM_BUSINESS_ID
+        LEFT JOIN UNIT ON UNIT.UNIT_ID = A.BUSINESS_UNIT_ID
+        LEFT JOIN MOCTYADDINFO ON MOCTY.UDF05 = MOCTYADDINFO.moctyuuid COLLATE Chinese_PRC_CS_AS
+        WHERE TY004 > 0
+        AND A.STATUS != 'Y' AND A.STATUS != 'y' AND A.ApproveStatus = 'Y'
+        <if test="docNo != null and docNo != ''">
+            AND A.DOC_NO = #{docNo}
+        </if>
+    </select>
+    <select id="getWorkInfoToWmsVoOverClaim" resultType="com.mgkj.vo.WorkInfoToWmsTempVo">
+        SELECT A.DOC_NO TY001, A.DOC_NO TY002, A.DOC_DATE TY003, 0 TY004, '' UDF01, '' UDF02,
+               '' UDF05, B.ITEM_CODE productId, UNIT_NAME unit,
+               A.ITEM_DESCRIPTION productName, A.ITEM_SPECIFICATION specification,
+               ISNULL(F.WORK_CENTER_CODE, '') workCenterId, MD002 workCenterName,
+               A.DOC_NO
+        FROM  MO A
+                  LEFT JOIN dbo.WORK_CENTER AS F ON A.SOURCE_ID_ROid = F.WORK_CENTER_ID
+                  LEFT JOIN CMSMD ON MD001 = ISNULL(F.WORK_CENTER_CODE, '')
+                  LEFT OUTER JOIN dbo.ITEM AS B ON A.ITEM_ID = B.ITEM_BUSINESS_ID
+                  LEFT JOIN UNIT ON UNIT.UNIT_ID = A.BUSINESS_UNIT_ID
+              --LEFT JOIN MOCTYADDINFO ON MOCTY.UDF05 = MOCTYADDINFO.moctyuuid COLLATE Chinese_PRC_CS_AS
+        WHERE A.DOC_NO = #{docNo}
+          --TY004 > 0 AND
+            --A.STATUS != 'Y' AND A.STATUS != 'y' AND A.ApproveStatus = 'Y'
+    </select>
+
+    <select id="getWorkInfoItem" resultType="com.mgkj.vo.WorkInfoToWmsItemVo">
+        SELECT RTRIM(MOCTY.UDF05) UDF05, A.DOC_NO, ITEM.ITEM_CODE,
+        (MO_D.REQU_INCLUDE_MULT_QTY / A.PLAN_QTY * TY004) TB004,
+        (SELECT ISNULL(SUM(qty), 0) FROM inv_barcode_transaction WHERE lot_att01 = MOCTY.UDF05 AND item_no = ITEM.ITEM_CODE) TB005,
+        MO_D.ISSUED_QTY gdIssuedQty, MO_D.REQU_INCLUDE_MULT_QTY gdRequQty,
+        UNIT.UNIT_NAME, UNIT.UNIT_CODE,
+--         ITEM_PLANT.UDF021 BIN_CODE,WAREHOUSE.WAREHOUSE_NAME,WAREHOUSE.WAREHOUSE_CODE,
+        MO_D.ITEM_DESCRIPTION, MO_D.ITEM_SPECIFICATION
+        FROM MOCTY
+        LEFT JOIN MO A ON A.DOC_NO = CONCAT(RTRIM(TY001  COLLATE Chinese_PRC_CS_AS), '-', RTRIM(TY002  COLLATE Chinese_PRC_CS_AS))
+        LEFT JOIN MO_D ON MO_D.MO_ID = A.MO_ID
+        LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = MO_D.ITEM_ID
+--         LEFT JOIN ITEM_WAREHOUSE ON ITEM_WAREHOUSE.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+--         LEFT JOIN WAREHOUSE ON WAREHOUSE.WAREHOUSE_ID = ITEM_WAREHOUSE.WAREHOUSE_ID
+        LEFT JOIN ITEM_PLANT ON ITEM_PLANT.ITEM_ID = MO_D.ITEM_ID AND ITEM_PLANT.Owner_Org_ROid = A.Owner_Org_ROid
+        LEFT JOIN UNIT ON UNIT.UNIT_ID = MO_D.UNIT_ID
+        WHERE TY004 > 0
+        AND A.STATUS != 'Y' AND A.STATUS != 'y' AND A.ApproveStatus = 'Y' AND ITEM_PLANT.ISSUE_TYPE = '0'
+        <if test="res != null and res.size() > 0">
+            AND MOCTY.UDF05 IN
+            (
+            <!-- 添加 OR 条件到 AND 的括号内 -->
+            <foreach collection="res" item="id" separator=" , ">
+                #{id.udf05}
+            </foreach>
+            )
+        </if>
+    </select>
+    <select id="getWorkInfoItemOverClaim" resultType="com.mgkj.vo.WorkInfoToWmsItemVo">
+        SELECT MO_D.MO_D_ID UDF05, A.DOC_NO, ITEM.ITEM_CODE,
+        0 TB004,
+        0 TB005,
+        MO_D.ISSUED_QTY gdIssuedQty, MO_D.REQU_INCLUDE_MULT_QTY gdRequQty,
+        UNIT.UNIT_NAME, UNIT.UNIT_CODE,
+        MO_D.ITEM_DESCRIPTION, MO_D.ITEM_SPECIFICATION
+        FROM  MO A
+        LEFT JOIN MO_D ON MO_D.MO_ID = A.MO_ID
+        LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = MO_D.ITEM_ID
+        --         LEFT JOIN ITEM_WAREHOUSE ON ITEM_WAREHOUSE.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+        --         LEFT JOIN WAREHOUSE ON WAREHOUSE.WAREHOUSE_ID = ITEM_WAREHOUSE.WAREHOUSE_ID
+        LEFT JOIN ITEM_PLANT ON ITEM_PLANT.ITEM_ID = MO_D.ITEM_ID AND ITEM_PLANT.Owner_Org_ROid = A.Owner_Org_ROid
+        LEFT JOIN UNIT ON UNIT.UNIT_ID = MO_D.UNIT_ID
+        <where> --TY004 > 0 AND
+        --A.STATUS != 'Y' AND A.STATUS != 'y' AND A.ApproveStatus = 'Y' AND ITEM_PLANT.ISSUE_TYPE = '0'
+        <if test="res != null and res.size() > 0">
+            AND A.DOC_NO IN
+            (
+            <!-- 添加 OR 条件到 AND 的括号内 -->
+            <foreach collection="res" item="id" separator=" , ">
+                #{id.ty002}
+            </foreach>
+            )
+        </if>
+        </where>
+    </select>
+    <select id="queryMoSummary" resultType="com.mgkj.dto.MoPickingSummary"
+            parameterType="com.mgkj.dto.QueryMoSummaryDTO">
+        SELECT id, doc_no docNo, item_code itemCode, business_qty businessQty,
+               match_qty matchQty, current_num currentNum, warehouse_code warehouseCode,
+               warehouse_name warehouseName, bin_code binCode, unit_code unitCode, unit_name unitName, barcode,
+               item_name itemName, item_spec itemSpec, remark, create_by createBy, create_time createTime, shjg, moctyUuid
+        FROM mo_picking_summary WHERE create_by = #{createBy}
+        <if test="docNo != null and docNo != ''">
+            AND doc_no = #{docNo}
+        </if>
+        <if test="id != null and id != ''">
+            AND id = #{id}
+        </if>
+        <if test="itemCode != null and itemCode != ''">
+            AND item_code = #{itemCode}
+        </if>
+    </select>
+    <select id="queryUnMatchQtyList" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT(1) FROM mo_picking_summary
+        WHERE match_qty = business_qty
+        AND id = #{id}
+    </select>
+    <select id="queryInvBarcodeOperationVo" resultType="com.mgkj.vo.InvBarcodeOperationVo"
+            parameterType="java.lang.String">
+        SELECT id,warehouse_no warehouseNo, ISNULL(cell_no,'') cellNo, item_no itemNo, item_name itemName,
+               item_spec itemSpec, barcode, qty, unit_no unitNo, chag_type chagType,
+               status_code statusCode, create_by createBy,create_date createDate
+        FROM inv_barcode_operation
+        WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = 4
+    </select>
+    <select id="queryMoSummaryOne" resultType="com.mgkj.dto.MoPickingSummary"
+            parameterType="com.mgkj.dto.QueryMoSummaryDTO">
+        SELECT id, doc_no docNo, item_code itemCode, business_qty businessQty,
+        match_qty matchQty, current_num currentNum, warehouse_code warehouseCode,
+        warehouse_name warehouseName, bin_code binCode, unit_code unitCode, unit_name unitName, barcode,
+        item_name itemName, item_spec itemSpec, remark, create_by createBy, create_time createTime
+        FROM mo_picking_summary WHERE create_by = #{createBy}
+        <if test="docNo != null and docNo != ''">
+            AND doc_no = #{docNo}
+        </if>
+        <if test="id != null and id != ''">
+            AND id = #{id}
+        </if>
+    </select>
+    <select id="queryIssueReceiptReqD" resultType="com.mgkj.vo.IssueReceiptDVo"
+            parameterType="com.mgkj.dto.QueryIssueReceiptD">
+        SELECT
+        ITEM_LOT.LOT_CODE lotCode,
+        ISSUE_RECEIPT_D.ISSUE_RECEIPT_D_ID issueReceiptId,
+        ISSUE_RECEIPT_D.ITEM_DESCRIPTION itemName,
+        ISSUE_RECEIPT_D.ITEM_SPECIFICATION itemSpec,
+        ITEM.ITEM_CODE itemCode,
+        ISSUE_RECEIPT_D.UDF023 status,
+        ISSUE_RECEIPT_D.ISSUE_RECEIPT_QTY outboundQty,
+        ISSUE_RECEIPT_D.UDF001 signedForQty,
+        WAREHOUSE.WAREHOUSE_NAME
+        FROM ISSUE_RECEIPT_D
+        LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = ISSUE_RECEIPT_D.ITEM_ID
+        LEFT JOIN ITEM_LOT ON ISSUE_RECEIPT_D.ITEM_LOT_ID = ITEM_LOT.ITEM_LOT_ID
+        LEFT JOIN WAREHOUSE ON WAREHOUSE.WAREHOUSE_ID = ISSUE_RECEIPT_D.WAREHOUSE_ID
+        LEFT JOIN MO ON ISSUE_RECEIPT_D.MO_ID = MO.MO_ID
+        LEFT JOIN ISSUE_RECEIPT ON ISSUE_RECEIPT.ISSUE_RECEIPT_ID = ISSUE_RECEIPT_D.ISSUE_RECEIPT_ID
+        LEFT JOIN WORK_CENTER ON ISSUE_RECEIPT.SOURCE_ID_ROid = WORK_CENTER.WORK_CENTER_ID
+        WHERE ISSUE_RECEIPT_D.UDF023 != 'Y'
+        AND WAREHOUSE.WAREHOUSE_NAME IN (
+        '动力仓-汽',
+        '行走仓-汽',
+        '电器仓-汽',
+        '包材仓-汽',
+        '塑件仓-汽',
+        '金工成品仓-汽',
+        '标件仓-电',
+        '五金仓-电',
+        '包材仓-电',
+        '电器仓-电',
+        '行走仓-电',
+        '电池仓-电',
+        '铝车架成品仓'
+        )
+            <if test="docNo != null and docNo != ''">
+                AND MO.UDF021 LIKE  ('%' + #{docNo} + '%')
+            </if>
+            <if test="workName != null and workName != ''">
+                AND WORK_CENTER.WORK_CENTER_NAME LIKE ('%' + #{workName} + '%')
+            </if>
+            <if test="warehouseName != null and warehouseName != ''">
+                AND WAREHOUSE.WAREHOUSE_NAME LIKE ('%' + #{warehouseName} + '%')
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND ISSUE_RECEIPT.DOC_DATE >= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND #{endTime} >= ISSUE_RECEIPT.DOC_DATE
+            </if>
+    </select>
+    <select id="queryIssueReceiptHeader" resultType="com.mgkj.vo.IssueReceiptVo">
+        SELECT DISTINCT A.DOC_NO docNo,A.ISSUE_RECEIPT_ID docId, B.UDF021 khdh,
+              D.WORK_CENTER_NAME workName, A.DOC_DATE docDate, A.REMARK remark,E.WAREHOUSE_NAME warehouseName
+        FROM ISSUE_RECEIPT A
+        LEFT JOIN ISSUE_RECEIPT_D C ON C.ISSUE_RECEIPT_ID = A.ISSUE_RECEIPT_ID
+        LEFT JOIN MO B ON C.MO_ID=B.MO_ID
+        LEFT JOIN WORK_CENTER D ON A.SOURCE_ID_ROid = D.WORK_CENTER_ID
+        LEFT JOIN WAREHOUSE E ON E.WAREHOUSE_ID=C.WAREHOUSE_ID
+        WHERE A.SOURCE_ID_RTK = 'WORK_CENTER' AND C.UDF023 != 'Y' AND B.UDF021 LIKE  ('%' + #{docNo} + '%')
+        ORDER BY A.DOC_DATE DESC
+    </select>
+    <select id="queryIssueReceiptD" resultType="com.mgkj.vo.IssueReceiptDVo">
+        SELECT
+            ITEM_LOT.LOT_CODE lotCode,
+            ISSUE_RECEIPT_D.ISSUE_RECEIPT_D_ID issueReceiptId,
+            ISSUE_RECEIPT_D.ITEM_DESCRIPTION itemName,
+            ISSUE_RECEIPT_D.ITEM_SPECIFICATION itemSpec,
+            ITEM.ITEM_CODE itemCode,
+            ISSUE_RECEIPT_D.UDF023 status,
+            ISSUE_RECEIPT_D.ISSUE_RECEIPT_QTY outboundQty,
+            ISSUE_RECEIPT_D.UDF001 signedForQty
+        FROM ISSUE_RECEIPT_D
+        LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = ISSUE_RECEIPT_D.ITEM_ID
+        LEFT JOIN ITEM_LOT ON ISSUE_RECEIPT_D.ITEM_LOT_ID = ITEM_LOT.ITEM_LOT_ID
+        WHERE ISSUE_RECEIPT_D_ID = #{id} AND ISSUE_RECEIPT_D.UDF023 != 'Y'
+    </select>
+    <select id="queryUnSignCount" resultType="java.lang.Integer">
+        SELECT
+        COUNT(*)
+        FROM ISSUE_RECEIPT_D
+        LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = ISSUE_RECEIPT_D.ITEM_ID
+        LEFT JOIN ITEM_LOT ON ISSUE_RECEIPT_D.ITEM_LOT_ID = ITEM_LOT.ITEM_LOT_ID
+        LEFT JOIN WAREHOUSE ON WAREHOUSE.WAREHOUSE_ID = ISSUE_RECEIPT_D.WAREHOUSE_ID
+        LEFT JOIN MO ON ISSUE_RECEIPT_D.MO_ID = MO.MO_ID
+        LEFT JOIN ISSUE_RECEIPT ON ISSUE_RECEIPT.ISSUE_RECEIPT_ID = ISSUE_RECEIPT_D.ISSUE_RECEIPT_ID
+        LEFT JOIN WORK_CENTER ON ISSUE_RECEIPT.SOURCE_ID_ROid = WORK_CENTER.WORK_CENTER_ID
+        WHERE ISSUE_RECEIPT_D.UDF023 = 'Y'
+        AND WAREHOUSE.WAREHOUSE_NAME IN (
+        '动力仓-汽',
+        '行走仓-汽',
+        '电器仓-汽',
+        '包材仓-汽',
+        '塑件仓-汽',
+        '金工成品仓-汽',
+        '标件仓-电',
+        '五金仓-电',
+        '包材仓-电',
+        '电器仓-电',
+        '行走仓-电',
+        '电池仓-电',
+        '铝车架成品仓'
+        )
+        <if test="docNo != null and docNo != ''">
+            AND MO.UDF021 LIKE  ('%' + #{docNo} + '%')
+        </if>
+        <if test="workName != null and workName != ''">
+            AND WORK_CENTER.WORK_CENTER_NAME LIKE ('%' + #{workName} + '%')
+        </if>
+        <if test="warehouseName != null and warehouseName != ''">
+            AND WAREHOUSE.WAREHOUSE_NAME LIKE ('%' + #{warehouseName} + '%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            AND ISSUE_RECEIPT.DOC_DATE >= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND #{endTime} >= ISSUE_RECEIPT.DOC_DATE
+        </if>
+    </select>
+    <select id="queryMoReceipt" resultType="com.mgkj.vo.MoReceiptVo">
+        SELECT
+            MO.UDF021 khdh,
+            MO.DOC_NO moDocNo,
+            ITEM_LOT.LOT_CODE lotCode,
+            MO_RECEIPT_D.MO_RECEIPT_D_ID moReceiptId,
+            MO_RECEIPT_D.ITEM_DESCRIPTION itemName,
+            MO_RECEIPT_D.ITEM_SPECIFICATION itemSpec,
+            ITEM.ITEM_CODE itemCode,
+            MO_RECEIPT_D.ACCEPTED_QTY acceptedQty,
+            MO_RECEIPT_D.UDF001 signedForQty
+        FROM MO_RECEIPT_D
+             LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = MO_RECEIPT_D.ITEM_ID
+             LEFT JOIN ITEM_LOT ON MO_RECEIPT_D.ITEM_LOT_ID = ITEM_LOT.ITEM_LOT_ID
+             LEFT JOIN WAREHOUSE ON WAREHOUSE.WAREHOUSE_ID = MO_RECEIPT_D.WAREHOUSE_ID
+             LEFT JOIN MO ON MO_RECEIPT_D.MO_ID = MO.MO_ID
+             LEFT JOIN MO_RECEIPT ON MO_RECEIPT.MO_RECEIPT_ID = MO_RECEIPT_D.MO_RECEIPT_ID
+             LEFT JOIN WORK_CENTER ON MO_RECEIPT.SOURCE_ID_ROid = WORK_CENTER.WORK_CENTER_ID
+        WHERE MO_RECEIPT_D.UDF023 != 'Y'
+            AND (ITEM.ITEM_CODE LIKE '1%' OR ITEM.ITEM_CODE LIKE '8%')
+            AND MO.UDF021 LIKE  ('%' + #{khdh} + '%') -- 客户单号
+            AND MO.DOC_NO LIKE  ('%' + #{moDocNo} + '%') -- 工单号
+            AND MO_RECEIPT.DOC_DATE >= #{startTime}
+            AND #{endTime} >= MO_RECEIPT.DOC_DATE
+    </select>
+    <select id="queryMoReceiptD" resultType="com.mgkj.vo.MoReceiptVo">
+        SELECT
+            SUM(ISNULL(MO_RECEIPT_D.ACCEPTED_QTY, 0)) acceptedQty,
+            B.UDF001 signedForQty
+        FROM MO B
+                 LEFT JOIN MO_RECEIPT_D ON MO_RECEIPT_D.MO_ID = B.MO_ID
+        WHERE B.DOC_NO = #{id}
+        GROUP BY B.UDF001
+    </select>
+    <select id="queryMoReceiptNew" resultType="com.mgkj.vo.MoReceiptVo"
+            parameterType="com.mgkj.dto.QueryMoReceiptD">
+        SELECT
+            B.DOC_NO moDocNo,
+            B.PLAN_QTY moQty,
+            ITEM.ITEM_NAME itemName,
+            ITEM.ITEM_CODE itemCode,
+            ITEM.ITEM_SPECIFICATION itemSpec,
+            B.UDF022 khdh,
+            SUM(ISNULL(MO_RECEIPT_D.ACCEPTED_QTY, 0)) acceptedQty,
+            B.UDF001 signedForQty
+        FROM MO B
+                 LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = B.ITEM_ID
+                 LEFT JOIN MO_RECEIPT_D ON MO_RECEIPT_D.MO_ID = B.MO_ID
+        WHERE B.UDF022 = (SELECT B.UDF022
+                          FROM SN_ITEM_RECORD A
+                                   LEFT JOIN MO B ON A.SOURCE_ID_ROid=B.MO_ID
+                          WHERE SN_NO = #{snNo})
+          AND ITEM_CODE LIKE '1%'
+        GROUP BY B.DOC_NO,B.UDF022,ITEM.ITEM_NAME,ITEM.ITEM_CODE,ITEM.ITEM_SPECIFICATION,B.PLAN_QTY,B.UDF001
+        ORDER BY B.DOC_NO
+    </select>
+    <select id="queryMoReceipt2" resultType="com.mgkj.vo.MoReceiptVo"
+            parameterType="com.mgkj.dto.QueryMoReceiptD">
+        SELECT MO_RECEIPT_ID, DOC_NO
+        FROM MO_RECEIPT
+        WHERE ADMIN_UNIT_ID IN (
+            SELECT ADMIN_UNIT_ID FROM ADMIN_UNIT WHERE ADMIN_UNIT_CODE IN ('DBZ', 'QBZ')
+        ) AND ApproveStatus = 'N'
+        <if test="docNo != null and docNo != ''">
+            AND DOC_NO LIKE ('%' + #{docNo} + '%')
+        </if>
+    </select>
+    <select id="getMoReceiptDList" resultType="com.mgkj.vo.MoReceiptDVo" parameterType="java.lang.String">
+        SELECT
+            B.MO_RECEIPT_D_ID docDNoId,
+            MO.DOC_NO moDocNo,
+            MO.UDF022 khdh,
+            ITEM.ITEM_CODE itemCode,
+            B.ITEM_DESCRIPTION itemName,
+            B.ITEM_SPECIFICATION itemSpec,
+            B.ACCEPTED_QTY acceptedQty
+        FROM MO_RECEIPT A
+             LEFT JOIN MO_RECEIPT_D B ON A.MO_RECEIPT_ID = B.MO_RECEIPT_ID
+             LEFT JOIN MO ON B.MO_ID = MO.MO_ID
+             LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = B.ITEM_ID
+        WHERE A.DOC_NO LIKE ('%' + #{docNo} + '%')
+    </select>
+    <select id="GetMoReceiptList" resultType="java.lang.String">
+        SELECT DOC_NO
+        FROM MO_RECEIPT
+        WHERE ApproveStatus = 'N'
+    </select>
+    <select id="getQtySumByCreate" resultType="java.math.BigDecimal">
+        SELECT SUM(qty) FROM inv_barcode_operation WHERE barcode = #{barcode} AND chag_type = #{chagType} AND create_by = #{createBy}
+    </select>
+</mapper>

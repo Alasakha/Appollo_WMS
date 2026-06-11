@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.CMSMVMapper">
+
+    <select id="getAll" resultType="com.mgkj.entity.CMSMV">
+        select * from CMSMV
+        where  1 = 1
+        <if test="MV001 != null and MV001 != '' ">and MV001 like '%' + #{MV001} + '%' or  MV002 like '%' + #{MV001} + '%' </if>
+    </select>
+    <select id="getEmployee" resultType="com.mgkj.entity.Employee">
+        SELECT MV001,MV002 from CMSMV
+        <where>
+            <if test="employeeName != null and employeeName != '' ">
+                MV002 like '%' + #{employeeName} + '%'
+            </if>
+        </where>
+    </select>
+    <select id="selectByUserId" resultType="com.mgkj.vo.CMSMVVo">
+        SELECT DISTINCT A.USER_ID userId,A.LOGONNAME MV001,A.USER_NAME MV002,A.UDF026 UDF01, E.EMPLOYEE_ID employeeId,E.EMPLOYEE_CODE employeeNo,
+                        E.EMPLOYEE_NAME employName , AU.ADMIN_UNIT_ID departmentUuid,AU.ADMIN_UNIT_CODE departmentCode,AU.ADMIN_UNIT_NAME departmentName
+        FROM [USER] A
+                 LEFT JOIN EMPLOYEE E ON A.EMPLOYEE_ID = E.EMPLOYEE_ID
+                 LEFT JOIN EMPLOYEE_D F ON E.EMPLOYEE_ID=F.EMPLOYEE_ID
+                 LEFT JOIN ADMIN_UNIT AU ON F.ADMIN_UNIT_ID = AU.ADMIN_UNIT_ID
+        WHERE LOGONNAME = #{userId}
+    </select>
+
+</mapper>

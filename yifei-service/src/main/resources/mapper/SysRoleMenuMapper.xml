@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.auth.SysRoleMenuMapper">
+    <select id="selectListByRoleIdList" resultType="com.mgkj.entity.auth.SysRoleMenu">
+        SELECT DISTINCT menu_id menuId FROM sys_role_menu
+        WHERE is_deleted = 0 AND role_id IN (
+        <if test="roleIdList != null and roleIdList.size() > 0">
+            <!-- 添加 OR 条件到 AND 的括号内 -->
+            <foreach collection="roleIdList" item="id" separator=" , ">
+                #{id}
+            </foreach>
+        </if>
+        )
+    </select>
+</mapper>

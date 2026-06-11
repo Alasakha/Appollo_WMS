@@ -1,0 +1,63 @@
+spring:
+  datasource:
+    dynamic:
+      primary: dscsys
+      datasource:
+        mes:
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://192.168.1.197:3306/ablwms?serverTimezone=UTC
+          username: root
+          password: 123456
+
+        backend:
+          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+          url: jdbc:sqlserver://192.168.1.151:1433;databaseName=WMS;encrypt=false;trustServerCertificate=false
+          username: sa
+          password: Abl123
+
+        dscsys:
+          driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+          url: jdbc:sqlserver://192.168.1.151:1433;databaseName=ABLTEST;encrypt=false;trustServerCertificate=false
+          username: sa
+          password: Abl123
+
+          hikari:
+            connection-timeout: 30000
+            minimum-idle: 5
+            maximum-pool-size: 50
+            auto-commit: true
+            idle-timeout: 600000
+            pool-name: DateSourceHikariCP
+            max-lifetime: 1800000
+            connection-test-query: SELECT 1
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+mybatis-plus:
+  # 扫描 resources/mapper/** 下的所有 XML 文件
+  mapper-locations: classpath*:mapper/**/*.xml
+
+
+sky:
+  corp:
+    #    corpid: "ww088c4ca4dbb37f26"
+    #    corpsecret: "E0CHzkX1fYlOFw8stsdl_LFD_mdcdoOjw6i35qIaL78"
+    #    template_id: "3WMVz718RyF7D492cWy2vADhgu54Us36w7Kpdhhq"
+    #    corpid: "wwd1a68e6e4858a0cf"
+    #    corpsecret: "opw_EAdfovmETHpQTgAKuCaZa62VKzv09M6YyX22tyg"
+    #    template_id: "C4ZUvumyvXt7XeWtC62ima5YXSHbdYVjC5Njn3B6A"
+    #    agentid: "1000026"
+    corpid: "wwd1a68e6e4858a0cf"
+    corpsecret: "FsfddqLPXocOOCBsqtjIvbrcgT25zK9RfT3sqFRUhcA"
+    template_id: "C4ZUvumyvXt7XeWtC62ima5YXSHbdYVjC5Njn3B6A"
+    agentid: "1000025"
+    list-userid:
+      - "HuGang"
+      - "ZouJinLin"
+      - "HongPingGuo"
+      - "WangYanYao"
+
+
+file:
+  upload-dir: D:\\WMS\\download

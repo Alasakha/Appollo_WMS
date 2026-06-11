@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="generator.mapper.WmsPoArrivalInspectionMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.WmsPoArrivalInspection">
+            <id property="inspectionUuid" column="inspectionUuid" jdbcType="OTHER"/>
+            <result property="checkName" column="checkName" jdbcType="VARCHAR"/>
+            <result property="checkDocNo" column="checkDocNo" jdbcType="VARCHAR"/>
+            <result property="arrivalDocNo" column="arrivalDocNo" jdbcType="VARCHAR"/>
+            <result property="arrivalDUuid" column="arrivalDUuid" jdbcType="OTHER"/>
+            <result property="arrivalDSequenceNumber" column="arrivalDSequenceNumber" jdbcType="VARCHAR"/>
+            <result property="itemCode" column="itemCode" jdbcType="VARCHAR"/>
+            <result property="itemName" column="itemName" jdbcType="VARCHAR"/>
+            <result property="acceptableQty" column="acceptableQty" jdbcType="DECIMAL"/>
+            <result property="unqualifiedQty" column="unqualifiedQty" jdbcType="DECIMAL"/>
+            <result property="destroyedQty" column="destroyedQty" jdbcType="DECIMAL"/>
+            <result property="decision" column="decision" jdbcType="VARCHAR"/>
+            <result property="resultStatus" column="resultStatus" jdbcType="VARCHAR"/>
+            <result property="decisionDescription" column="decisionDescription" jdbcType="VARCHAR"/>
+            <result property="createDate" column="CreateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        inspectionUuid,checkName,checkDocNo,
+        arrivalDocNo,arrivalDUuid,arrivalDSequenceNumber,
+        itemCode,itemName,acceptableQty,
+        unqualifiedQty,destroyedQty,decision,
+        resultStatus,decisionDescription,CreateDate
+    </sql>
+</mapper>

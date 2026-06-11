@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.MOCTAMapper">
+
+
+    <select id="getOverdueDetailsInfo" resultType="com.mgkj.vo.WorkOrderOvertimeVo">
+        SELECT ISNULL(ISNULL(m.MD002, ma.MA002),'') workCenter,TA001 single,TA002 singleNumber,TA003 singleDate, RTRIM(TA006) orderNum, TA034 orderName, TA035 specification,CAST(TA015 AS REAL) expectedOutput,TA010 expectedCompletion
+        FROM MOCTA t
+        LEFT JOIN CMSMD m ON t.TA021 = m.MD001
+        LEFT JOIN PURMA ma ON ma.MA001 = t.TA032
+        WHERE t.TA011 not in('Y','y')
+        AND t.TA013='Y'
+        AND t.TA010 &lt; CONVERT(CHAR(8),GETDATE(),112)
+        AND TA001 = #{single}
+        AND TA002 = #{singleNumber}
+        AND ISNULL(ISNULL(m.MD002, ma.MA002),'') = #{workCenter}
+        ORDER BY t.TA009
+    </select>
+
+    <select id="selectAll" resultType="com.mgkj.entity.MOCTA">
+        SELECT * FROM MOCTA
+        ORDER BY TA001
+    </select>
+
+    <select id="getTb005ByTb001Tb002AndProductId" resultType="java.math.BigDecimal">
+        SELECT ISNULL(TB005, 0)
+        FROM MOCTB
+        WHERE RTRIM(TB001) + '-' + RTRIM(TB002) = #{docNo}
+          AND TB003 = #{product}
+    </select>
+</mapper>

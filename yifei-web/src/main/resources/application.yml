@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: abl-wms
+  profiles:
+    active: dev
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+    async:
+      request-timeout: 120000
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 查看日志
+  mapper-locations: classpath*:/mapper/*.xml
+server:
+  servlet:
+    session:
+      timeout: 120s
+  port: 9001
+logging:
+  #指定日志的配置文件的位置。
+  config: classpath:logback-spring.xml
+  file: #配置日志文件
+    path: loggs
+  level:
+    com:
+      example:
+        mapper: trace
+        controller: info

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.AgvTaskInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.AgvTaskInfo">
+            <result property="id" column="id" />
+            <result property="taskCode" column="taskCode" />
+            <result property="reqCode" column="reqCode" />
+            <result property="reqParam" column="reqParam" />
+            <result property="respParam" column="respParam" />
+            <result property="createTime" column="createTime" />
+            <result property="taskType" column="taskType" />
+            <result property="taskStatus" column="taskStatus" />
+            <result property="startLocationCode" column="startLocationCode" />
+            <result property="endLocationCode" column="endLocationCode" />
+            <result property="startLocationType" column="startLocationType" />
+            <result property="endLocationType" column="endLocationType" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,taskCode,reqCode,reqParam,respParam,createTime,
+        taskType,taskStatus,startLocationCode,endLocationCode,startLocationType,
+        endLocationType
+    </sql>
+    <select id="getAgvTaskInfoByBarcode" resultType="com.mgkj.entity.AgvTaskInfo">
+        SELECT agv_task_info.*
+        FROM agv_task_info
+                 LEFT JOIN agv_task_detail ON agv_task_info.id = agv_task_detail.agvTaskId
+        WHERE agv_task_detail.barcode = #{barcode}
+    </select>
+    <select id="getAgvTaskList" resultType="com.mgkj.entity.AgvTaskInfo">
+        SELECT agv_task_info.*
+        FROM agv_task_info
+                 LEFT JOIN agv_warehouse ON agv_task_info.endLocationCode = agv_warehouse.stationCode
+                 LEFT JOIN agv_process_info ON agv_warehouse.id = agv_process_info.agvWarId
+        WHERE agv_task_info.docNo = #{docNo} AND agv_task_info.taskStatus = 0
+        ORDER BY agv_process_info.processCode ASC
+    </select>
+</mapper>

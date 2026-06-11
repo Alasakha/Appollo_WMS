@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.PoArrivalInspectionSd1Mapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.PoArrivalInspectionSd1">
+            <id property="PO_ARRIVAL_INSPECTION_SD1_ID" column="PO_ARRIVAL_INSPECTION_SD1_ID" jdbcType="OTHER"/>
+            <result property="sequenceNumber" column="SequenceNumber" jdbcType="INTEGER"/>
+            <result property="MEASURED_VALUE" column="MEASURED_VALUE" jdbcType="DECIMAL"/>
+            <result property="DECISION" column="DECISION" jdbcType="BIT"/>
+            <result property="REMARK" column="REMARK" jdbcType="VARCHAR"/>
+            <result property="UDF001" column="UDF001" jdbcType="DECIMAL"/>
+            <result property="UDF002" column="UDF002" jdbcType="DECIMAL"/>
+            <result property="UDF003" column="UDF003" jdbcType="DECIMAL"/>
+            <result property="UDF011" column="UDF011" jdbcType="DECIMAL"/>
+            <result property="UDF012" column="UDF012" jdbcType="DECIMAL"/>
+            <result property="UDF013" column="UDF013" jdbcType="DECIMAL"/>
+            <result property="UDF021" column="UDF021" jdbcType="VARCHAR"/>
+            <result property="UDF022" column="UDF022" jdbcType="VARCHAR"/>
+            <result property="UDF023" column="UDF023" jdbcType="VARCHAR"/>
+            <result property="UDF024" column="UDF024" jdbcType="VARCHAR"/>
+            <result property="UDF025" column="UDF025" jdbcType="VARCHAR"/>
+            <result property="UDF026" column="UDF026" jdbcType="VARCHAR"/>
+            <result property="UDF041" column="UDF041" jdbcType="TIMESTAMP"/>
+            <result property="UDF042" column="UDF042" jdbcType="TIMESTAMP"/>
+            <result property="UDF051" column="UDF051" jdbcType="OTHER"/>
+            <result property="UDF052" column="UDF052" jdbcType="OTHER"/>
+            <result property="UDF053" column="UDF053" jdbcType="OTHER"/>
+            <result property="UDF054" column="UDF054" jdbcType="OTHER"/>
+            <result property="version" column="Version" jdbcType="TIMESTAMP"/>
+            <result property="approveStatus" column="ApproveStatus" jdbcType="VARCHAR"/>
+            <result property="approveDate" column="ApproveDate" jdbcType="TIMESTAMP"/>
+            <result property="approveBy" column="ApproveBy" jdbcType="OTHER"/>
+            <result property="createDate" column="CreateDate" jdbcType="TIMESTAMP"/>
+            <result property="lastModifiedDate" column="LastModifiedDate" jdbcType="TIMESTAMP"/>
+            <result property="modifiedDate" column="ModifiedDate" jdbcType="TIMESTAMP"/>
+            <result property="createBy" column="CreateBy" jdbcType="OTHER"/>
+            <result property="lastModifiedBy" column="LastModifiedBy" jdbcType="OTHER"/>
+            <result property="modifiedBy" column="ModifiedBy" jdbcType="OTHER"/>
+            <result property="PO_ARRIVAL_INSPECTION_D_ID" column="PO_ARRIVAL_INSPECTION_D_ID" jdbcType="OTHER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        PO_ARRIVAL_INSPECTION_SD1_ID,SequenceNumber,MEASURED_VALUE,
+        DECISION,REMARK,UDF001,
+        UDF002,UDF003,UDF011,
+        UDF012,UDF013,UDF021,
+        UDF022,UDF023,UDF024,
+        UDF025,UDF026,UDF041,
+        UDF042,UDF051,UDF052,
+        UDF053,UDF054,Version,
+        ApproveStatus,ApproveDate,ApproveBy,
+        CreateDate,LastModifiedDate,ModifiedDate,
+        CreateBy,LastModifiedBy,ModifiedBy,
+        PO_ARRIVAL_INSPECTION_D_ID
+    </sql>
+    <select id="getMeasurementValueByCheckDUuid" resultType="com.mgkj.entity.PoArrivalInspectionSd1">
+
+        SELECT A.SequenceNumber,A.MEASURED_VALUE,A.DECISION,A.REMARK
+        FROM PO_ARRIVAL_INSPECTION_SD1 A
+                 LEFT JOIN PO_ARRIVAL_INSPECTION_D B ON A.PO_ARRIVAL_INSPECTION_D_ID = B.PO_ARRIVAL_INSPECTION_D_ID
+        WHERE A.PO_ARRIVAL_INSPECTION_D_ID = #{checkDUuid}
+
+    </select>
+</mapper>

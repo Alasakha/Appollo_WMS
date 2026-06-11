@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.DscmaMapper">
+
+
+
+    <select id="dscmaList" resultType="com.mgkj.entity.Dscma">
+        SELECT * FROM DSCMA
+        WHERE 1 = 1
+        <if test="ma001!=null and ma001 !='' ">
+            AND MA001 LIKE CONCAT('%', #{ma001}, '%')
+        </if>
+        <if test="ma002!=null and ma002 !='' ">
+            AND MA002 LIKE CONCAT('%', #{ma002}, '%')
+        </if>
+        <if test="deptNoList != null and deptNoList.size() > 0">
+            AND UDF01 IN
+            (
+            <!-- 添加 OR 条件到 AND 的括号内 -->
+            <foreach collection="deptNoList" item="id" separator=" , ">
+                #{id}
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <select id="queryList" resultType="com.mgkj.entity.Dscma">
+        SELECT [帐号] AS ma001,[姓名] AS ma002 FROM QYWX
+        <if test="ma001!=null and ma001 !='' ">
+            AND [帐号] LIKE CONCAT('%', #{ma001}, '%')
+        </if>
+        <if test="ma002!=null and ma002 !='' ">
+            AND [姓名] LIKE CONCAT('%', #{ma002}, '%')
+        </if>
+    </select>
+
+    <select id="selUserList" resultType="com.mgkj.entity.Dscma">
+        SELECT LOGONNAME ma001, USER_NAME ma002 FROM [USER]
+    </select>
+
+    <select id="queryList2" resultType="com.mgkj.entity.Dscma">
+        SELECT * FROM DSCMA
+        WHERE 1 = 1
+        <if test="ma001!=null and ma001 !='' ">
+            AND MA001 LIKE CONCAT('%', #{ma001}, '%')
+        </if>
+        <if test="ma002!=null and ma002 !='' ">
+            AND MA002 LIKE CONCAT('%', #{ma002}, '%')
+        </if>
+    </select>
+    
+    <select id="employeeList" resultType="com.mgkj.entity.Dscma">
+        SELECT EMPLOYEE_CODE ma001, EMPLOYEE_NAME ma002, ISNULL(xs, 0) AS xs,
+        0 sc, 0 money, deptName workCenter
+        FROM EMPLOYEE
+        LEFT JOIN employeeXs ON EMPLOYEE_CODE COLLATE Chinese_PRC_CS_AS = employeeXs.employeeNo
+        WHERE EXISTS(SELECT * FROM PersonSignInOut WHERE creatorNo = EMPLOYEE_CODE COLLATE Chinese_PRC_CS_AS)
+        <if test="ta021!=null and ta021 !='' and ta021 == '1'.toString()">
+            AND deptName = '总装一课'
+        </if>
+        <if test="ta021!=null and ta021 !='' and ta021 == '2'.toString()">
+            AND deptName = '总装二课'
+        </if>
+        <if test="ma002!=null and ma002 !='' ">
+            AND EMPLOYEE_NAME LIKE CONCAT('%', #{ma002}, '%')
+        </if>
+    </select>
+
+    <select id="employeeListToday" resultType="com.mgkj.entity.Dscma">
+        SELECT EMPLOYEE_CODE ma001, EMPLOYEE_NAME ma002, ISNULL(xs, 0) AS xs, 0 sc, 0 money, deptName workCenter
+        FROM EMPLOYEE LEFT JOIN employeeXs ON EMPLOYEE_CODE COLLATE Chinese_PRC_CS_AS = employeeXs.employeeNo
+        WHERE EXISTS(SELECT * FROM PersonSignInOut WHERE udf04 = #{date} AND ISNULL(udf06, '') != '' AND creatorNo = EMPLOYEE_CODE COLLATE Chinese_PRC_CS_AS)
+    </select>
+    <select id="getLoginUserByDeptNo" resultType="com.mgkj.vo.GetLoginUserByDeptNoVo">
+        SELECT MA001 userNo, MA002 userName, UDF01 deptNo FROM DSCMA
+        WHERE 1 = 1
+        <if test="userNo!=null and userNo !='' ">
+            AND MA001 LIKE CONCAT('%', #{userNo}, '%')
+        </if>
+        <if test="userName!=null and userName !='' ">
+            AND MA002 LIKE CONCAT('%', #{userName}, '%')
+        </if>
+        <if test="deptNo!=null and deptNo !='' ">
+            AND UDF01 = #{deptNo}
+        </if>
+    </select>
+
+</mapper>

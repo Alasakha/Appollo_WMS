@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.InvBarcodeOperationMapper">
+
+
+    <select id="selectByid" resultType="com.mgkj.entity.InvBarcodeOperation">
+        SELECT id id,
+               warehouse_no warehouseNo,
+               org_no orgNo,
+               cell_no cellNo,
+               item_no itemNo,
+               barcode barcode,
+               status_code statusCode,
+               stock_rate stockRate,
+               stock_keep  stockKeep,
+               qty qty,
+               unit_no unitNo,
+               reference_qty referenceQty,
+               chag_type chagType,
+               doc_return_flag docReturnFlag,
+               status_code statusCode,
+               create_by createBy,
+               item_name itemName
+        FROM inv_barcode_operation
+        WHERE id = #{id}
+
+
+
+    </select>
+    <select id="queryNotSubimtByTypeAndCreateBy" resultType="com.mgkj.entity.InvBarcodeOperation">
+        SELECT id id,
+               warehouse_no warehouseNo,
+               cell_no cellNo,
+               item_no itemNo,
+               barcode barcode,
+               status_code statusCode,
+               stock_rate stockRate,
+               stock_keep  stockKeep,
+               qty qty,
+               unit_no unitNo,
+               reference_qty referenceQty,
+               chag_type chagType,
+               doc_return_flag docReturnFlag,
+               status_code statusCode,
+               create_by createBy,
+               item_name itemName,
+               lot_att01 lotAtt01
+        FROM inv_barcode_operation
+        WHERE status_code = 0 AND chag_type = #{chagType} AND create_by = #{createBy}
+    </select>
+    <select id="invBarcodeOperationListByIds" resultType="com.mgkj.entity.InvBarcodeOperation">
+        SELECT id,
+        warehouse_no warehouseNo,
+        ISNULL(cell_no,'') cellNo,
+        item_no itemNo,
+        item_name itemName,
+        item_spec itemSpec,
+        barcode ,
+        qty ,
+        unit_no unitNo,
+        chag_type chagType,
+        status_code statusCode,
+        create_by createBy,
+        create_date createDate,
+        org_no orgNo,
+        lot_att01 lotAtt01,
+        lot_att02 lotAtt02,
+        lot_att03 lotAtt03,
+        lot_att04 lotAtt04,
+        lot_att05 lotAtt05,
+        classify_type classifyType,
+        remark remark
+        FROM inv_barcode_operation
+        where id in
+        <foreach collection="idList" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectByIdList" resultType="com.mgkj.entity.InvBarcodeOperation">
+        SELECT
+        id id,
+        org_no orgNo,
+        doc_no docNo,
+        doc_seq_no docSeqNo,
+        warehouse_no warehouseNo,
+        org_no orgNo,
+        cell_no cellNo,
+        item_no itemNo,
+        barcode barcode,
+        status_code statusCode,
+        stock_rate stockRate,
+        stock_keep  stockKeep,
+        qty qty,
+        unit_no unitNo,
+        reference_qty referenceQty,
+        chag_type chagType,
+        doc_return_flag docReturnFlag,
+        create_by createBy,
+        item_name itemName
+        FROM inv_barcode_operation
+        <where>
+            <if test="ids != null and ids.size() > 0">
+                id IN
+                <foreach collection="ids" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <if test="ids == null or ids.size() == 0">
+                -- 当 ids 为空时，添加一个恒假条件避免语法错误（可根据业务调整）
+                1 = 0
+            </if>
+        </where>
+    </select>
+</mapper>

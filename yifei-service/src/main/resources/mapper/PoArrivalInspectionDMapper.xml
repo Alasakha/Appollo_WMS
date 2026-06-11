@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.PoArrivalInspectionDMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.PoArrivalInspectionD">
+            <id property="PO_ARRIVAL_INSPECTION_D_ID" column="PO_ARRIVAL_INSPECTION_D_ID" jdbcType="OTHER"/>
+            <result property="SEQUENCE" column="SEQUENCE" jdbcType="INTEGER"/>
+            <result property="DEFECT_CLASS" column="DEFECT_CLASS" jdbcType="VARCHAR"/>
+            <result property="INSPECTION_QTY" column="INSPECTION_QTY" jdbcType="DECIMAL"/>
+            <result property="INSPECTION_QQ" column="INSPECTION_QQ" jdbcType="DECIMAL"/>
+            <result property="INSPECTION_AC" column="INSPECTION_AC" jdbcType="DECIMAL"/>
+            <result property="INSPECTION_RE" column="INSPECTION_RE" jdbcType="DECIMAL"/>
+            <result property="DECISION" column="DECISION" jdbcType="BIT"/>
+            <result property="IMPACT_RESULT" column="IMPACT_RESULT" jdbcType="BIT"/>
+            <result property="REMARK" column="REMARK" jdbcType="VARCHAR"/>
+            <result property="INSPECTION_ITEM_ID" column="INSPECTION_ITEM_ID" jdbcType="OTHER"/>
+            <result property="DEFECTIVE_REASONS_ID" column="DEFECTIVE_REASONS_ID" jdbcType="OTHER"/>
+            <result property="UDF001" column="UDF001" jdbcType="DECIMAL"/>
+            <result property="UDF002" column="UDF002" jdbcType="DECIMAL"/>
+            <result property="UDF003" column="UDF003" jdbcType="DECIMAL"/>
+            <result property="UDF011" column="UDF011" jdbcType="DECIMAL"/>
+            <result property="UDF012" column="UDF012" jdbcType="DECIMAL"/>
+            <result property="UDF013" column="UDF013" jdbcType="DECIMAL"/>
+            <result property="UDF021" column="UDF021" jdbcType="VARCHAR"/>
+            <result property="UDF022" column="UDF022" jdbcType="VARCHAR"/>
+            <result property="UDF023" column="UDF023" jdbcType="VARCHAR"/>
+            <result property="UDF024" column="UDF024" jdbcType="VARCHAR"/>
+            <result property="UDF025" column="UDF025" jdbcType="VARCHAR"/>
+            <result property="UDF026" column="UDF026" jdbcType="VARCHAR"/>
+            <result property="UDF041" column="UDF041" jdbcType="TIMESTAMP"/>
+            <result property="UDF042" column="UDF042" jdbcType="TIMESTAMP"/>
+            <result property="UDF051" column="UDF051" jdbcType="OTHER"/>
+            <result property="UDF052" column="UDF052" jdbcType="OTHER"/>
+            <result property="UDF053" column="UDF053" jdbcType="OTHER"/>
+            <result property="UDF054" column="UDF054" jdbcType="OTHER"/>
+            <result property="version" column="Version" jdbcType="TIMESTAMP"/>
+            <result property="createDate" column="CreateDate" jdbcType="TIMESTAMP"/>
+            <result property="lastModifiedDate" column="LastModifiedDate" jdbcType="TIMESTAMP"/>
+            <result property="modifiedDate" column="ModifiedDate" jdbcType="TIMESTAMP"/>
+            <result property="createBy" column="CreateBy" jdbcType="OTHER"/>
+            <result property="lastModifiedBy" column="LastModifiedBy" jdbcType="OTHER"/>
+            <result property="modifiedBy" column="ModifiedBy" jdbcType="OTHER"/>
+            <result property="approveStatus" column="ApproveStatus" jdbcType="VARCHAR"/>
+            <result property="approveDate" column="ApproveDate" jdbcType="TIMESTAMP"/>
+            <result property="approveBy" column="ApproveBy" jdbcType="OTHER"/>
+            <result property="PO_ARRIVAL_INSPECTION_ID" column="PO_ARRIVAL_INSPECTION_ID" jdbcType="OTHER"/>
+            <result property="sequenceNumber" column="SequenceNumber" jdbcType="INTEGER"/>
+            <result property="QS_DESCRIPTION" column="QS_DESCRIPTION" jdbcType="VARCHAR"/>
+            <result property="STANDARD_MAX" column="STANDARD_MAX" jdbcType="DECIMAL"/>
+            <result property="QC_MAX" column="QC_MAX" jdbcType="DECIMAL"/>
+            <result property="STANDARD_VALUE" column="STANDARD_VALUE" jdbcType="DECIMAL"/>
+            <result property="QC_MIN" column="QC_MIN" jdbcType="DECIMAL"/>
+            <result property="STANDARD_MIN" column="STANDARD_MIN" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        PO_ARRIVAL_INSPECTION_D_ID,SEQUENCE,DEFECT_CLASS,
+        INSPECTION_QTY,INSPECTION_QQ,INSPECTION_AC,
+        INSPECTION_RE,DECISION,IMPACT_RESULT,
+        REMARK,INSPECTION_ITEM_ID,DEFECTIVE_REASONS_ID,
+        UDF001,UDF002,UDF003,
+        UDF011,UDF012,UDF013,
+        UDF021,UDF022,UDF023,
+        UDF024,UDF025,UDF026,
+        UDF041,UDF042,UDF051,
+        UDF052,UDF053,UDF054,
+        Version,CreateDate,LastModifiedDate,
+        ModifiedDate,CreateBy,LastModifiedBy,
+        ModifiedBy,ApproveStatus,ApproveDate,
+        ApproveBy,PO_ARRIVAL_INSPECTION_ID,SequenceNumber,
+        QS_DESCRIPTION,STANDARD_MAX,QC_MAX,
+        STANDARD_VALUE,QC_MIN,STANDARD_MIN
+    </sql>
+    <update id="updatePoArrivalInspectionDById">
+        UPDATE PO_ARRIVAL_INSPECTION_D SET DECISION = #{decision},INSPECTION_QQ = #{defectiveQty}
+                                       WHERE PO_ARRIVAL_INSPECTION_D_ID = #{uuid}
+
+
+
+    </update>
+    <update id="updateBatchById">
+    <foreach collection = "list" item = "item" separator = ";">
+        UPDATE PO_ARRIVAL_INSPECTION_D SET DECISION = #{item.DECISION},
+                                           INSPECTION_QQ = #{item.INSPECTION_QQ}
+        WHERE PO_ARRIVAL_INSPECTION_D_ID = #{item.PO_ARRIVAL_INSPECTION_D_ID}
+    </foreach>
+
+    </update>
+
+
+</mapper>

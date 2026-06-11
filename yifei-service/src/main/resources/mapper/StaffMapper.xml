@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.StaffMapper">
+
+
+    <select id="getAllStaffInfo" resultType="com.mgkj.dto.StaffDto">
+        SELECT
+        DISTINCT
+        EMPLOYEE.EMPLOYEE_CODE AS staffNo,
+        EMPLOYEE.EMPLOYEE_NAME AS staffName
+        FROM   EMPLOYEE AS EMPLOYEE
+        INNER JOIN PLANT
+        ON 1=1
+        INNER JOIN PARA_PLANT
+        ON PARA_PLANT.Owner_Org_ROid=PLANT.PLANT_ID
+        WHERE
+         EMPLOYEE.ApproveStatus = N'Y'
+        AND  PLANT_CODE='1'
+    </select>
+    <select id="getGroupStaffInfo" resultType="com.mgkj.dto.StaffDto">
+        SELECT  EMPLOYEE_CODE AS employeeNo,
+                EMPLOYEE_NAME AS employeeName
+        FROM WORK_TEAM
+                 LEFT JOIN dbo.WORK_TEAM_D
+                           ON WORK_TEAM_D.WORK_TEAM_ID = WORK_TEAM.WORK_TEAM_ID
+                 LEFT JOIN dbo.EMPLOYEE
+                           ON EMPLOYEE.EMPLOYEE_ID = WORK_TEAM_D.EMPLOYEE_ID
+        WHERE WORK_TEAM_CODE=#{groupNo}
+          AND WORK_TEAM.ApproveStatus='Y'
+        ORDER BY WORK_TEAM_CODE,EMPLOYEE_CODE
+    </select>
+    <select id="getStaffDetailInfo" resultType="com.mgkj.dto.StaffDetailDto">
+        SELECT e.EMPLOYEE_CODE AS employeeNo,
+               e.EMPLOYEE_NAME AS employeeName,
+               ISNULL(au.ADMIN_UNIT_CODE,'')AS departmentNo,
+               ISNULL(au.ADMIN_UNIT_NAME,'')AS departmentName
+        FROM EMPLOYEE AS e
+                 LEFT JOIN EMPLOYEE_D AS ed
+                           ON ed.EMPLOYEE_ID = e.EMPLOYEE_ID
+                               AND ed.IS_PRIMARY = 1
+                 LEFT JOIN ADMIN_UNIT AS au
+                           ON au.ADMIN_UNIT_ID = ed.ADMIN_UNIT_ID
+        WHERE e.EMPLOYEE_CODE = #{employeeNo}
+    </select>
+
+</mapper>

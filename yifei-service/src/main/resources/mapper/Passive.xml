@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.PassiveMapper">
+
+
+    <insert id="insertMiddleTable">
+        insert into LSMD_T (LSMD_T_ID, LSMD001, LSMD002, LSMD003, LSMD004, LSMD005, LSMD006, LSMD008, LSMD010,
+                            LSMD013, LSMD014, LSMD015, LSMD017,LSMD018,LSMD019, LSMD020, LSMD024, LSMD025, LSMD026, LSMD027, LSMD028, LSMD029,
+                            LSMD030, LSMD031,
+                            LSMD033, LSMD036, LSMD037, LSMD039, LSMD042, LSMD045, LSMD046, LSMD047, LSMD053, LSMD054, LSMD055, LSMD058, LSMD083,
+                            LSMD084,LSMD085, LSMD086, LSMD906,LSMD907,
+                            LSMDCRTDT, LSMDCRTID, LSMDENT, LSMDMODDT, LSMDMODID, LSMDOWNDP, LSMDOWNID, LSMDSITE,LSMDSTUS)
+        values (#{lsmdTId}, #{lsmd001},
+                #{lsmd002}, #{lsmd003}, #{lsmd004}, #{lsmd005}, #{lsmd006},#{lsmd008},#{lsmd010},
+                #{lsmd013}, #{lsmd014},#{lsmd015}, #{lsmd017}, #{lsmd018}, #{lsmd019}, #{lsmd020}, #{lsmd024},
+                #{lsmd025}, #{lsmd026}, #{lsmd027}, #{lsmd028}, #{lsmd029}, #{lsmd030}, #{lsmd031}, #{lsmd033},
+                #{lsmd036},#{lsmd037},#{lsmd039}, #{lsmd042},#{lsmd045}, #{lsmd046},#{lsmd047},
+                #{lsmd053}, #{lsmd054},#{lsmd055}, #{lsmd058},
+                #{lsmd083}, #{lsmd084}, #{lsmd085}, #{lsmd086},
+                #{lsmd906},#{lsmd907},
+                #{lsmdcrtdt}, #{lsmdcrtid}, #{lsmdent},
+                #{lsmdmoddt}, #{lsmdmodid}, #{lsmdowndp}, #{lsmdownid}, #{lsmdsite}, #{lsmdstus})
+
+
+    </insert>
+    <insert id="insertTransferMiddleTable">
+        insert into LSMD_T (
+            LSMD_T_ID, LSMD001, LSMD002, LSMD003, LSMD004, LSMD005, LSMD006, LSMD007, LSMD008, LSMD010,
+            LSMD013, LSMD014, LSMD015, LSMD019, LSMD024, LSMD025, LSMD026, LSMD027, LSMD028, LSMD029,
+            LSMD030, LSMD031, LSMD033, LSMD036, LSMD037, LSMD038,LSMD039, LSMD042, LSMD045, LSMD046, LSMD047, LSMD053,
+            LSMD054, LSMD055, LSMD058, LSMD081,LSMD082, LSMD083, LSMD084, LSMD085, LSMD086, LSMD906, LSMD907,
+            LSMDCRTDT, LSMDCRTID, LSMDENT, LSMDMODDT, LSMDMODID, LSMDOWNDP, LSMDOWNID, LSMDSITE,
+            LSMDSTUS
+        ) values (
+                     #{lsmdTId}, #{lsmd001}, #{lsmd002}, #{lsmd003}, #{lsmd004}, #{lsmd005}, #{lsmd006}, #{lsmd007},
+                     #{lsmd008}, #{lsmd010}, #{lsmd013}, #{lsmd014}, #{lsmd015}, #{lsmd019}, #{lsmd024},
+                     #{lsmd025}, #{lsmd026}, #{lsmd027}, #{lsmd028}, #{lsmd029}, #{lsmd030}, #{lsmd031}, #{lsmd033},#{lsmd036},
+                     #{lsmd037}, #{lsmd038}, #{lsmd039}, #{lsmd042}, #{lsmd045}, #{lsmd046}, #{lsmd047}, #{lsmd053},
+                     #{lsmd054}, #{lsmd055}, #{lsmd058}, #{lsmd081},#{lsmd082}, #{lsmd083}, #{lsmd084}, #{lsmd085}, #{lsmd086},
+                     #{lsmd906}, #{lsmd907}, #{lsmdcrtdt}, #{lsmdcrtid}, #{lsmdent}, #{lsmdmoddt}, #{lsmdmodid},
+                     #{lsmdowndp}, #{lsmdownid}, #{lsmdsite}, #{lsmdstus}
+                 )
+
+
+
+    </insert>
+    <update id="UpdateBarcodeQty">
+        UPDATE bm_barcode_detail SET qty -= #{transferQty} WHERE barcode = #{barcode}
+    </update>
+    <update id="batchUpdateBarcodeQty">
+        <foreach collection="qtyList" item="item" separator=";">
+            UPDATE bm_barcode_detail SET qty -= #{item.matchQty} WHERE barcode = #{item.barcode}
+        </foreach>
+
+
+    </update>
+    <select id="getTransferBarcodeInfo" resultType="com.mgkj.vo.TransferBarcodeVo">
+        SELECT
+        barcode barcode,
+        item_no itemCode,
+        item_name itemName,
+        item_spec itemSpec,
+        unit_no unitCode,
+        ISNULL(unit_name,'') unitName,
+        ISNULL(sn_warehouse_no,'') warehouseCode,
+        ISNULL(sn_cell_no,'') binCode,
+        qty matchQty,
+        org_no shjg
+        FROM bm_barcode_detail
+        WHERE 1=1
+        <if test="barcode!=null and barcode!=''">
+            and barcode = #{barcode}
+        </if>
+    </select>
+    <select id="getEmployeeInfo" resultType="com.mgkj.vo.PassiveEmployeeInfoVo">
+        SELECT e.EMPLOYEE_CODE AS employeeCode,
+               e.EMPLOYEE_NAME AS employeeName,
+               ISNULL(au.ADMIN_UNIT_CODE,'')AS departmentCode,
+               ISNULL(au.ADMIN_UNIT_NAME,'')AS departmentName
+        FROM EMPLOYEE AS e
+                 LEFT JOIN EMPLOYEE_D AS ed
+                           ON ed.EMPLOYEE_ID = e.EMPLOYEE_ID
+                               AND ed.IS_PRIMARY = 1
+                 LEFT JOIN ADMIN_UNIT AS au
+                           ON au.ADMIN_UNIT_ID = ed.ADMIN_UNIT_ID
+        <where>
+             e.ApproveStatus = 'Y'
+            <if test="employeeName!=null and employeeName!=''">
+                AND e.EMPLOYEE_NAME like CONCAT('%',#{employeeName},'%')
+            </if>
+        </where>
+
+
+
+    </select>
+    <select id="getBarCodeDetailByBarCode" resultType="com.mgkj.vo.BarCodeDetailVo">
+        SELECT lot_att30,barcode,item_no itemCode,item_name itemName,item_spec itemSpec,
+               unit_no unitNo,unit_name unitName, (qty -  ISNULL(standard_col13,0.0)) AS qty,sn_warehouse_no warehouseCode,
+               sn_cell_no binCode,remark,org_no shjg,combination_lot_no lotCode,
+               customer_no customerNo,source_no sourceNo
+        FROM bm_barcode_detail
+        WHERE barcode = #{barcode}
+
+
+    </select>
+
+
+    <select id="getQtySum" resultType="java.math.BigDecimal">
+        SELECT SUM(qty) FROM inv_barcode_operation WHERE barcode = #{barcode} AND status_code = 0 AND chag_type = #{chatType}
+    </select>
+
+    <select id="queryInvBarcodeOperationVo" resultType="com.mgkj.vo.InvBarcodeOperationVo"
+            parameterType="java.lang.String">
+        SELECT id,
+               sn_from_warehouse_no fromWarehouseCode,
+               sn_from_cell_no fromBinCode,
+               sn_to_warehouse_no toWarehouseCode,
+               sn_to_cell_no  toBinCode,
+               item_no itemNo,
+               item_name itemName,
+               item_spec itemSpec,
+               barcode barcode,
+               qty matchQty,
+               unit_no unitNo,
+               unit_name unitName,
+               chag_type chagType,
+               status_code statusCode,
+               create_by createBy,
+               create_date createDate,
+               org_no shjg
+        FROM inv_barcode_operation
+        WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = 5
+    </select>
+
+    <delete id="deleteInvBarcodeOperationByCreateBy">
+        DELETE FROM inv_barcode_operation WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = #{chagType}
+    </delete>
+
+
+    <select id="queryNotSubimtByTypeAndCreateBy" resultType="com.mgkj.entity.InvBarcodeOperation">
+        SELECT id id,
+               barcode barcode,
+               qty qty,
+               warehouse_no warehouseNo,
+               cell_no  cellNo,
+               item_no itemNo,
+               item_name itemName,
+               item_spec itemSpec,
+               unit_no unitNo,
+               unit_name unitNmae,
+               reference_qty referenceQty,
+               chag_type chagType,
+               doc_return_flag docReturnFlag,
+               status_code statusCode,
+               stock_rate stockRate,
+               stock_keep  stockKeep,
+               create_by createBy
+        FROM inv_barcode_operation
+        WHERE status_code = 0 AND chag_type = #{chagType} AND create_by = #{createBy}
+    </select>
+    <select id="queryToOrOutInvBarcodeOperationVo" resultType="com.mgkj.vo.InvBarcodeOperationVo">
+        SELECT id,
+               warehouse_no warehouseNo,
+               cell_no cellNo,
+               item_no itemNo,
+               item_name itemName,
+               item_spec itemSpec,
+               barcode barcode,
+               qty,
+               qty as matchQty,
+               unit_no unitNo,
+               chag_type chagType,
+               status_code statusCode,
+               create_by createBy,
+               create_date createDate,
+               org_no shjg,
+               lot_att01 employeeCode,
+               lot_att02 departmentCode,
+               lot_att03 departmentName,
+               lot_att04 projectId,
+               lot_att05 carType,
+               classify_type typeCode
+        FROM inv_barcode_operation
+        WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = #{chagType}
+
+
+
+    </select>
+    <select id="queryTransNotSubimtByTypeAndCreateBy" resultType="com.mgkj.entity.InvBarcodeOperation">
+
+        SELECT id id,
+               barcode barcode,
+               item_no itemNo,
+               item_name itemName,
+               item_spec itemSpec,
+               qty qty,
+               reference_qty referenceQty,
+               sn_from_warehouse_no snFromWarehouseNo,
+               sn_from_cell_no  snFromCellNo,
+               sn_to_warehouse_no  snToWarehouseNo,
+               sn_to_cell_no  snToCellNo,
+               unit_no unitNo,
+               unit_name unitNmae,
+               chag_type chagType,
+               status_code statusCode,
+               create_by createBy,
+               doc_return_flag docReturnFlag,
+               stock_keep  stockKeep,
+               stock_rate stockRate
+        FROM inv_barcode_operation
+        WHERE status_code = 0 AND chag_type = #{chagType} AND create_by = #{createBy} AND barcode = #{barcode}
+
+    </select>
+    <select id="passiveOutStorageTypeDoc" resultType="com.mgkj.vo.PassiveOutStorageTypeDocVo">
+        SELECT DOC_CODE typeCode,DOC_FULL_NAME typeName
+        FROM DOC  LEFT JOIN PLANT ON DOC.Owner_Org_ROid = PLANT_ID
+        WHERE DOC_CODE IN ('1100','1101','1104','1109','1110','1111','1112','1113','1119','1125','1150','1120','1155','1161','1162','1199','1223','1224')
+          AND PLANT_CODE = #{shjg}
+        ORDER BY DOC_CODE ASC
+    </select>
+    <select id="PassiveToStorageTypeDoc" resultType="com.mgkj.vo.PassiveOutStorageTypeDocVo">
+        SELECT DOC_CODE typeCode,DOC_FULL_NAME typeName
+        FROM DOC  LEFT JOIN PLANT ON DOC.Owner_Org_ROid = PLANT_ID
+        WHERE DOC_CODE IN ('1105','1106','1107','1108','1115','1116','1117','1151','1152','1171')
+          AND PLANT_CODE = #{shjg}
+        ORDER BY DOC_CODE ASC
+
+    </select>
+    <select id="selectByCreateBy" resultType="java.lang.String">
+
+    select DISTINCT org_no from inv_barcode_operation where create_by = #{createBy} and chag_type= 7
+
+    </select>
+    <select id="getUnfinishedProjects" resultType="com.mgkj.vo.UnfinishedProjectsVo">
+        SELECT PROJECT_ID AS projectId,PROJECT_CODE AS projectCode,PROJECT_NAME AS projectName,PROJECT_DESC AS projectDesc
+        FROM PROJECT
+        <where>
+            CLOSE_STATUS = '0'
+            <if test="projectName!=null and projectName!=''">
+                AND PROJECT_NAME LIKE '%' + #{projectName} + '%'
+            </if>
+        </where>
+    </select>
+    <select id="selectItemIdByItemCode" resultType="java.lang.String">
+        SELECT ITEM_BUSINESS_ID  FROM ITEM WHERE ITEM_CODE = #{itemCode}
+    </select>
+    <select id="selectTransactionDocDByDocNo" resultType="com.mgkj.vo.TransactionDocDVo">
+        SELECT TRANSACTION_DOC_D.ITEM_ID AS itemId,TRANSACTION_DOC_D.TRANSACTION_DOC_D_ID AS transactionDocDId
+        FROM TRANSACTION_DOC
+                 LEFT JOIN TRANSACTION_DOC_D ON TRANSACTION_DOC.TRANSACTION_DOC_ID = TRANSACTION_DOC_D.TRANSACTION_DOC_ID
+        WHERE DOC_NO = #{docNo}
+    </select>
+
+
+    <update id="updateBmBarcodeDetailOfQty">
+        UPDATE bm_barcode_detail
+        SET standard_col13 = ISNULL(standard_col13, 0) + #{qty}
+        WHERE barcode = #{barcode}
+    </update>
+    <update id="updateTransactionDocD">
+
+        UPDATE TRANSACTION_DOC_D SET PROJECT_ID = #{projectId},UDF021=#{carType}
+        WHERE TRANSACTION_DOC_D_ID = #{transactionDocDId}
+    </update>
+    <update id="updateRemark">
+        UPDATE TRANSACTION_DOC SET REMARK = #{remark} WHERE DOC_NO = #{docNo}
+    </update>
+
+
+</mapper>

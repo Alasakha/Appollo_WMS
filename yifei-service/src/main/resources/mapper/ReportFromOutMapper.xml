@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.ReportFromOutMapper">
+
+
+    <select id="deliveryQuantity" resultType="com.mgkj.vo.ReportFromOutVo">
+
+        SELECT CC012 AS supplierName, CAST(COUNT(*) AS INT) AS count, SUBSTRING(CREATE_DATE, 1, ${type}) AS date
+                 FROM PURCC
+                <where>
+                    CC009 = 'Y'
+                    <if test="supplierName != null and !supplierName.isEmpty()">
+                        AND CC012 IN
+                        <foreach item="item" collection="supplierName" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                    <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                        AND SUBSTRING(CREATE_DATE, 1, ${type}) BETWEEN SUBSTRING(#{start_time}, 1, ${type}) AND SUBSTRING(#{end_time}, 1, ${type})
+                    </if>
+                </where>
+                 GROUP BY  CC012, SUBSTRING(CREATE_DATE, 1, ${type})
+                 ORDER BY  SUBSTRING(CREATE_DATE, 1, ${type})
+    </select>
+
+
+    <select id="deliveryLot" resultType="com.mgkj.vo.ReportFromOutVo">
+        SELECT CC012 AS supplierName, CAST(SUM(CC013) AS INT) AS count, SUBSTRING ( CREATE_DATE, 1, ${type} ) AS date
+                 FROM PURCC
+                <where>
+                     CC009 = 'Y'
+                    <if test="supplierName != null and !supplierName.isEmpty()">
+                        AND CC012 IN
+                        <foreach item="item" collection="supplierName" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                    <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                        AND SUBSTRING ( CREATE_DATE, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+                    </if>
+                </where>
+                 GROUP BY CC012, SUBSTRING ( CREATE_DATE, 1, ${type} )
+                 ORDER BY SUBSTRING ( CREATE_DATE, 1, ${type} )
+    </select>
+
+
+    <select id="qualifiedLot" resultType="com.mgkj.vo.ReportFromOutVo">
+        SELECT SUBSTRING(PURCD.CREATE_DATE, 1, ${type}) AS date,  CC012 supplierName, CAST(SUM(CD018) AS INT) AS count
+                FROM PURCD
+                        LEFT JOIN PURCC ON CD001 = CC001 AND CD002 = CC002
+                          <where>
+                                CC009 = 'Y'
+                              <if test="supplierName != null and !supplierName.isEmpty()">
+                                  AND CC012 IN
+                                  <foreach item="item" collection="supplierName" open="(" separator="," close=")">
+                                      #{item}
+                                  </foreach>
+                              </if>
+                              <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                                  AND SUBSTRING(PURCD.CREATE_DATE, 1, ${type}) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+                              </if>
+                          </where>
+                          GROUP BY CC012, SUBSTRING(PURCD.CREATE_DATE, 1, ${type})
+                          ORDER BY SUBSTRING(PURCD.CREATE_DATE, 1, ${type})
+
+    </select>
+
+
+    <select id="qualifiedQuantity" resultType="com.mgkj.vo.ReportFromOutVo">
+            SELECT TG021 supplierName, CAST(COUNT(*) AS INT) AS count,
+                        SUBSTRING(PURTG.CREATE_DATE, 1, ${type}) AS date
+                 FROM PURTG LEFT JOIN PURCC ON TG001=CC001 AND TG002=CC002
+                <where>
+                    TG013 = 'Y'
+                    <if test="supplierName != null and !supplierName.isEmpty()">
+                        AND TG021 IN
+                        <foreach item="item" collection="supplierName" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </if>
+                    <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                        AND SUBSTRING(PURTG.CREATE_DATE, 1, ${type}) BETWEEN  SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+                    </if>
+                </where>
+                 GROUP BY TG021, SUBSTRING(PURTG.CREATE_DATE, 1, ${type})
+                 ORDER BY SUBSTRING(PURTG.CREATE_DATE, 1, ${type})
+    </select>
+    <select id="getSupplier" resultType="java.lang.String">
+        SELECT DISTINCT RTRIM(CC012) AS supplierName
+        FROM PURCC
+    </select>
+</mapper>
+
+

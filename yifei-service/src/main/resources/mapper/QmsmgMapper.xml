@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.QmsmgMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.Qmsmg">
+            <id property="MG001" column="MG001" jdbcType="CHAR"/>
+            <id property="MG002" column="MG002" jdbcType="CHAR"/>
+            <id property="MG003" column="MG003" jdbcType="CHAR"/>
+            <id property="MG008" column="MG008" jdbcType="CHAR"/>
+            <id property="MG020" column="MG020" jdbcType="VARCHAR"/>
+            <result property="COMPANY" column="COMPANY" jdbcType="CHAR"/>
+            <result property="CREATOR" column="CREATOR" jdbcType="CHAR"/>
+            <result property="USR_GROUP" column="USR_GROUP" jdbcType="CHAR"/>
+            <result property="CREATE_DATE" column="CREATE_DATE" jdbcType="CHAR"/>
+            <result property="MODIFIER" column="MODIFIER" jdbcType="CHAR"/>
+            <result property="MODI_DATE" column="MODI_DATE" jdbcType="CHAR"/>
+            <result property="FLAG" column="FLAG" jdbcType="NUMERIC"/>
+            <result property="MG004" column="MG004" jdbcType="CHAR"/>
+            <result property="MG005" column="MG005" jdbcType="CHAR"/>
+            <result property="MG006" column="MG006" jdbcType="VARCHAR"/>
+            <result property="MG007" column="MG007" jdbcType="VARCHAR"/>
+            <result property="MG009" column="MG009" jdbcType="CHAR"/>
+            <result property="MG010" column="MG010" jdbcType="CHAR"/>
+            <result property="MG011" column="MG011" jdbcType="CHAR"/>
+            <result property="MG012" column="MG012" jdbcType="NUMERIC"/>
+            <result property="MG013" column="MG013" jdbcType="NUMERIC"/>
+            <result property="MG014" column="MG014" jdbcType="VARCHAR"/>
+            <result property="MG015" column="MG015" jdbcType="CHAR"/>
+            <result property="MG016" column="MG016" jdbcType="NUMERIC"/>
+            <result property="MG017" column="MG017" jdbcType="CHAR"/>
+            <result property="MG018" column="MG018" jdbcType="CHAR"/>
+            <result property="MG019" column="MG019" jdbcType="CHAR"/>
+            <result property="MG021" column="MG021" jdbcType="NUMERIC"/>
+            <result property="MG022" column="MG022" jdbcType="NUMERIC"/>
+            <result property="MG023" column="MG023" jdbcType="NUMERIC"/>
+            <result property="UDF01" column="UDF01" jdbcType="VARCHAR"/>
+            <result property="UDF02" column="UDF02" jdbcType="VARCHAR"/>
+            <result property="UDF03" column="UDF03" jdbcType="VARCHAR"/>
+            <result property="UDF04" column="UDF04" jdbcType="VARCHAR"/>
+            <result property="UDF05" column="UDF05" jdbcType="VARCHAR"/>
+            <result property="UDF06" column="UDF06" jdbcType="VARCHAR"/>
+            <result property="UDF51" column="UDF51" jdbcType="NUMERIC"/>
+            <result property="UDF52" column="UDF52" jdbcType="NUMERIC"/>
+            <result property="UDF53" column="UDF53" jdbcType="NUMERIC"/>
+            <result property="UDF54" column="UDF54" jdbcType="NUMERIC"/>
+            <result property="UDF55" column="UDF55" jdbcType="NUMERIC"/>
+            <result property="UDF56" column="UDF56" jdbcType="NUMERIC"/>
+            <result property="UDF07" column="UDF07" jdbcType="VARCHAR"/>
+            <result property="UDF08" column="UDF08" jdbcType="VARCHAR"/>
+            <result property="UDF09" column="UDF09" jdbcType="VARCHAR"/>
+            <result property="UDF10" column="UDF10" jdbcType="VARCHAR"/>
+            <result property="UDF11" column="UDF11" jdbcType="VARCHAR"/>
+            <result property="UDF12" column="UDF12" jdbcType="VARCHAR"/>
+            <result property="UDF57" column="UDF57" jdbcType="NUMERIC"/>
+            <result property="UDF58" column="UDF58" jdbcType="NUMERIC"/>
+            <result property="UDF59" column="UDF59" jdbcType="NUMERIC"/>
+            <result property="UDF60" column="UDF60" jdbcType="NUMERIC"/>
+            <result property="UDF61" column="UDF61" jdbcType="NUMERIC"/>
+            <result property="UDF62" column="UDF62" jdbcType="NUMERIC"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        MG001,MG002,MG003,
+        MG008,MG020,COMPANY,
+        CREATOR,USR_GROUP,CREATE_DATE,
+        MODIFIER,MODI_DATE,FLAG,
+        MG004,MG005,MG006,
+        MG007,MG009,MG010,
+        MG011,MG012,MG013,
+        MG014,MG015,MG016,
+        MG017,MG018,MG019,
+        MG021,MG022,MG023,
+        UDF01,UDF02,UDF03,
+        UDF04,UDF05,UDF06,
+        UDF51,UDF52,UDF53,
+        UDF54,UDF55,UDF56,
+        UDF07,UDF08,UDF09,
+        UDF10,UDF11,UDF12,
+        UDF57,UDF58,UDF59,
+        UDF60,UDF61,UDF62
+    </sql>
+</mapper>

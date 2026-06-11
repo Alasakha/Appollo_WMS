@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.SFCTEMapper">
+
+    <select id="queryById" resultType="com.mgkj.entity.SFCTE">
+        WITH Results AS(
+            SELECT
+                TE001,
+                TE002,
+                TE023,
+                TE005,
+                TE008,
+                TE017,
+                TE009,
+                TE019,
+                TE018,
+                MD002,
+                e.UDF10,
+                e.UDF09,
+                MAX(status) AS status,
+                ROW_NUMBER() OVER (ORDER BY TE023) AS RowNum
+            FROM SFCTE AS e LEFT JOIN SFCTD AS d ON TE001 = TD001  AND TE002 = TD002 AND TE023 = TD003
+                            LEFT JOIN CMSMD AS c  ON e.UDF10 = MD001  OR e.UDF10 = MD002
+                            lEFT JOIN QMSMG AS q ON e.TE017 = q.MG002 collate Chinese_PRC_BIN
+            WHERE TE023 BETWEEN #{startTime} AND #{EndTime}
+              AND RTRIM(TE001)+'-'+RTRIM(TE002)+'-'+RTRIM(TE023)+'-'+'1'+'-'+RTRIM(TE008) = #{code}
+            GROUP BY TE001,TE002,TE023,TE005,TE008,TE017,TE009,TE019,TE018,MD002,e.UDF10,
+                     e.UDF09
+        )SELECT * ,'0' AS status FROM Results
+    </select>
+
+    <select id="selectListStaff" resultType="com.mgkj.entity.SFCTE">
+        WITH Results AS (select *, (SELECT MW002 FROM CMSMW WHERE MW001 = TE009) AS name,(select ISNULL(SUM(TE011),0) from SFCTE
+        where UDF09 = TE001 and UDF10 = TE002  and UDF11 = TE003) AS num from SFCTE where TE001 = 'D420' AND UDF08 != 'Y'
+        <if test="dh!=null and dh!=''">
+            and TE002 LIKE '%'+#{dh}+'%'
+        </if>
+        <if test="ph!=null and ph!=''">
+            and TE017 LIKE '%'+#{ph}+'%'
+        </if>
+        <if test="code!=null and code!=''"></if>
+        <if test="code=='P0176'">
+            AND TE006 = '5101'
+        </if>
+        <if test="code=='P0050'">
+            AND TE006 = '5102'
+        </if>
+        <if test="code=='P0049'">
+            AND TE006 = '5103'
+        </if>
+        OR TE004 = #{code}
+        )
+        SELECT * FROM Results WHERE TE011 > num order by TE003
+    </select>
+
+    <select id="queryPageTest" resultType="com.mgkj.entity.SFCTE">
+        SELECT
+        TE001,
+        TE002,
+        TE023,
+        TE005,
+        TE008,
+        TE017,
+        TE009,
+        TE019,
+        TE018,
+        MD002,
+        e.UDF10,
+        e.UDF09,
+        MAX(status) AS status
+        FROM SFCTE AS e LEFT JOIN SFCTD AS d ON TE001 = TD001  AND TE002 = TD002 AND TE023 = TD003
+        LEFT JOIN CMSMD AS c  ON e.UDF10 = MD001  OR e.UDF10 = MD002
+        lEFT JOIN QMSMG AS q ON e.TE017 = q.MG002 collate Chinese_PRC_BIN
+        WHERE MG020 = #{checky}
+        AND TE001 = 'D420'
+        AND (SELECT COUNT(*) FROM inspectionHead ds
+        WHERE ds.TA001 = TE001  COLLATE Chinese_PRC_BIN AND ds.TA002 = TE002  COLLATE Chinese_PRC_BIN AND ds.TA004 = TE009  COLLATE Chinese_PRC_BIN
+        AND (SELECT top 1 MG020 FROM inspectionBody b WHERE ds.uid = b.i_uid) = #{checky}) = 0
+        <if test="startTime!=null &amp; startTime!='' &amp; EndTime!=null &amp; EndTime!=''">AND TE023 BETWEEN #{startTime} AND #{EndTime}</if>
+        <if test="gy!=null &amp; gy!='' ">and TE009 LIKE '%'+#{gy}+'%' </if>
+        <if test="te017!=null &amp; te017!='' ">and TE017 LIKE '%'+#{te017}+'%'</if>
+        <if test="mv002!=null &amp; mv002!='' ">and TE005 LIKE '%'+#{mv002}+'%'</if>
+        GROUP BY TE001,TE002,TE023,TE005,TE008,TE017,TE009,TE019,TE018,MD002,e.UDF10,e.UDF09
+    </select>
+
+    <update id="updateYourEntity">
+        UPDATE SFCTE
+        SET status = '已检验'
+        WHERE RTRIM(TE001)+'-'+RTRIM(TE002)+'-'+RTRIM(TE023)+'-'+'1'+'-'+RTRIM(TE008) = #{code}
+    </update>
+
+    <update id="updateBg">
+        UPDATE SFCTE
+        SET UDF08 = #{val}
+        WHERE RTRIM(TE001)+'-'+RTRIM(TE002)+'-'+RTRIM(TE003) = #{code}
+    </update>
+
+    <update id="updateBgs">
+        UPDATE SFCTE
+        SET status = #{val}
+        WHERE RTRIM(TE001)+'-'+RTRIM(TE002)+'-'+RTRIM(TE009) = #{code}
+    </update>
+
+    <update id="updateYourEntityS">
+        UPDATE SFCTE
+        SET status = '已取消'
+        WHERE RTRIM(TE001)+'-'+RTRIM(TE002)+'-'+RTRIM(TE023)+'-'+'1'+'-'+RTRIM(TE008) = #{code}
+    </update>
+
+    <select id="querySfCtAMoCtaList" resultType="com.mgkj.vo.SfctaMoctaVo">
+        SELECT s.TA001,s.TA002,s.TA003,s.TA004,m.TA029,m.TA064,m.TA006,m.TA034,m.TA035,m.TA003 AS kgtime,m.TA015,m.TA011,m.TA007,s.TA007 AS gz,m.TA027
+        FROM SFCTA AS s LEFT JOIN MOCTA m ON s.TA001 = m.TA001  AND s.TA002 = m.TA002
+        WHERE m.TA011!='Y' AND m.TA011 != 'y'
+        <if test="TA001!=null and TA001!=''">
+            AND m.TA001 LIKE '%'+#{TA001}+'%'
+        </if>
+        <if test="TA002!=null and TA002!=''">
+            AND m.TA002 LIKE '%'+#{TA002}+'%'
+        </if>
+        <if test="TA006!=null and TA006!=''">
+            AND m.TA006 LIKE '%'+#{TA006}+'%'
+        </if>
+    </select>
+
+    <select id="getMw002ByMw001" resultType="java.lang.String">
+        SELECT MW002 FROM CMSMW WHERE MW001 = #{MW001}
+    </select>
+
+    <select id="querySfCtaIPag" resultType="com.mgkj.vo.SfctaMoctaVo">
+        WITH Results AS (
+        SELECT s.MO_ROUTING_D_ID,s.TA001,s.TA002,s.TA003,s.TA004,s.TA005,m.TA029,m.TA064,m.TA006,m.TA034,m.TA035,m.TA003 AS kgtime,m.TA015 AS TA015 ,m.TA011,m.TA007,s.TA007 AS gz,m.TA027,
+        (SELECT ISNULL(MIN(TE011), 0) num FROM (SELECT SUM(TE011) TE011 FROM SFCTE WHERE TE006 = s.TA001 AND TE007 = s.TA002 AND TE008 = s.TA003 GROUP BY UDF09) A) AS num,
+        (SELECT MW002 FROM CMSMW WHERE MW001 = s.TA004) AS name
+        FROM SFCTA AS s LEFT JOIN MOCTA m ON s.TA001 = m.TA001  AND s.TA002 = m.TA002
+        WHERE m.TA011!='Y' AND m.TA011 != 'y'
+        <if test="single!=null and single!=''">
+            AND s.TA001 = #{single}
+        </if>
+        <if test="odd!=null and odd!=''">
+            AND s.TA002 = #{odd}
+        </if>
+        <if test="ph!=null and ph!=''">
+            AND m.TA006 LIKE '%'+#{ph}+'%'
+        </if>
+        <if test="pm!=null and pm!=''">
+            AND m.TA034 LIKE '%'+#{pm}+'%'
+        </if>
+        <if test="gy!=null and gy!=''">
+            AND s.TA004 LIKE '%'+#{gy}+'%'
+        </if>
+        )SELECT * FROM Results WHERE TA015 > num
+    </select>
+
+    <select id="qualityFrom" resultType="com.mgkj.entity.SFCTE">
+        SELECT *
+        FROM (
+        SELECT ROW_NUMBER() OVER (ORDER BY CREATE_DATE DESC) AS RowNum, CREATE_DATE, TE006, TE007, TE011, UDF51, UDF52, UDF53, TE017, TE018, TE019, UDF06 ,TE020
+        FROM SFCTE
+        <where>
+            <if test="UDF06!=null and UDF06!=''">
+                AND UDF06 LIKE '%'+#{UDF06}+'%'
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND CREATE_DATE BETWEEN #{start_time} AND #{end_time}
+            </if>
+        </where>
+        ) AS t
+        WHERE t.RowNum BETWEEN (#{page}-1) * #{pageSize} + 1 AND (#{page}-1) * #{pageSize} + #{pageSize}
+    </select>
+
+    <select id="qualityFromCount" resultType="int">
+        SELECT COUNT(*)
+        FROM SFCTE
+        <where>
+            <if test="UDF06!=null and UDF06!=''">
+                AND UDF06 LIKE '%'+#{UDF06}+'%'
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND CREATE_DATE BETWEEN #{start_time} AND #{end_time}
+            </if>
+        </where>
+    </select>
+    <select id="qualityFromDown" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING(CREATE_DATE, 1, ${type}) date,CAST(ROUND(SUM(UDF51+UDF52+UDF53),0)AS INT) count
+        FROM SFCTE
+        <where>
+            <if test="UDF06!=null and UDF06!=''">
+                AND UDF06 LIKE '%'+#{UDF06}+'%'
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING(CREATE_DATE, 1, ${type}) BETWEEN SUBSTRING(#{start_time}, 1, ${type}) AND SUBSTRING(#{end_time}, 1, ${type})
+            </if>
+        </where>
+        GROUP BY SUBSTRING(CREATE_DATE, 1, ${type})
+        ORDER BY SUBSTRING(CREATE_DATE, 1, ${type})
+    </select>
+    <select id="qualityFromUp" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING(CREATE_DATE, 1, ${type}) date,CAST(ROUND(SUM(TE011),0) AS INT) count
+        FROM SFCTE
+        <where>
+            <if test="UDF06!=null and UDF06!=''">
+                AND UDF06 LIKE '%'+#{UDF06}+'%'
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING(CREATE_DATE, 1, ${type}) BETWEEN SUBSTRING(#{start_time}, 1, ${type}) AND SUBSTRING(#{end_time}, 1, ${type})
+            </if>
+        </where>
+        GROUP BY SUBSTRING(CREATE_DATE, 1, ${type})
+        ORDER BY SUBSTRING(CREATE_DATE, 1, ${type})
+    </select>
+    <select id="qualityFromTemp" resultType="com.mgkj.entity.SFCTE">
+        SELECT *
+        FROM (
+        SELECT ROW_NUMBER() OVER (ORDER BY CREATE_DATE DESC) AS RowNum, CREATE_DATE, TE006, TE007, TE011, UDF51, UDF52, UDF53, TE017, TE018, TE019, UDF06 ,TE020
+        FROM SFCTE
+        <where>
+            <if test="UDF06!=null and UDF06!=''">
+                AND UDF06 = #{UDF06}
+            </if>
+            <if test="UDF06==null or UDF06==''">
+                AND (UDF06 = '一次测温' OR UDF06 = '三次测温')
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND CREATE_DATE BETWEEN #{start_time} AND #{end_time}
+            </if>
+        </where>
+        ) AS t
+        WHERE t.RowNum BETWEEN (#{page}-1) * #{pageSize} + 1 AND (#{page}-1) * #{pageSize} + #{pageSize}
+    </select>
+
+    <select id="qualityFromTempCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM SFCTE
+        <where>
+            <if test="UDF06!=null and UDF06!=''">
+                AND UDF06 = #{UDF06}
+            </if>
+            <if test="UDF06==null or UDF06==''">
+                AND (UDF06 = '一次测温' OR UDF06 = '三次测温')
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND CREATE_DATE BETWEEN #{start_time} AND #{end_time}
+            </if>
+        </where>
+    </select>
+    <select id="qualityFromTempUp" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( CREATE_DATE, 1, ${type} ) date,CAST(ROUND(SUM(TE011),0) AS INT) count
+        FROM SFCTE
+        <where>
+            <if test="UDF06!=null and UDF06!=''">
+                AND UDF06 = #{UDF06}
+            </if>
+            <if test="UDF06==null or UDF06==''">
+                AND (UDF06 = '一次测温' OR UDF06 = '三次测温')
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( CREATE_DATE, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( CREATE_DATE, 1, ${type} )
+        ORDER BY SUBSTRING ( CREATE_DATE, 1, ${type} )
+    </select>
+    <select id="qualityFromTempDown" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( CREATE_DATE, 1, ${type} ) date,CAST(ROUND(SUM(UDF51+UDF52+UDF53),0)AS INT) count
+        FROM SFCTE
+        <where>
+            <if test="UDF06!=null and UDF06!=''">
+                AND UDF06 = #{UDF06}
+            </if>
+            <if test="UDF06==null or UDF06==''">
+                AND (UDF06 = '一次测温' OR UDF06 = '三次测温')
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( CREATE_DATE, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( CREATE_DATE, 1, ${type} )
+        ORDER BY SUBSTRING ( CREATE_DATE, 1, ${type} )
+    </select>
+
+    <select id="qualityFromTempCountByWw" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TH003, 1, ${type} ) date,CAST(ROUND(SUM(TI019),0)AS INT) count
+        FROM MOCTH
+        LEFT JOIN PURMA
+        ON TH005 = MA001
+        LEFT JOIN MOCTI
+        ON TH001 = TI001
+        AND TH002 = TI002
+        <where>
+            MA002 LIKE '%方同喜%'
+            AND TH010 NOT LIKE '%脱漆%'
+            AND TH023 = 'Y'
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TH003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TH003, 1, ${type} )
+        ORDER BY SUBSTRING ( TH003, 1, ${type} )
+    </select>
+    <select id="qualityFromTempCountByBf" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TL003, 1, ${type} ) date,CAST(ROUND(SUM(TM007),0)AS INT) count
+        FROM INVTL
+        LEFT JOIN INVTM
+        ON TM001 = TL001 AND TL002= TM002
+        <where>
+            TL009 = '二次测温不真空'
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TL003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TL003, 1, ${type} )
+        ORDER BY SUBSTRING ( TL003, 1, ${type} )
+    </select>
+    <select id="getSonList" resultType="com.mgkj.entity.SfcteBo">
+        SELECT * FROM SFCTA_A
+        WHERE MO_ROUTING_D_ID = #{id} ORDER BY ZGX
+    </select>
+
+    <select id="getTe003ByTe001Te002" resultType="java.lang.Integer">
+        SELECT ISNULL(CAST(CAST(MAX(TE003) AS NUMERIC(11))+1 AS CHAR(11)),1) FROM SFCTE WHERE TE001 = #{TE001} AND TE002 = #{TE002}
+    </select>
+
+
+    <select id="querySfCtaIPag2" resultType="com.mgkj.vo.SfctaMoctaTwoVo">
+        WITH Results AS (
+        SELECT TA001+'-'+TA002 AS dh,TA027,TA006,TA034,TA035,TA007,TA015,TA003 AS kgtime,
+        (SELECT ISNULL(MIN(TE011), 0) num FROM (SELECT SUM(TE011) TE011 FROM SFCTE WHERE TE006 = TA001 AND TE007 = TA002 AND TE008 = TA003 GROUP BY UDF09) A) AS num,TA011,TA064,TA029
+        FROM MOCTA	WHERE TA011!='Y' AND TA011 != 'y'
+        <if test="dh!=null and dh!=''">
+            AND TA001+'-'+TA002 LIKE '%'+#{dh}+'%'
+        </if>
+        <if test="ph!=null and ph!=''">
+            AND TA006 LIKE '%'+#{ph}+'%'
+        </if>
+        <if test="pm!=null and pm!=''">
+            AND TA034 LIKE '%'+#{pm}+'%'
+        </if>
+        <if test="gy!=null and gy!=''">
+            AND TA001 + '-' + TA002 IN(SELECT TA001+'-'+TA002 FROM SFCTA WHERE TA004 LIKE '%'+#{gy}+'%')
+        </if>
+        <if test="kgtime!=null and kgtime!=''">
+            AND TA003 LIKE '%'+#{kgtime}+'%'
+        </if>
+        )SELECT * FROM Results WHERE TA015 > num
+    </select>
+    <select id="querySfCteByTe004" resultType="com.mgkj.entity.SFCTE">
+        SELECT
+        SFCTE.*,
+        ISNULL(c.number, 0) AS num,
+        number*100/SFCTE.UDF57 AS  jindu,
+        ISNULL(SFCTE.UDF57 -  ISNULL(c.number, 0), 0) AS yunxu
+        FROM
+        SFCTE
+        --LEFT JOIN CMSMW MW ON MW.MW001 = SFCTE.TE009
+        LEFT JOIN (
+        SELECT (SUM(UDF51)+SUM(UDF52)+SUM(UDF53)+SUM(TE011)) AS number,(UDF09+'-'+UDF10+'-'+UDF11) AS bbb
+        FROM SFCTE
+        WHERE TE001 = 'D410'
+        GROUP BY (UDF09+'-'+UDF10+'-'+UDF11)
+        ) as c
+        ON
+        c.bbb = SFCTE.TE001 + '-' + SFCTE.TE002 + '-' + SFCTE.TE003
+        <where>
+            SFCTE.TE001 = 'D420' AND SFCTE.UDF57 > ISNULL(c.number, 0) --AND SFCTE.UDF09 != 'N' AND MW.MW004 = '1'
+            <if test="employeeNumber!=null and employeeNumber!=''">
+                AND SFCTE.TE004 = #{employeeNumber}
+            </if>
+            <if test="odd!=null and odd!=''">
+                AND SFCTE.TE002  = #{odd}
+            </if>
+            <if test="xh!=null and xh!=''">
+                AND SFCTE.TE003 = #{xh}
+            </if>
+            <if test="TE017!= null and TE017!=''">
+                AND SFCTE.TE017 LIKE CONCAT('%', #{TE017}, '%')
+            </if>
+            <if test="beginTime!=null and beginTime!=''">
+                AND SUBSTRING(SFCTE.CREATE_DATE, 1, 8) >= #{beginTime}
+            </if>
+            <if test="endTime!=null and endTime!=''">
+                AND #{endTime} >= SUBSTRING(SFCTE.CREATE_DATE, 1, 8)
+            </if>
+        </where>
+        order by SFCTE.CREATE_DATE DESC
+    </select>
+    <select id="queryGd" resultType="com.mgkj.vo.SfcteVo">
+        SELECT TE001,TE002,TE003,TE004,TE011,UDF53,UDF51,UDF52,UDF02,UDF03,UDF04,TE015,LTRIM(RTRIM(CREATE_DATE)) CREATE_DATE,TE023,
+        TE017 itemNo,TE018 itemName,TE019 itemSpec,TE008 gxNo,UDF01 gxName
+        FROM SFCTE
+       <where>
+           <if test="beginTime!=null and beginTime!=''">
+                TE023 >= #{beginTime}
+           </if>
+           <if test="endTime!=null and endTime!=''">
+               AND #{endTime} >= TE023
+           </if>
+           AND TE001 = #{single} AND TE004 = #{userId}
+       </where>
+        ORDER BY CREATE_DATE DESC
+    </select>
+    <select id="queryBgCount" resultType="com.mgkj.vo.BgNumVo">
+        SELECT  SUBSTRING(CREATE_DATE, 1, 8) date,SUM(TE011)+SUM(UDF53) num
+        FROM SFCTE
+        <where>
+        TE001 = 'D410' AND TE004 = #{userId}
+        <if test="beginTime!=null and beginTime!=''">
+            AND SUBSTRING(CREATE_DATE, 1, 8) >= #{beginTime}
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            AND #{endTime} >= SUBSTRING(CREATE_DATE, 1, 8)
+        </if>
+        </where>
+        GROUP BY SUBSTRING(CREATE_DATE, 1, 8)
+    </select>
+    <select id="getNewTE002Year4" resultType="java.lang.String">
+        DECLARE @datePart CHAR(6) = SUBSTRING(CONVERT(CHAR(8), GETDATE(), 112), 3, 6);
+        DECLARE @maxSequence INT;
+        SELECT @maxSequence = MAX(CAST(SUBSTRING(TD002, 7, 5) AS INT))
+        FROM SFCTD
+        WHERE TD002 LIKE @datePart + '%'
+          AND TD001 = #{TD001};
+        SET @maxSequence = ISNULL(@maxSequence, 0);
+        DECLARE @newSequence INT = @maxSequence + 1;
+        SELECT @datePart + RIGHT('00000' + CAST(@newSequence AS VARCHAR(5)), 5)
+    </select>
+</mapper>

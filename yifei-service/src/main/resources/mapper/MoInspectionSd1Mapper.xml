@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.MoInspectionSd1Mapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.MoInspectionSd1">
+            <id property="moInspectionSd1Id" column="MO_INSPECTION_SD1_ID" jdbcType="OTHER"/>
+            <result property="sequencenumber" column="SequenceNumber" jdbcType="INTEGER"/>
+            <result property="measuredValue" column="MEASURED_VALUE" jdbcType="DECIMAL"/>
+            <result property="decision" column="DECISION" jdbcType="BIT"/>
+            <result property="remark" column="REMARK" jdbcType="VARCHAR"/>
+            <result property="udf001" column="UDF001" jdbcType="DECIMAL"/>
+            <result property="udf002" column="UDF002" jdbcType="DECIMAL"/>
+            <result property="udf003" column="UDF003" jdbcType="DECIMAL"/>
+            <result property="udf011" column="UDF011" jdbcType="DECIMAL"/>
+            <result property="udf012" column="UDF012" jdbcType="DECIMAL"/>
+            <result property="udf013" column="UDF013" jdbcType="DECIMAL"/>
+            <result property="udf021" column="UDF021" jdbcType="VARCHAR"/>
+            <result property="udf022" column="UDF022" jdbcType="VARCHAR"/>
+            <result property="udf023" column="UDF023" jdbcType="VARCHAR"/>
+            <result property="udf024" column="UDF024" jdbcType="VARCHAR"/>
+            <result property="udf025" column="UDF025" jdbcType="VARCHAR"/>
+            <result property="udf026" column="UDF026" jdbcType="VARCHAR"/>
+            <result property="udf041" column="UDF041" jdbcType="TIMESTAMP"/>
+            <result property="udf042" column="UDF042" jdbcType="TIMESTAMP"/>
+            <result property="udf051" column="UDF051" jdbcType="OTHER"/>
+            <result property="udf052" column="UDF052" jdbcType="OTHER"/>
+            <result property="udf053" column="UDF053" jdbcType="OTHER"/>
+            <result property="udf054" column="UDF054" jdbcType="OTHER"/>
+            <result property="version" column="Version" jdbcType="TIMESTAMP"/>
+            <result property="createdate" column="CreateDate" jdbcType="TIMESTAMP"/>
+            <result property="lastmodifieddate" column="LastModifiedDate" jdbcType="TIMESTAMP"/>
+            <result property="modifieddate" column="ModifiedDate" jdbcType="TIMESTAMP"/>
+            <result property="createby" column="CreateBy" jdbcType="OTHER"/>
+            <result property="lastmodifiedby" column="LastModifiedBy" jdbcType="OTHER"/>
+            <result property="modifiedby" column="ModifiedBy" jdbcType="OTHER"/>
+            <result property="approvestatus" column="ApproveStatus" jdbcType="VARCHAR"/>
+            <result property="approvedate" column="ApproveDate" jdbcType="TIMESTAMP"/>
+            <result property="approveby" column="ApproveBy" jdbcType="OTHER"/>
+            <result property="moInspectionDId" column="MO_INSPECTION_D_ID" jdbcType="OTHER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        MO_INSPECTION_SD1_ID,SequenceNumber,MEASURED_VALUE,
+        DECISION,REMARK,UDF001,
+        UDF002,UDF003,UDF011,
+        UDF012,UDF013,UDF021,
+        UDF022,UDF023,UDF024,
+        UDF025,UDF026,UDF041,
+        UDF042,UDF051,UDF052,
+        UDF053,UDF054,Version,
+        CreateDate,LastModifiedDate,ModifiedDate,
+        CreateBy,LastModifiedBy,ModifiedBy,
+        ApproveStatus,ApproveDate,ApproveBy,
+        MO_INSPECTION_D_ID
+    </sql>
+</mapper>

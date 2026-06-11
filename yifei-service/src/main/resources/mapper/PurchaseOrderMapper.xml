@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.mgkj.mapper.PurchaseOrderMapper">
+
+
+    <!--<select id="getErpPurchaseOrder" resultType="com.mgkj.vo.PurchaseOrderEasyVo">-->
+    <!--    select DOC_NO ,DOC_DATE,SUPPLIER_FULL_NAME,CreateDate,LastModifiedDate,REMARK  FROM  PURCHASE_ORDER-->
+    <!--</select>-->
+    <!--<resultMap id="PurchaseOrder" type="com.mgkj.entity.PurchaseOrder">-->
+    <!--    <id column="DOC_NO" property="docNo"></id>-->
+    <!--    <id column="DOC_DATE" property="docDate"></id>-->
+    <!--    <id column="SUPPLIER_FULL_NAME" property="supplierFullName"></id>-->
+    <!--    <id column="CreateDate" property="createdate"></id>-->
+    <!--    <id column="LastModifiedDate" property="lastmodifieddate"></id>-->
+    <!--    <id column="REMARK" property="remark"></id>-->
+    <!--</resultMap>-->
+    <select id="getErpPurchaseOrder" resultType="com.mgkj.entity.PurchaseOrder">
+        select DOC_NO ,DOC_DATE,SUPPLIER_FULL_NAME,CreateDate,LastModifiedDate,SUPPLIER_ADDR_NAME,PURCHASE_DATE,REMARK ,[CLOSE] ,Version ,PURCHASE_ORDER_ID FROM  PURCHASE_ORDER;
+    </select>
+    <select id="getErpPurchaseOrderD" resultType="com.mgkj.entity.PurchaseOrderD">
+
+    </select>
+    <select id="listWarehouse" resultType="com.mgkj.vo.WarehouseInfoVo">
+        select WAREHOUSE_CODE,WAREHOUSE_NAME from WAREHOUSE;
+    </select>
+</mapper>

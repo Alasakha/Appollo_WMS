@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="generator.mapper.MoDMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.MoD">
+            <id property="moDId" column="MO_D_ID" jdbcType="OTHER"/>
+            <result property="sequencenumber" column="SequenceNumber" jdbcType="INTEGER"/>
+            <result property="itemDescription" column="ITEM_DESCRIPTION" jdbcType="VARCHAR"/>
+            <result property="itemSpecification" column="ITEM_SPECIFICATION" jdbcType="VARCHAR"/>
+            <result property="replaceItem" column="REPLACE_ITEM" jdbcType="VARCHAR"/>
+            <result property="upLevelItemId" column="UP_LEVEL_ITEM_ID" jdbcType="OTHER"/>
+            <result property="replacedItemId" column="REPLACED_ITEM_ID" jdbcType="OTHER"/>
+            <result property="replacedItemFeatureId" column="REPLACED_ITEM_FEATURE_ID" jdbcType="OTHER"/>
+            <result property="requiredQty" column="REQUIRED_QTY" jdbcType="DECIMAL"/>
+            <result property="requIncludeMultQty" column="REQU_INCLUDE_MULT_QTY" jdbcType="DECIMAL"/>
+            <result property="replacedQty" column="REPLACED_QTY" jdbcType="DECIMAL"/>
+            <result property="issuedQty" column="ISSUED_QTY" jdbcType="DECIMAL"/>
+            <result property="itemType" column="ITEM_TYPE" jdbcType="VARCHAR"/>
+            <result property="itemType02" column="ITEM_TYPE_02" jdbcType="VARCHAR"/>
+            <result property="planIssueDate" column="PLAN_ISSUE_DATE" jdbcType="TIMESTAMP"/>
+            <result property="actualIssueDate" column="ACTUAL_ISSUE_DATE" jdbcType="TIMESTAMP"/>
+            <result property="remark" column="REMARK" jdbcType="VARCHAR"/>
+            <result property="issueOverrunRate" column="ISSUE_OVERRUN_RATE" jdbcType="DECIMAL"/>
+            <result property="issueShortageRate" column="ISSUE_SHORTAGE_RATE" jdbcType="DECIMAL"/>
+            <result property="upLevelItemFeatureId" column="UP_LEVEL_ITEM_FEATURE_ID" jdbcType="OTHER"/>
+            <result property="issueMaterialPeriod" column="ISSUE_MATERIAL_PERIOD" jdbcType="INTEGER"/>
+            <result property="itemGroup" column="ITEM_GROUP" jdbcType="OTHER"/>
+            <result property="replaceGroup" column="REPLACE_GROUP" jdbcType="OTHER"/>
+            <result property="itemId" column="ITEM_ID" jdbcType="OTHER"/>
+            <result property="unitId" column="UNIT_ID" jdbcType="OTHER"/>
+            <result property="itemFeatureId" column="ITEM_FEATURE_ID" jdbcType="OTHER"/>
+            <result property="operationId" column="OPERATION_ID" jdbcType="OTHER"/>
+            <result property="warehouseId" column="WAREHOUSE_ID" jdbcType="OTHER"/>
+            <result property="binId" column="BIN_ID" jdbcType="OTHER"/>
+            <result property="itemLotId" column="ITEM_LOT_ID" jdbcType="OTHER"/>
+            <result property="requiredSecondQty" column="REQUIRED_SECOND_QTY" jdbcType="DECIMAL"/>
+            <result property="issuedSecondQty" column="ISSUED_SECOND_QTY" jdbcType="DECIMAL"/>
+            <result property="issuedReqQty" column="ISSUED_REQ_QTY" jdbcType="DECIMAL"/>
+            <result property="issuedReqSecondQty" column="ISSUED_REQ_SECOND_QTY" jdbcType="DECIMAL"/>
+            <result property="moDPic" column="MO_D_PIC" jdbcType="VARCHAR"/>
+            <result property="projectId" column="PROJECT_ID" jdbcType="OTHER"/>
+            <result property="leastRequiredQty" column="LEAST_REQUIRED_QTY" jdbcType="DECIMAL"/>
+            <result property="componentLocation" column="COMPONENT_LOCATION" jdbcType="VARCHAR"/>
+            <result property="transferQty" column="TRANSFER_QTY" jdbcType="DECIMAL"/>
+            <result property="moRoutingDId" column="MO_ROUTING_D_ID" jdbcType="OTHER"/>
+            <result property="notMoMaterail" column="NOT_MO_MATERAIL" jdbcType="BIT"/>
+            <result property="createdate" column="CreateDate" jdbcType="TIMESTAMP"/>
+            <result property="lastmodifieddate" column="LastModifiedDate" jdbcType="TIMESTAMP"/>
+            <result property="modifieddate" column="ModifiedDate" jdbcType="TIMESTAMP"/>
+            <result property="createby" column="CreateBy" jdbcType="OTHER"/>
+            <result property="lastmodifiedby" column="LastModifiedBy" jdbcType="OTHER"/>
+            <result property="modifiedby" column="ModifiedBy" jdbcType="OTHER"/>
+            <result property="version" column="Version" jdbcType="TIMESTAMP"/>
+            <result property="approvestatus" column="ApproveStatus" jdbcType="VARCHAR"/>
+            <result property="approvedate" column="ApproveDate" jdbcType="TIMESTAMP"/>
+            <result property="approveby" column="ApproveBy" jdbcType="OTHER"/>
+            <result property="udf001" column="UDF001" jdbcType="DECIMAL"/>
+            <result property="udf002" column="UDF002" jdbcType="DECIMAL"/>
+            <result property="udf003" column="UDF003" jdbcType="DECIMAL"/>
+            <result property="udf011" column="UDF011" jdbcType="DECIMAL"/>
+            <result property="udf012" column="UDF012" jdbcType="DECIMAL"/>
+            <result property="udf013" column="UDF013" jdbcType="DECIMAL"/>
+            <result property="udf021" column="UDF021" jdbcType="VARCHAR"/>
+            <result property="udf022" column="UDF022" jdbcType="VARCHAR"/>
+            <result property="udf023" column="UDF023" jdbcType="VARCHAR"/>
+            <result property="udf024" column="UDF024" jdbcType="VARCHAR"/>
+            <result property="udf025" column="UDF025" jdbcType="VARCHAR"/>
+            <result property="udf026" column="UDF026" jdbcType="VARCHAR"/>
+            <result property="udf041" column="UDF041" jdbcType="TIMESTAMP"/>
+            <result property="udf042" column="UDF042" jdbcType="TIMESTAMP"/>
+            <result property="udf051" column="UDF051" jdbcType="OTHER"/>
+            <result property="udf052" column="UDF052" jdbcType="OTHER"/>
+            <result property="udf053" column="UDF053" jdbcType="OTHER"/>
+            <result property="udf054" column="UDF054" jdbcType="OTHER"/>
+            <result property="moId" column="MO_ID" jdbcType="OTHER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        MO_D_ID,SequenceNumber,ITEM_DESCRIPTION,
+        ITEM_SPECIFICATION,REPLACE_ITEM,UP_LEVEL_ITEM_ID,
+        REPLACED_ITEM_ID,REPLACED_ITEM_FEATURE_ID,REQUIRED_QTY,
+        REQU_INCLUDE_MULT_QTY,REPLACED_QTY,ISSUED_QTY,
+        ITEM_TYPE,ITEM_TYPE_02,PLAN_ISSUE_DATE,
+        ACTUAL_ISSUE_DATE,REMARK,ISSUE_OVERRUN_RATE,
+        ISSUE_SHORTAGE_RATE,UP_LEVEL_ITEM_FEATURE_ID,ISSUE_MATERIAL_PERIOD,
+        ITEM_GROUP,REPLACE_GROUP,ITEM_ID,
+        UNIT_ID,ITEM_FEATURE_ID,OPERATION_ID,
+        WAREHOUSE_ID,BIN_ID,ITEM_LOT_ID,
+        REQUIRED_SECOND_QTY,ISSUED_SECOND_QTY,ISSUED_REQ_QTY,
+        ISSUED_REQ_SECOND_QTY,MO_D_PIC,PROJECT_ID,
+        LEAST_REQUIRED_QTY,COMPONENT_LOCATION,TRANSFER_QTY,
+        MO_ROUTING_D_ID,NOT_MO_MATERAIL,CreateDate,
+        LastModifiedDate,ModifiedDate,CreateBy,
+        LastModifiedBy,ModifiedBy,Version,
+        ApproveStatus,ApproveDate,ApproveBy,
+        UDF001,UDF002,UDF003,
+        UDF011,UDF012,UDF013,
+        UDF021,UDF022,UDF023,
+        UDF024,UDF025,UDF026,
+        UDF041,UDF042,UDF051,
+        UDF052,UDF053,UDF054,
+        MO_ID
+    </sql>
+</mapper>

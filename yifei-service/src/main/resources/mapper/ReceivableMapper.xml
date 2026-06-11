@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.ReceivableMapper">
+
+
+    <select id="getReceivable" resultType="com.mgkj.vo.ReceivableVo">
+        SELECT TA001 single,TA002 singleNumber,TA003 documentDate,TA004 customerNo,MA002 customerName,
+               TA009 currency,MF002 currencyName,ROUND((TA030 + TA029 - TA030),2) unAccount,TA020 advancePay
+        FROM ACRTA
+        LEFT JOIN CMSMF
+        ON MF001 = TA009
+        LEFT JOIN COPMA
+        ON MA001 = TA004
+        WHERE TA025 = 'Y'
+        AND (TA030 + TA029 - TA030) > 0
+        AND TA020 &lt; CONVERT(CHAR(8),GETDATE(),112)
+        ORDER BY TA001
+    </select>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM ACRTA
+                 LEFT JOIN ACRTB
+                           ON TA001 = TB001
+                 LEFT JOIN CMSMF
+                           ON MF001 = TA009
+                 LEFT JOIN COPMA
+                           ON MA001 = TA004
+                               AND TA002 =TB002
+        WHERE TA025 = 'Y'
+          AND (TA030 + TA029 - TA030) > 0
+          AND TA020 &lt; CONVERT(CHAR(8),GETDATE(),112)
+    </select>
+
+    <select id="getReceivableInfo" resultType="com.mgkj.vo.ReceivableVo">
+        SELECT TA001 single,TA002 singleNumber,TA003 documentDate,TA004 customerNo,MA002 customerName,
+               TA009 currency,MF002 currencyName,ROUND((TA030 + TA029 - TA030),2) unAccount,TA020 advancePay
+        FROM ACRTA
+                 LEFT JOIN CMSMF
+                           ON MF001 = TA009
+                 LEFT JOIN COPMA
+                           ON MA001 = TA004
+        WHERE TA025 = 'Y'
+          AND (TA030 + TA029 - TA030) > 0
+          AND TA020 &lt; CONVERT(CHAR(8),GETDATE(),112)
+          AND TA001 = #{single}
+          AND TA002 = #{singleNumber}
+    </select>
+</mapper>

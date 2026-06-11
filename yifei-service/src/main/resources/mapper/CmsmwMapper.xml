@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.CmsmwMapper">
+
+    <select id="query"  resultType="com.mgkj.entity.Cmsmw">
+        select * from CMSMW
+        <if test="gy!=null and gy!= ''">
+            where MW001 LIKE '%'+#{gy}+'%'
+        </if>
+    </select>
+
+    <select id="querys"  resultType="com.mgkj.entity.Cmsmw">
+        SELECT * FROM CMSMW WHERE MW001 = #{gy}
+    </select>
+</mapper>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.INVMBMapper">
+
+    <select id="query"  resultType="com.mgkj.entity.Invmb">
+        select MB001,MB002,MB003 from INVMB where 1=1
+        <if test="ph!=null and ph!= ''">
+            AND MB001 LIKE '%'+#{ph}+'%'
+        </if>
+        <if test="pm!=null and pm!= ''">
+            AND MB002 LIKE '%'+#{pm}+'%'
+        </if>
+    </select>
+
+    <select id="querys" resultType="com.mgkj.entity.Invmb">
+        select MB001,MB002,MB003 from INVMB where 1=1 AND MB001 = #{ph}
+    </select>
+</mapper>

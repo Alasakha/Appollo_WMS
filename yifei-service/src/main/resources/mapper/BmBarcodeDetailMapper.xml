@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.BmBarcodeDetailMapper">
+    <update id="updateQty">
+        UPDATE bm_barcode_detail
+        SET qty = #{qty}
+        WHERE barcode = #{barcode}
+    </update>
+    <select id="getMaxLabelSeq" resultType="java.lang.Integer">
+        SELECT
+            MAX(CAST(SUBSTRING(barcode, CHARINDEX('#', barcode, LEN(barcode) - CHARINDEX('#', REVERSE(barcode)) + 1) + 1, LEN(barcode)) AS INT)) AS maxLabelSeq
+        FROM bm_barcode_detail
+        WHERE item_no = #{itemNo}
+          AND lot_date = #{date,jdbcType=DATE}
+
+    </select>
+    <select id="selectTA021" resultType="java.lang.String">
+        SELECT TA021 FROM MOCTA WHERE CONCAT(RTRIM(TA001), '-', RTRIM(TA002)) = #{jobNo}
+    </select>
+    <select id="listBarcodeInfo" resultType="com.mgkj.vo.ListPrintBarcodeVO">
+        SELECT
+        PLANT_CODE plantCode,
+        I.ITEM_CODE itemNo,
+        IL.LOT_CODE lotCode,
+        SUM(INVENTORY_QTY) qty,
+        I.ITEM_NAME itemName,
+        I.ITEM_SPECIFICATION itemSpec,
+        W.WAREHOUSE_CODE warehouseNo,
+        W.WAREHOUSE_NAME warehouseName,
+        IP.UDF021 binCode,
+        U.UNIT_CODE unitCode,
+        U.UNIT_NAME unitName,
+        CONVERT(varchar(8), GETDATE(), 112) date
+        FROM ITEM_WAREHOUSE_BIN A
+        LEFT JOIN ITEM I ON A.ITEM_ID = I.ITEM_BUSINESS_ID
+        LEFT JOIN ITEM_LOT IL ON IL.ITEM_LOT_ID = A.ITEM_LOT_ID
+        LEFT JOIN ITEM_PLANT IP ON IP.ITEM_ID = I.ITEM_BUSINESS_ID
+        LEFT JOIN PLANT P ON IP.Owner_Org_ROid = P.PLANT_ID
+        LEFT JOIN WAREHOUSE W ON A.WAREHOUSE_ID = W.WAREHOUSE_ID
+        LEFT JOIN UNIT U ON U.UNIT_ID = I.STOCK_UNIT_ID
+        WHERE INVENTORY_QTY != 0
+        <if test="plantCode != null and plantCode != ''">
+            AND PLANT_CODE = #{plantCode}
+        </if>
+        <if test="itemNo != null and itemNo != ''">
+            AND I.ITEM_CODE like #{itemNo} +  '%'
+        </if>
+        <if test="itemName != null and itemName != ''">
+            AND I.ITEM_NAME like #{itemName} +  '%'
+        </if>
+        <if test="itemSpec != null and itemSpec != ''">
+            AND I.ITEM_SPECIFICATION like #{itemSpec} +  '%'
+        </if>
+        GROUP BY PLANT_CODE,I.ITEM_CODE,IL.LOT_CODE,I.ITEM_NAME,I.ITEM_SPECIFICATION,W.WAREHOUSE_CODE,W.WAREHOUSE_NAME,IP.UDF021,U.UNIT_CODE,U.UNIT_NAME
+    </select>
+    <select id="getBarType" resultType="java.lang.String">
+        SELECT bar_type FROM bm_barcode_detail WHERE barcode = #{number}
+    </select>
+</mapper>

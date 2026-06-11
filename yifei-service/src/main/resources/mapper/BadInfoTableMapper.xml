@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.BadInfoTableMapper">
+
+
+    <insert id="add" keyProperty="id" useGeneratedKeys="true">
+        insert into badInfoTable(single, odd, badNumber,serialNumber, number, remark,happenid,responsibleid,type)
+        values (#{single},#{odd},#{badNumber},#{serialNumber},#{number},#{remark},#{happenid},#{responsibleid},#{type})
+    </insert>
+
+    <update id="modify">
+        update badInfoTable
+        <trim prefix="set" suffixOverrides=",">
+            <if test="single != null and single != '' "> single = #{single},</if>
+            <if test="odd != null and odd != '' "> odd = #{odd},</if>
+            <if test="serialNumber != null and serialNumber != '' "> serialNumber = #{serialNumber},</if>
+            <if test="badNumber != null and badNumber != '' "> badNumber = #{badNumber},</if>
+            <if test="number != null"> number = #{number},</if>
+            <if test="remark != null and remark != '' "> remark = #{remark},</if>
+            <if test="happenid != null and happenid != '' "> happenid = #{happenid},</if>
+            <if test="responsibleid != null  and responsibleid != ''"> responsibleid = #{responsibleid},</if>
+            <if test="type != null"> type = #{type},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="find" resultType="com.mgkj.entity.BadInfoTable">
+        select * from badInfoTable
+        where 1=1
+        <if test="id != null" > and id = #{id}</if>
+
+    </select>
+
+
+
+</mapper>

@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.DeliveryNoticeMapper">
+    <insert id="saveDeliveryDetailSummary" parameterType="com.mgkj.vo.DeliveryDetailVo">
+        INSERT INTO sales_summary(id,item_code,item_name,item_spec,business_qty,match_qty,create_by,create_time,doc_no_list)
+        VALUES (NEWID(),#{detail.itemCode},#{detail.itemName},#{detail.itemSpec},#{detail.planQty},'0',#{createBy},GETDATE(),#{detail.docNoListStr})
+    </insert>
+    <insert id="saveInvBarCodeOperation" parameterType="com.mgkj.vo.BarCodeDetailVo">
+        INSERT INTO inv_barcode_operation(id,barcode,item_no,unit_no,qty,warehouse_no,cell_no,remark,create_by,create_date)
+        VALUES (NEWID(),#{barCodeDetailVo.barcode},#{barCodeDetailVo.itemCode},#{barCodeDetailVo.unitNo},#{barCodeDetailVo.qty},#{barCodeDetailVo.warehouseCode},#{barCodeDetailVo.binCode},#{barCodeDetailVo.remark},#{createBy},GETDATE())
+    </insert>
+    <insert id="saveSalesSummary">
+        INSERT INTO sales_summary(id,item_code,item_name,item_spec,business_qty,match_qty,create_by,create_time,doc_no,unit_no,bin_code,warehouse_code,customerNo,shjg,current_num, unit_name)
+        VALUES (NEWID(),#{detail.itemCode},#{detail.itemName},#{detail.itemSpec},#{detail.planQty},#{detail.deliveryQty},#{createBy},GETDATE(),#{detail.docNo},#{detail.unitCode},#{detail.binCode},#{detail.warehouseCode},#{detail.customerNo},#{detail.shjg},'0',#{detail.unitName})
+    </insert>
+    <update id="updateSalesSummaryOfMatchQty">
+        UPDATE sales_summary SET match_qty = match_qty + #{qty}, barcode = #{barCode}, current_num = current_num + #{qty}
+        WHERE id = #{id} AND create_by = #{createBy}
+    </update>
+    <update id="updateBmBarcodeDetailOfQty">
+        UPDATE bm_barcode_detail SET qty = qty - #{qty}
+        WHERE barcode = #{barcode}
+    </update>
+    <update id="updateQtySubtraction">
+        UPDATE sales_summary SET match_qty = match_qty - #{qty}, current_num = current_num - #{qty}
+        WHERE id = #{id} AND create_by = #{createBy}
+    </update>
+    <update id="updateQtyZero">
+        UPDATE sales_summary SET match_qty = match_qty - #{qty}, current_num = 0.0
+        WHERE id = #{id} AND create_by = #{createBy}
+    </update>
+    <delete id="deleteDeliveryDetailSummaryByCreateBy" parameterType="java.lang.String">
+        DELETE FROM sales_summary WHERE create_by = #{createBy}
+    </delete>
+    <delete id="deleteInvBarcodeOperationByCreateBy">
+        DELETE FROM inv_barcode_operation WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = 3
+    </delete>
+    <delete id="deleteInvBarcodeOperationById" parameterType="java.lang.String">
+        DELETE FROM inv_barcode_operation WHERE id = #{id}
+    </delete>
+
+    <select id="getDeliveryNoticeList" resultType="com.mgkj.dto.DeliveryNotice"
+            parameterType="com.mgkj.dto.DeliveryNoticeDTO">
+        SELECT C.CUSTOMER_CODE customerCode,C.CUSTOMER_NAME customerName,A.DOC_NO docNo,CONVERT(varchar(10), A.DOC_DATE, 120) docDate,A.REMARK remark,
+               (SELECT TOP 1 CUSTOMER_ORDER_NO FROM SALES_ORDER_DOC X LEFT JOIN  SALES_ORDER_DOC_D Y ON X.SALES_ORDER_DOC_ID=Y.SALES_ORDER_DOC_ID LEFT JOIN SALES_ORDER_DOC_SD Z ON Y.SALES_ORDER_DOC_D_ID=Z.SALES_ORDER_DOC_D_ID LEFT JOIN SALES_DELIVERY_D K ON Z.SALES_ORDER_DOC_SD_ID=K.SOURCE_ID_ROid WHERE K.SALES_DELIVERY_ID=A.SALES_DELIVERY_ID) customerNo
+        FROM SALES_DELIVERY A
+        LEFT JOIN CUSTOMER C ON C.CUSTOMER_BUSINESS_ID=A.CUSTOMER_ID
+        WHERE EXISTS(SELECT * FROM SALES_DELIVERY_D B  WHERE A.SALES_DELIVERY_ID=B.SALES_DELIVERY_ID AND B.BUSINESS_QTY-B.ISSUED_QTY>0)
+        <if test="customerNo != null and customerNo != ''">
+            AND (
+            SELECT TOP 1 CUSTOMER_ORDER_NO
+            FROM SALES_ORDER_DOC X
+            LEFT JOIN SALES_ORDER_DOC_D Y ON X.SALES_ORDER_DOC_ID=Y.SALES_ORDER_DOC_ID
+            LEFT JOIN SALES_ORDER_DOC_SD Z ON Y.SALES_ORDER_DOC_D_ID=Z.SALES_ORDER_DOC_D_ID
+            LEFT JOIN SALES_DELIVERY_D K ON Z.SALES_ORDER_DOC_SD_ID=K.SOURCE_ID_ROid
+            WHERE K.SALES_DELIVERY_ID=A.SALES_DELIVERY_ID
+            ) LIKE CONCAT('%',#{customerNo},'%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            AND A.DOC_DATE >= #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND #{endTime} >= A.DOC_DATE
+        </if>
+        ORDER BY A.DOC_DATE DESC
+    </select>
+    <select id="getDeliveryWarehouseList" resultType="com.mgkj.dto.DeliveryWarehouse">
+        SELECT DISTINCT C.WAREHOUSE_CODE warehouseCode,C.WAREHOUSE_NAME warehouseName
+        FROM SALES_DELIVERY A
+                 LEFT JOIN SALES_DELIVERY_D B ON A.SALES_DELIVERY_ID=B.SALES_DELIVERY_ID
+                 LEFT JOIN WAREHOUSE C ON B.WAREHOUSE_ID=C.WAREHOUSE_ID
+        WHERE B.BUSINESS_QTY-B.ISSUED_QTY>0 AND A.DOC_NO IN
+        <foreach item="item" collection="docNoList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="getDeliveryDetail" resultType="com.mgkj.dto.DeliveryDetail">
+        SELECT A.DOC_NO docNo,U.UNIT_CODE unitCode, U.UNIT_NAME unitName, C.WAREHOUSE_CODE warehouseCode, D.ITEM_CODE itemCode,D.ITEM_NAME itemName,D.ITEM_SPECIFICATION itemSpec,
+        SUM(B.BUSINESS_QTY) planQty,SUM(B.ISSUED_QTY) deliveryQty,SUM(B.BUSINESS_QTY-B.ISSUED_QTY) unDeliveryQty, Z.UDF021 binCode,
+        (SELECT TOP 1 CUSTOMER_ORDER_NO FROM SALES_ORDER_DOC X LEFT JOIN SALES_ORDER_DOC_D Y ON X.SALES_ORDER_DOC_ID=Y.SALES_ORDER_DOC_ID LEFT JOIN SALES_ORDER_DOC_SD Z ON Y.SALES_ORDER_DOC_D_ID=Z.SALES_ORDER_DOC_D_ID LEFT JOIN SALES_DELIVERY_D K ON Z.SALES_ORDER_DOC_SD_ID=K.SOURCE_ID_ROid WHERE K.SALES_DELIVERY_ID=A.SALES_DELIVERY_ID) customerNo,
+        P.PLANT_CODE shjg
+        FROM SALES_DELIVERY A
+        LEFT JOIN SALES_DELIVERY_D B ON A.SALES_DELIVERY_ID=B.SALES_DELIVERY_ID
+        LEFT JOIN WAREHOUSE C ON B.WAREHOUSE_ID = C.WAREHOUSE_ID
+        LEFT JOIN ITEM D ON D.ITEM_BUSINESS_ID = B.ITEM_ID
+        LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = D.ITEM_BUSINESS_ID
+        LEFT JOIN UNIT U ON D.STOCK_UNIT_ID = U.UNIT_ID
+        LEFT JOIN PLANT P ON P.PLANT_ID	= A.PLANT_ID
+        WHERE B.BUSINESS_QTY-B.ISSUED_QTY>0
+        AND A.DOC_NO IN
+        <foreach item="docNo" collection="docNoList" open="(" separator="," close=")">
+            #{docNo}
+        </foreach>
+        AND C.WAREHOUSE_CODE IN
+        <foreach item="warehouseCode" collection="warehouseCodeList" open="(" separator="," close=")">
+            #{warehouseCode}
+        </foreach>
+        AND ISNULL(ITEM_CODE,'') &lt;&gt; ''
+        GROUP BY D.ITEM_CODE,D.ITEM_NAME,D.ITEM_SPECIFICATION,C.WAREHOUSE_CODE,U.UNIT_NAME,U.UNIT_CODE,A.DOC_NO,Z.UDF021,A.SALES_DELIVERY_ID,P.PLANT_CODE
+        ORDER BY D.ITEM_CODE
+    </select>
+    <select id="getBarCodeDetailByBarCode" resultType="com.mgkj.vo.BarCodeDetailVo">
+        SELECT org_no orgNo,barcode,item_no itemCode, item_name itemName, item_spec itemSpec,unit_no unitNo, unit_name unitName,
+               qty,sn_warehouse_no warehouseCode, sn_warehouse_name warehouseName,sn_cell_no binCode,remark,combination_lot_no lotCode, org_no shjg
+        FROM bm_barcode_detail
+        WHERE barcode = #{barCode}
+    </select>
+    <select id="getDeliveryDetailSummaryByCreateBy" resultType="com.mgkj.dto.DeliveryDetail"
+            parameterType="java.lang.String">
+        SELECT id, item_code itemCode, item_name itemName, item_spec itemSpec,
+               create_by createBy, create_time createTime, business_qty planQty, match_qty deliveryQty, doc_no docNo, unit_no unitCode,
+               ISNULL(bin_code,'') binCode, warehouse_code warehouseCode, barcode barCode,customerNo, shjg shjg, current_num currentNum, unit_name unitName
+        FROM sales_summary
+        WHERE create_by = #{createBy} -- AND match_qty != 0
+    </select>
+    <select id="getBarCodeDetailByCreateBy" resultType="com.mgkj.vo.BarCodeDetailVo"
+            parameterType="java.lang.String">
+        SELECT barcode,item_no itemCode, item_name itemName, item_spec itemSpec, unit_no unitNo,
+               qty,warehouse_no warehouseCode,cell_no binCode,remark
+        FROM inv_barcode_operation
+        WHERE create_by = #{createBy}
+    </select>
+    <select id="getSalesSummaryByItemCode" resultType="com.mgkj.entity.SalesSummary">
+        SELECT id, item_code itemCode, business_qty businessQty, item_name itemName, item_spec itemSpec,
+               create_by createBy, create_time createTime, match_qty matchQty, doc_no docNo, unit_no unitNo,
+               bin_code binCode, warehouse_code warehouseCode, barcode barCode,customerNo, shjg shjg,current_num currentNum
+        FROM sales_summary WHERE 1=1
+        <if test="itemCode != null and itemCode != ''">
+            AND item_code = #{itemCode}
+        </if>
+        <if test="createBy != null and createBy != ''">
+            AND create_by = #{createBy}
+        </if>
+    </select>
+    <select id="getSalesSummaryByCreateBy" resultType="com.mgkj.entity.SalesSummary"
+            parameterType="java.lang.String">
+        SELECT id, item_code itemCode, business_qty businessQty, item_name itemName, item_spec itemSpec,
+               create_by createBy, create_time createTime, match_qty matchQty, doc_no docNo,
+               unit_no unitNo,bin_code binCode, warehouse_code warehouseCode, barcode barCode,shjg shjg, current_num currentNum
+        FROM sales_summary
+        WHERE create_by = #{createBy}
+        ORDER BY item_code
+    </select>
+    <select id="getMaxBarCodeDetail" resultType="java.lang.String">
+        SELECT ISNULL(RIGHT('0000' + CAST(MAX(CAST(RIGHT(barcode, 4) AS INT)) + 1 AS VARCHAR(4)), 4), '0001')
+        FROM bm_barcode_detail
+        WHERE barcode LIKE #{queryBarCode} + '%'
+    </select>
+    <select id="getInvBarcodeOperationVo" resultType="com.mgkj.vo.InvBarcodeOperationVo">
+        SELECT id,warehouse_no warehouseNo, ISNULL(cell_no,'') cellNo, item_no itemNo, item_name itemName,
+               item_spec itemSpec, barcode, qty, unit_no unitNo, chag_type chagType,
+               status_code statusCode, create_by createBy,create_date createDate
+        FROM inv_barcode_operation
+        WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = 3
+    </select>
+    <select id="getQtySum" resultType="java.math.BigDecimal">
+        SELECT SUM(qty) FROM inv_barcode_operation WHERE barcode = #{barCode} AND chag_type = #{chagType}
+    </select>
+    <select id="getUnMatchQtyList" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM sales_summary
+        WHERE match_qty != business_qty
+        AND create_by = #{createBy}
+    </select>
+    <select id="getInvBarcodeOperationById" resultType="com.mgkj.entity.InvBarcodeOperation"
+            parameterType="java.lang.String">
+        SELECT id, warehouse_no warehouseNo, cell_no cellNo, item_no itemNo,
+               barcode, qty, unit_no unitNo, chag_type chagType, status_code statusCode,
+               create_by createBy, create_date createDate, item_name itemName, item_spec itemSpec
+        FROM inv_barcode_operation
+        WHERE id = #{id}
+    </select>
+    <select id="isScanningCodeRecord" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT count(1)
+        FROM inv_barcode_operation
+        WHERE create_by = #{createBy} AND status_code = 0 AND chag_type = 3
+    </select>
+    <select id="selectPlantId" resultType="java.lang.String">
+        SELECT Owner_Org_ROid  FROM MO WHERE DOC_NO  = #{moNo}
+    </select>
+    <select id="getDeliveryDetailByTimed" resultType="com.mgkj.dto.DeliveryDetail">
+        SELECT A.DOC_NO docNo,
+        S.DOC_NO salesNo,
+        U.UNIT_CODE unitCode,
+        U.UNIT_NAME unitName,
+        C.WAREHOUSE_CODE warehouseCode,
+        D.ITEM_CODE itemCode,
+        D.ITEM_NAME itemName,
+        D.ITEM_SPECIFICATION itemSpec,
+        SUM(B.BUSINESS_QTY) planQty,
+        SUM(B.ISSUED_QTY) deliveryQty,
+        SUM(ISNULL(B.BUSINESS_QTY, 0) - ISNULL(B.ISSUED_QTY, 0)) unDeliveryQty,
+        Z.UDF021 binCode,
+        (SELECT TOP 1 CUSTOMER_ORDER_NO FROM SALES_ORDER_DOC X LEFT JOIN SALES_ORDER_DOC_D Y ON
+        X.SALES_ORDER_DOC_ID=Y.SALES_ORDER_DOC_ID LEFT JOIN SALES_ORDER_DOC_SD Z ON
+        Y.SALES_ORDER_DOC_D_ID=Z.SALES_ORDER_DOC_D_ID LEFT JOIN SALES_DELIVERY_D K ON
+        Z.SALES_ORDER_DOC_SD_ID=K.SOURCE_ID_ROid WHERE K.SALES_DELIVERY_ID=A.SALES_DELIVERY_ID) customerNo,
+        P.PLANT_CODE shjg
+        FROM SALES_DELIVERY A
+        LEFT JOIN SALES_DELIVERY_D B ON A.SALES_DELIVERY_ID=B.SALES_DELIVERY_ID
+        LEFT JOIN SALES_ORDER_DOC S ON S.SALES_ORDER_DOC_ID = B.SALES_ORDER_DOC_ID
+        LEFT JOIN WAREHOUSE C ON B.WAREHOUSE_ID = C.WAREHOUSE_ID
+        LEFT JOIN ITEM D ON D.ITEM_BUSINESS_ID = B.ITEM_ID
+        LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = D.ITEM_BUSINESS_ID
+        LEFT JOIN UNIT U ON D.STOCK_UNIT_ID = U.UNIT_ID
+        LEFT JOIN PLANT P ON P.PLANT_ID = A.PLANT_ID
+        WHERE ISNULL(B.BUSINESS_QTY, 0) - ISNULL(B.ISSUED_QTY, 0) > 0
+        <if test="docNoList != null and docNoList.size() > 0">
+            AND A.DOC_NO IN
+            <foreach item="docNo" collection="docNoList" open="(" separator="," close=")">
+                #{docNo}
+            </foreach>
+        </if>
+        <if test="warehouseCodeList != null and warehouseCodeList.size() > 0">
+            AND C.WAREHOUSE_CODE IN
+            <foreach item="warehouseCode" collection="warehouseCodeList" open="(" separator="," close=")">
+                #{warehouseCode}
+            </foreach>
+        </if>
+        AND ISNULL(D.ITEM_CODE,'') &lt;&gt; ''
+        GROUP BY
+        D.ITEM_CODE,D.ITEM_NAME,D.ITEM_SPECIFICATION,C.WAREHOUSE_CODE,U.UNIT_NAME,U.UNIT_CODE,A.DOC_NO,Z.UDF021,A.SALES_DELIVERY_ID,P.PLANT_CODE,S.DOC_NO
+        ORDER BY D.ITEM_CODE
+    </select>
+    <select id="getDeliveryDetailByDocNo" resultType="com.mgkj.dto.DeliveryDetail">
+        SELECT TOP 1
+               A.DOC_NO docNo, S.DOC_NO salesNo,
+               U.UNIT_CODE                                       unitCode,
+               U.UNIT_NAME                                       unitName,
+               C.WAREHOUSE_CODE                                  warehouseCode,
+               D.ITEM_CODE                                       itemCode,
+               D.ITEM_NAME                                       itemName,
+               D.ITEM_SPECIFICATION                              itemSpec,
+               B.BUSINESS_QTY                                    planQty,
+               B.ISSUED_QTY                                      deliveryQty,
+               B.BUSINESS_QTY - B.ISSUED_QTY                     unDeliveryQty,
+               Z.UDF021                                          binCode,
+               (SELECT TOP 1 CUSTOMER_ORDER_NO
+                FROM SALES_ORDER_DOC X
+                         LEFT JOIN SALES_ORDER_DOC_D Y ON X.SALES_ORDER_DOC_ID = Y.SALES_ORDER_DOC_ID
+                         LEFT JOIN SALES_ORDER_DOC_SD Z ON Y.SALES_ORDER_DOC_D_ID = Z.SALES_ORDER_DOC_D_ID
+                         LEFT JOIN SALES_DELIVERY_D K ON Z.SALES_ORDER_DOC_SD_ID = K.SOURCE_ID_ROid
+                WHERE K.SALES_DELIVERY_ID = A.SALES_DELIVERY_ID) customerNo,
+               P.PLANT_CODE                                      shjg
+        FROM SALES_DELIVERY A
+                 LEFT JOIN SALES_DELIVERY_D B ON A.SALES_DELIVERY_ID = B.SALES_DELIVERY_ID
+                 LEFT JOIN SALES_ORDER_DOC S ON S.SALES_ORDER_DOC_ID = B.SALES_ORDER_DOC_ID
+                 LEFT JOIN WAREHOUSE C ON B.WAREHOUSE_ID = C.WAREHOUSE_ID
+                 LEFT JOIN ITEM D ON D.ITEM_BUSINESS_ID = B.ITEM_ID
+                 LEFT JOIN ITEM_PLANT Z ON Z.ITEM_ID = D.ITEM_BUSINESS_ID
+                 LEFT JOIN UNIT U ON D.STOCK_UNIT_ID = U.UNIT_ID
+                 LEFT JOIN PLANT P ON P.PLANT_ID = A.PLANT_ID
+        WHERE B.BUSINESS_QTY - B.ISSUED_QTY > 0
+          AND A.DOC_NO = #{docNo}
+          AND D.ITEM_CODE = #{itemCode}
+    </select>
+
+    <select id="getSalesOutboundDocSummary" resultType="com.mgkj.dto.SalesOutboundDocSummary">
+        SELECT
+            A.DOC_NO docNo,
+            SUM(ISNULL(B.BUSINESS_QTY, 0)) businessQty,
+            SUM(ISNULL(B.ISSUED_QTY, 0)) issuedQty
+        FROM SALES_DELIVERY A
+                 LEFT JOIN SALES_DELIVERY_D B ON A.SALES_DELIVERY_ID = B.SALES_DELIVERY_ID
+                 LEFT JOIN ITEM D ON D.ITEM_BUSINESS_ID = B.ITEM_ID
+        WHERE A.DOC_NO IN
+        <foreach item="docNo" collection="docNoList" open="(" separator="," close=")">
+            #{docNo}
+        </foreach>
+        <!-- 自动出库当前只判断品号 1 开头的销货单单身。 -->
+          AND ISNULL(D.ITEM_CODE, '') LIKE '1%'
+        GROUP BY A.DOC_NO
+    </select>
+
+    <insert id="upsertSalesSummaryForV2">
+        IF NOT EXISTS (SELECT 1 FROM sales_summary WHERE create_by = #{createBy} AND doc_no = #{docNo} AND item_code = #{itemCode})
+        BEGIN
+            INSERT INTO sales_summary(id,item_code,item_name,item_spec,business_qty,match_qty,create_by,create_time,doc_no,unit_no,bin_code,warehouse_code,customerNo,shjg,current_num,unit_name,barcode)
+            VALUES (NEWID(),#{itemCode},#{itemName},#{itemSpec},#{businessQty},#{deliveryQty},#{createBy},GETDATE(),#{docNo},#{unitCode},#{binCode},#{warehouseCode},#{customerNo},#{shjg},#{currentNum},#{unitName},#{barcode})
+        END
+        ELSE
+        BEGIN
+            UPDATE sales_summary
+            SET match_qty = match_qty + #{currentNum},
+                current_num = current_num + #{currentNum},
+                barcode = #{barcode}
+            WHERE create_by = #{createBy} AND doc_no = #{docNo} AND item_code = #{itemCode}
+        END
+    </insert>
+
+    <!-- 获取发货明细-实时已扫量（LEFT JOIN：E10数据兜底 + 叠加扫码实时已扫量） -->
+    <select id="getDeliveryDetailWithScanned" resultType="com.mgkj.dto.DeliveryDetail">
+        SELECT
+            A.DOC_NO docNo,
+            D.ITEM_CODE itemCode,
+            D.ITEM_NAME itemName,
+            D.ITEM_SPECIFICATION itemSpec,
+            U.UNIT_CODE unitCode,
+            U.UNIT_NAME unitName,
+            SUM(B.BUSINESS_QTY) planQty,
+            SUM(B.ISSUED_QTY) deliveryQty,
+            SUM(B.BUSINESS_QTY - B.ISSUED_QTY) unDeliveryQty,
+            SUM(ISNULL(S.qty, 0)) scannedQty,
+            SUM(B.BUSINESS_QTY - B.ISSUED_QTY - ISNULL(S.qty, 0)) remainingQty,
+            C.WAREHOUSE_CODE warehouseCode,
+            ZP.UDF021 binCode,
+            (SELECT TOP 1 CUSTOMER_ORDER_NO FROM SALES_ORDER_DOC X
+             LEFT JOIN SALES_ORDER_DOC_D Y ON X.SALES_ORDER_DOC_ID = Y.SALES_ORDER_DOC_ID
+             LEFT JOIN SALES_ORDER_DOC_SD Z2 ON Y.SALES_ORDER_DOC_D_ID = Z2.SALES_ORDER_DOC_D_ID
+             LEFT JOIN SALES_DELIVERY_D K ON Z2.SALES_ORDER_DOC_SD_ID = K.SOURCE_ID_ROid
+             WHERE K.SALES_DELIVERY_ID = A.SALES_DELIVERY_ID) customerNo,
+            P.PLANT_CODE shjg
+        FROM SALES_DELIVERY A
+        LEFT JOIN SALES_DELIVERY_D B ON A.SALES_DELIVERY_ID = B.SALES_DELIVERY_ID
+        LEFT JOIN WAREHOUSE C ON B.WAREHOUSE_ID = C.WAREHOUSE_ID
+        LEFT JOIN ITEM D ON D.ITEM_BUSINESS_ID = B.ITEM_ID
+        LEFT JOIN ITEM_PLANT ZP ON ZP.ITEM_ID = D.ITEM_BUSINESS_ID
+        LEFT JOIN UNIT U ON D.STOCK_UNIT_ID = U.UNIT_ID
+        LEFT JOIN PLANT P ON P.PLANT_ID = A.PLANT_ID
+        LEFT JOIN (
+            SELECT docNo, itemCode,
+                   SUM(ISNULL(qty, 0)) AS qty
+            FROM SalesOutboundTaskDetail
+            WHERE 1=1
+            <if test="warehouseCodeList != null and warehouseCodeList.size > 0">
+                AND warehouseCode IN
+                <foreach item="w" collection="warehouseCodeList" open="(" separator="," close=")">
+                    #{w}
+                </foreach>
+            </if>
+            GROUP BY docNo, itemCode
+        ) S ON S.docNo = A.DOC_NO AND S.itemCode = D.ITEM_CODE
+        WHERE B.BUSINESS_QTY - B.ISSUED_QTY > 0
+        AND A.DOC_NO IN
+        <foreach item="item" collection="docNoList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="warehouseCodeList != null and warehouseCodeList.size > 0">
+            AND C.WAREHOUSE_CODE IN
+            <foreach item="w" collection="warehouseCodeList" open="(" separator="," close=")">
+                #{w}
+            </foreach>
+        </if>
+        AND ISNULL(D.ITEM_CODE, '') &lt;&gt; ''
+        GROUP BY D.ITEM_CODE, D.ITEM_NAME, D.ITEM_SPECIFICATION, C.WAREHOUSE_CODE,
+                 U.UNIT_NAME, U.UNIT_CODE, A.DOC_NO, ZP.UDF021, A.SALES_DELIVERY_ID, P.PLANT_CODE
+        ORDER BY D.ITEM_CODE
+    </select>
+
+    <!-- 按人查看扫码明细 -->
+    <select id="getMyScannedList" resultType="com.mgkj.entity.Salesoutboundtaskdetail">
+        SELECT id, barcode, warehouseCode, binCode,
+               qty, docNo, salesNo, customerDocNo,
+               unitCode, itemCode, itemName,
+               itemSpec, orgNo, status, createTime,
+               createBy, plan_qty planQty, synced, sync_time syncTime
+        FROM SalesOutboundTaskDetail
+        WHERE docNo = #{docNo}
+        <if test="createBy != null and createBy != ''">
+            AND createBy = #{createBy}
+        </if>
+        ORDER BY createTime DESC
+    </select>
+
+    <!-- 统计未同步记录数（提交前校验用） -->
+    <select id="countUnsyncedRecords" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM SalesOutboundTaskDetail
+        WHERE synced = 0
+        <if test="docNo != null and docNo != ''">
+            AND docNo = #{docNo}
+        </if>
+    </select>
+
+    <!-- 批量查询待同步记录 -->
+    <select id="getUnsyncedRecords" resultType="com.mgkj.entity.Salesoutboundtaskdetail">
+        SELECT TOP #{limit}
+               id, barcode, warehouseCode, binCode,
+               qty, docNo, salesNo, customerDocNo,
+               unitCode, itemCode, itemName,
+               itemSpec, orgNo, status, createTime,
+               createBy, plan_qty planQty
+        FROM SalesOutboundTaskDetail
+        WHERE synced = 0
+        ORDER BY id
+    </select>
+
+    <!-- 批量标记已同步 -->
+    <update id="batchMarkSynced">
+        UPDATE SalesOutboundTaskDetail
+        SET synced = 1, sync_time = GETDATE()
+        WHERE id IN
+        <foreach item="item" collection="idList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+</mapper>

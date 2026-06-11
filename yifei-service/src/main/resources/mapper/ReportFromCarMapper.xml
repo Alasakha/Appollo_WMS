@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.ReportFromCarMapper">
+
+    <select id="inputQuantity1" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TD003, 1, ${type} ) date,CAST(ROUND(SUM(TE011+(SFCTE.UDF51+SFCTE.UDF52+SFCTE.UDF53)),0)AS INT) count
+        FROM SFCTD
+            LEFT JOIN SFCTE ON TE001 = TD001 AND TE002 = TD002
+        <where>
+            TD005 = 'Y'
+            <if test="workCenter == '金工车间'">
+               AND SFCTE.UDF01 LIKE '%金工%' AND SFCTE.UDF06 = '割管'
+            </if>
+            <if test="workCenter == '综合车间'">
+               AND SFCTE.UDF01 LIKE '%综合%' AND SFCTE.UDF06 = '配口'
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TD003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TD003, 1, ${type} )
+        ORDER BY SUBSTRING ( TD003, 1, ${type} )
+    </select>
+    <select id="inputQuantity2" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TC003, 1, ${type} ) date ,CAST(ROUND(SUM(TE005),0)AS INT) count
+        FROM MOCTC
+            LEFT JOIN MOCTE
+            ON TC001 = TE001 AND TC002 = TE002
+            LEFT JOIN PURMA
+            ON TC006 = MA001 AND TC008 = '55'
+        <where>
+            TC009 = 'Y'
+            <if test="workCenter == '抛光车间(方同喜)'">
+                AND MA002 like '%方同喜%'
+            </if>
+            <if test="workCenter == '抛光车间(顾浩)'">
+                AND MA002 like '%顾浩%'
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TC003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TC003, 1, ${type} )
+        ORDER BY SUBSTRING ( TC003, 1, ${type} )
+    </select>
+    <select id="inputQuantity3" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TC003, 1, ${type} ) date,CAST(ROUND(SUM(TE005),0)AS INT) count
+        FROM MOCTC
+            LEFT JOIN MOCTE ON TC001 = TE001 AND TC002 = TE002
+            LEFT JOIN CMSMD ON TC005 = MD001
+        <where>
+          TC001 = 5410
+          AND TC009 = 'Y'
+          AND MD002 = '喷漆车间'
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TC003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TC003, 1, ${type} )
+        ORDER BY SUBSTRING ( TC003, 1, ${type} )
+    </select>
+    <select id="inputQuantity4" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TD003, 1, ${type} ) date,CAST(ROUND(SUM(TE011+(SFCTE.UDF51+SFCTE.UDF52+SFCTE.UDF53)),0)AS INT) count
+        FROM SFCTD
+            LEFT JOIN SFCTE ON TE001 = TD001 AND TE002 = TD002
+        <where>
+             SFCTE.UDF01 = '喷漆'
+             AND SFCTE.UDF06 LIKE '%检验%'
+             AND TD005 = 'Y'
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TD003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TD003, 1, ${type} )
+        ORDER BY SUBSTRING ( TD003, 1, ${type} )
+    </select>
+    <select id="outputQuantity1" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TD003, 1, ${type} ) date,CAST(ROUND(SUM(TE011+(SFCTE.UDF51+SFCTE.UDF52+SFCTE.UDF53)),0)AS INT) count
+        FROM SFCTD
+        LEFT JOIN SFCTE ON TE001 = TD001 AND TE002 = TD002
+        <where>
+            TD005 = 'Y'
+            <if test="workCenter == '金工车间'">
+                AND SFCTE.UDF01 LIKE '%金工%' AND SFCTE.UDF06 = '平口底'
+            </if>
+            <if test="workCenter == '综合车间'">
+                AND SFCTE.UDF01 LIKE '%综合%' AND SFCTE.UDF06 = '一次测温'
+            </if>
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TD003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TD003, 1, ${type} )
+        ORDER BY SUBSTRING ( TD003, 1, ${type} )
+    </select>
+    <select id="outputQuantity2" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TH003, 1, ${type} ) date,CAST(ROUND(SUM(TI019),0)AS INT) count
+        FROM
+            MOCTH
+                LEFT JOIN PURMA ON TH005 = MA001
+                LEFT JOIN MOCTI ON TH001 = TI001
+                AND TH002 = TI002
+        <where>
+            TH023 = 'Y'
+        <if test="workCenter == '抛光车间(方同喜)'">
+            AND MA002 like '%方同喜%'
+        </if>
+        <if test="workCenter == '抛光车间(顾浩)'">
+            AND MA002 like '%顾浩%'
+        </if>
+          AND TH010 NOT LIKE '%脱漆%'
+        <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+            AND SUBSTRING ( TH003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+        </if>
+        </where>
+        GROUP BY SUBSTRING ( TH003, 1, ${type} )
+        ORDER BY SUBSTRING ( TH003, 1, ${type} )
+    </select>
+    <select id="outputQuantityByFG" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TA003, 1, ${type} ) date, COUNT(*) count FROM
+            MOCTA
+                LEFT JOIN MOCTB ON TA001 = TB001 AND TA002 = TB002
+                LEFT JOIN CMSMD ON TA021 = MD001
+        <where>
+            TA013 = 'Y'
+          AND TA001='5210'
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TA003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+          AND MD002='综合车间'
+        </where>
+        GROUP BY SUBSTRING ( TA003, 1, ${type} )
+        ORDER BY SUBSTRING ( TA003, 1, ${type} )
+    </select>
+    <select id="outputQuantity3" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TD003, 1, ${type} ) date,CAST(ROUND(SUM(TE011+(SFCTE.UDF51+SFCTE.UDF52+SFCTE.UDF53)),0)AS INT) count
+        FROM SFCTD
+        LEFT JOIN SFCTE ON TE001 = TD001 AND TE002 = TD002
+        <where>
+            SFCTE.UDF01 = '喷漆'
+            AND SFCTE.UDF06 LIKE '%检验%'
+            AND TD005 = 'Y'
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND SUBSTRING ( TD003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TD003, 1, ${type} )
+        ORDER BY SUBSTRING ( TD003, 1, ${type} )
+    </select>
+    <select id="outputQuantity4" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TF003, 1, ${type} ) date , CAST(ROUND(SUM(TF024),0)AS INT) count
+        FROM
+            MOCTF
+        <where>
+                TF006 = 'Y'
+            <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+                AND  SUBSTRING ( TF003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+            </if>
+        </where>
+        GROUP BY SUBSTRING ( TF003, 1, ${type} )
+        ORDER BY SUBSTRING ( TF003, 1, ${type} )
+    </select>
+    <select id="scrapQuantity" resultType="com.mgkj.vo.ReportVo">
+        SELECT SUBSTRING ( TL003, 1, ${type} ) date, CAST(ROUND(SUM(TM007),0)AS INT) count
+        FROM
+            INVTL
+                LEFT JOIN INVTM ON TM001 = TL001
+                AND TL002 = TM002
+        <where>
+            TL014 = 'Y'
+        <if test="workCenter!=null and workCenter!=''">
+            AND INVTL.UDF01 = SUBSTRING('${workCenter}', 1, 4)
+        </if>
+        <if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+            AND SUBSTRING ( TL003, 1, ${type} ) BETWEEN SUBSTRING ( #{start_time}, 1, ${type} ) AND SUBSTRING ( #{end_time}, 1, ${type} )
+        </if>
+        </where>
+        GROUP BY SUBSTRING ( TL003, 1, ${type} )
+        ORDER BY SUBSTRING ( TL003, 1, ${type} )
+    </select>
+    <select id="getWorkCenter" resultType="java.lang.String">
+        SELECT DISTINCT RTRIM(MD002) FROM CMSMD
+    </select>
+</mapper>
+
+

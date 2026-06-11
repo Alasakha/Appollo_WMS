@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.mgkj.mapper.IBasicsMapper">
+
+
+    <insert id="add">
+        insert into inspectionBasics
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="i_uid != null">i_uid,</if>
+            <if test="numOn != null">numOn,</if>
+            <if test="mg003 != null">MG003,</if>
+            <if test="value != null">value</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="i_uid != null">#{i_uid},</if>
+            <if test="numOn != null">#{numOn},</if>
+            <if test="mg003 != null">#{mg003},</if>
+            <if test="value != null">#{value}</if>
+        </trim>
+    </insert>
+    <select id="getByi_uid" resultType="com.mgkj.entity.IBasics">
+        select * from inspectionBasics where i_uid = #{i_uid}
+    </select>
+
+    <delete id="del">
+        delete from inspectionBasics where i_uid = #{i_uid}
+    </delete>
+</mapper>

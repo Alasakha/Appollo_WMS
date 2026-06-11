@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.AgvTaskDetailMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.AgvTaskDetail">
+            <result property="id" column="id" />
+            <result property="barcode" column="barcode" />
+            <result property="taskCode" column="taskCode" />
+            <result property="reqCode" column="reqCode" />
+            <result property="status" column="status" />
+        <result property="agvTaskId" column="agvTaskId"/>
+        <result property="docNo" column="docNo"/>
+            <result property="createdAt" column="createdAt" />
+            <result property="createdBy" column="createdBy" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,barcode,taskCode,reqCode,status,createdAt,
+        createdBy
+    </sql>
+    <select id="getAgvTaskDetailListByCreatedBy" resultType="com.mgkj.vo.MaterialBarCodeDetailVo">
+        SELECT
+            A.id,
+            A.barcode,
+            B.item_no itemCode,
+            B.item_name itemName,
+            B.item_spec itemSpec,
+            B.unit_name unitName,
+            B.qty,
+            B.sn_cell_no binCode,
+            B.org_no shjg,
+            B.combination_lot_no lotCode,
+            B.customer_no customerNo
+        FROM agv_task_detail A
+        LEFT JOIN bm_barcode_detail B ON A.barcode = B.barcode
+        WHERE A.status = 0 AND A.createdBy = #{createBy}
+    </select>
+    <select id="getAgvTaskDetailList" resultType="com.mgkj.entity.AgvTaskDetail">
+        SELECT
+            A.*,
+            B.item_name itemName,
+            B.item_spec itemSpec,
+            B.qty qty
+        FROM agv_task_detail A
+        LEFT JOIN bm_barcode_detail B ON A.barcode = B.barcode
+        WHERE A.taskCode = #{taskCode}
+        </select>
+</mapper>

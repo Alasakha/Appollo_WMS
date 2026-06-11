@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mgkj.mapper.SyncMapper">
+
+    <!-- 同步送货单头 -->
+    <insert id="syncDeliveryList">
+        INSERT INTO deliveryList (
+            uuid, delivery, vendorCode, consignee, deliveryTime, deliveryNumber,
+            creator, creatorId, remark, status, makeOverCount, shjg,
+            backDeliveryNumber, arrivalNo
+        )
+        SELECT
+            uuid, delivery, vendorCode, consignee, deliveryTime, deliveryNumber,
+            creator, creatorId, remark, status, makeOverCount, shjg,
+            backDeliveryNumber, arrivalNo
+        FROM ABLTEST..deliveryList A
+        WHERE NOT EXISTS (SELECT 1 FROM deliveryList B WHERE A.uuid = B.uuid)
+          AND NOT EXISTS (SELECT 1 FROM deliveryList B WHERE A.deliveryNumber = B.deliveryNumber)
+    </insert>
+
+    <!-- 同步送货单身 -->
+    <insert id="syncDeliveryDetails">
+        INSERT INTO deliveryNoteDetails (
+            uuid, parentId, purchaseOrder, deliveryNum, packDetails
+        )
+        SELECT
+            uuid, parentId, purchaseOrder, deliveryNum, packDetails
+        FROM ABLTEST..deliveryNoteDetails A
+        WHERE NOT EXISTS (SELECT 1 FROM deliveryNoteDetails B WHERE A.uuid = B.uuid)
+    </insert>
+
+    <!-- 同步条码 -->
+    <insert id="syncBarcodes">
+        INSERT INTO bm_barcode_detail (
+            id, org_no, barcode, item_no, unit_no, unit_name, supplier_no, lot_date,
+            customer_no, owner_no, bar_type, supplier_product_date, supplier_product_lot,
+            lot_desc, barcode_vld_date, gen_moment, source_no, source_seq, barcode_weight,
+            reference_qty, reference_unit_no, customer_barcode, supplier_barcode, qty,
+            sn_warehouse_no, sn_cell_no, sn_barcode_status, combination_lot_no, wms_lot_no,
+            lot_att01, lot_att02, lot_att03, lot_att04, lot_att05, lot_att06, lot_att07,
+            lot_att08, lot_att09, lot_att10, lot_att11, lot_att12, lot_att13, lot_att14,
+            lot_att15, lot_att16, lot_att17, lot_att18, lot_att19, lot_att20, lot_att21,
+            lot_att22, lot_att23, lot_att24, lot_att25, lot_att26, lot_att27, lot_att28,
+            lot_att29, lot_att30, lot_att31, lot_att32, lot_att33, lot_att34, lot_att35,
+            lot_att36, lot_att37, lot_att38, lot_att39, lot_att40, lot_att41, lot_att42,
+            lot_att43, lot_att44, lot_att45, lot_att46, lot_att47, lot_att48, lot_att49,
+            lot_att50, status_code, remark, create_flag, create_by, create_name, create_date,
+            update_by, update_name, update_date, standard_col01, standard_col02, standard_col03,
+            standard_col04, standard_col05, standard_col06, standard_col07, standard_col08,
+            standard_col09, standard_col10, standard_col11, standard_col12, standard_col13,
+            standard_col14, standard_col15, guest_col01, guest_col02, guest_col03, guest_col04,
+            guest_col05, guest_col06, guest_col07, guest_col08, guest_col09, guest_col10,
+            org_name, org_short_name, item_name, item_spec, supplier_name, supplier_short_name,
+            customer_name, customer_short_name, reference_unit_name, sn_warehouse_name,
+            sn_cell_name, tenantsid, print_split_flag
+        )
+        SELECT
+            id, org_no, barcode, item_no, unit_no, unit_name, supplier_no, lot_date,
+            customer_no, owner_no, bar_type, supplier_product_date, supplier_product_lot,
+            lot_desc, barcode_vld_date, gen_moment, source_no, source_seq, barcode_weight,
+            reference_qty, reference_unit_no, customer_barcode, supplier_barcode, qty,
+            sn_warehouse_no, sn_cell_no, sn_barcode_status, combination_lot_no, wms_lot_no,
+            lot_att01, lot_att02, lot_att03, lot_att04, lot_att05, lot_att06, lot_att07,
+            lot_att08, lot_att09, lot_att10, lot_att11, lot_att12, lot_att13, lot_att14,
+            lot_att15, lot_att16, lot_att17, lot_att18, lot_att19, lot_att20, lot_att21,
+            lot_att22, lot_att23, lot_att24, lot_att25, lot_att26, lot_att27, lot_att28,
+            lot_att29, lot_att30, lot_att31, lot_att32, lot_att33, lot_att34, lot_att35,
+            lot_att36, lot_att37, lot_att38, lot_att39, lot_att40, lot_att41, lot_att42,
+            lot_att43, lot_att44, lot_att45, lot_att46, lot_att47, lot_att48, lot_att49,
+            lot_att50, status_code, remark, create_flag, create_by, create_name, create_date,
+            update_by, update_name, update_date, standard_col01, standard_col02, standard_col03,
+            standard_col04, standard_col05, standard_col06, standard_col07, standard_col08,
+            standard_col09, standard_col10, standard_col11, standard_col12, standard_col13,
+            standard_col14, standard_col15, guest_col01, guest_col02, guest_col03, guest_col04,
+            guest_col05, guest_col06, guest_col07, guest_col08, guest_col09, guest_col10,
+            org_name, org_short_name, item_name, item_spec, supplier_name, supplier_short_name,
+            customer_name, customer_short_name, reference_unit_name, sn_warehouse_name,
+            sn_cell_name, tenantsid, print_split_flag
+        FROM ABLTEST..bm_barcode_detail A
+        WHERE NOT EXISTS (SELECT 1 FROM bm_barcode_detail B WHERE A.id = B.id)
+          AND NOT EXISTS (SELECT 1 FROM bm_barcode_detail B WHERE A.barcode = B.barcode)
+    </insert>
+
+</mapper>

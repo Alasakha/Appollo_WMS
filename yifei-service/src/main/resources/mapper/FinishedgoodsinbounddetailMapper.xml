@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.FinishedgoodsinbounddetailMapper">
+
+    <resultMap id="BaseResultMap" type="com.mgkj.entity.FinishedGoodsInboundDetail">
+            <result property="id" column="id" />
+            <result property="barcode" column="barcode" />
+            <result property="warehouseCode" column="warehouseCode" />
+            <result property="warehouseName" column="warehouseName" />
+            <result property="binCode" column="binCode" />
+            <result property="lotNo" column="lotNo" />
+            <result property="qty" column="qty" />
+            <result property="docNo" column="docNo" />
+            <result property="customerDocNo" column="customerDocNo" />
+            <result property="unitCode" column="unitCode" />
+            <result property="itemCode" column="itemCode" />
+            <result property="itemName" column="itemName" />
+            <result property="itemSpec" column="itemSpec" />
+            <result property="orgNo" column="orgNo" />
+            <result property="status" column="status" />
+            <result property="createTime" column="createTime" />
+            <result property="createBy" column="createBy" />
+            <result property="remark" column="remark" />
+            <result property="issueNo" column="issueNo" />
+            <result property="receiptNo" column="receiptNo" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,barcode,warehouseCode,warehouseName,binCode,lotNo,
+        qty,docNo,customerDocNo,unitCode,itemCode,
+        itemName,itemSpec,orgNo,status,createTime,
+        createBy,remark,issueNo,receiptNo
+    </sql>
+</mapper>

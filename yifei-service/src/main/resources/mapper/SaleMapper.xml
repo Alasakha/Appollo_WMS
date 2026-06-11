@@ -1,0 +1,850 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mgkj.mapper.SaleMapper">
+    <insert id="insertMiddleTable" parameterType="com.mgkj.entity.Lsmdt">
+        insert into LSMD_T (LSMD_T_ID,LSMD001,LSMD002,LSMD003,LSMD004,LSMD005,LSMD006,LSMD007,
+                            LSMD013,LSMD014,LSMD015,LSMD019,LSMD024,LSMD025,LSMD026,LSMD027,LSMD028,LSMD029,LSMD030,LSMD031,
+                            LSMD033,LSMD033,LSMD039,LSMD042,LSMD046,LSMD047,LSMD053,LSMD054,LSMD055,LSMD058,LSMD083,LSMD084,LSMD085,LSMD086,
+                            LSMDCRTDT,LSMDCRTID,LSMDENT,LSMDMODDT,LSMDMODID,LSMDOWNDP,LSMDOWNID,LSMDSITE,LSMDSTUS)
+        values (#{lsmdTId},#{lsmd001},
+                #{lsmd002},#{lsmd003},#{lsmd004},#{lsmd005},#{lsmd006},#{lsmd007},#{lsmd013},#{lsmd014},#{lsmd015},#{lsmd019},#{lsmd024},
+                #{lsmd025},#{lsmd026},#{lsmd027},#{lsmd028},#{lsmd029},#{lsmd030},#{lsmd031},#{lsmd033},#{lsmd039},#{lsmd042},#{lsmd046},
+                #{lsmd047},#{lsmd053},#{lsmd055},#{lsmd058},#{lsmd083},#{lsmd084},#{lsmd085},#{lsmd086},#{lsmdcrtdt},#{lsmdcrtid},#{lsmdent},
+                #{lsmdmoddt},#{lsmdmodid},#{lsmdowndp},#{lsmdownid},#{lsmdsite},#{lsmdstus})
+    </insert>
+    <insert id="insertMiddleTable1">
+        insert into LSMD_T (LSMD_T_ID,LSMD001,LSMD002,LSMD003,LSMD004,LSMD005,LSMD006,LSMD007,LSMD008,LSMD010,
+                            LSMD013,LSMD014,LSMD015,LSMD019,LSMD024,LSMD025,LSMD026,LSMD027,LSMD028,LSMD029,LSMD030,
+                            LSMD033,LSMD034,LSMD036,LSMD037,LSMD038,LSMD039,LSMD042,LSMD045,LSMD046,LSMD047,LSMD053,
+                            LSMD054,LSMD055,LSMD058,LSMD081,LSMD082,LSMD083,LSMD084,LSMD085,LSMD086,LSMD906,LSMD907,
+                            LSMDCRTDT,LSMDCRTID,LSMDENT,LSMDMODDT,LSMDMODID,LSMDOWNDP,LSMDOWNID,LSMDSITE,LSMDSTUS)
+        values (#{lsmdTId},#{lsmd001},
+                #{lsmd002},#{lsmd003},#{lsmd004},#{lsmd005},#{lsmd006},#{lsmd007},#{lsmd008},#{lsmd010},#{lsmd013},#{lsmd014},#{lsmd015},#{lsmd019},#{lsmd024},
+                #{lsmd025},#{lsmd026},#{lsmd027},#{lsmd028},#{lsmd029},#{lsmd030},#{lsmd033},#{lsmd034},#{lsmd036},#{lsmd037},#{lsmd038},#{lsmd039},#{lsmd042},
+                #{lsmd045},#{lsmd046},#{lsmd047},#{lsmd053},#{lsmd054},#{lsmd055},#{lsmd058},#{lsmd081},#{lsmd082},#{lsmd083},#{lsmd084},#{lsmd085},#{lsmd086},
+                #{lsmd906},#{lsmd907},#{lsmdcrtdt},#{lsmdcrtid},#{lsmdent},
+                #{lsmdmoddt},#{lsmdmodid},#{lsmdowndp},#{lsmdownid},#{lsmdsite},#{lsmdstus})
+
+
+    </insert>
+    <insert id="insertMiddleTable2" parameterType="com.mgkj.entity.Lsmdt">
+        insert into LSMD_T (
+            LSMD_T_ID, LSMD001, LSMD002, LSMD003, LSMD004, LSMD005, LSMD006, LSMD007, LSMD008, LSMD010,
+            LSMD013, LSMD014, LSMD015, LSMD019, LSMD024, LSMD025, LSMD026, LSMD027, LSMD028, LSMD029,
+            LSMD030, LSMD031, LSMD033, LSMD034, LSMD036, LSMD037, LSMD038, LSMD039, LSMD042, LSMD045, LSMD046, LSMD047, LSMD053,
+            LSMD054, LSMD055, LSMD058, LSMD081,LSMD082, LSMD083, LSMD084, LSMD085, LSMD086, LSMD906, LSMD907,
+            LSMDCRTDT, LSMDCRTID, LSMDENT, LSMDMODDT, LSMDMODID, LSMDOWNDP, LSMDOWNID, LSMDSITE,
+            LSMDSTUS
+        ) values (
+                     #{lsmdTId}, #{lsmd001}, #{lsmd002}, #{lsmd003}, #{lsmd004}, #{lsmd005}, #{lsmd006}, #{lsmd007},
+                     #{lsmd008}, #{lsmd010}, #{lsmd013}, #{lsmd014}, #{lsmd015}, #{lsmd019}, #{lsmd024},
+                     #{lsmd025}, #{lsmd026}, #{lsmd027}, #{lsmd028}, #{lsmd029}, #{lsmd030}, #{lsmd031}, #{lsmd033},
+                     #{lsmd034},#{lsmd036},
+                     #{lsmd037},#{lsmd038}, #{lsmd039}, #{lsmd042}, #{lsmd045}, #{lsmd046}, #{lsmd047}, #{lsmd053},
+                     #{lsmd054}, #{lsmd055}, #{lsmd058}, #{lsmd081},#{lsmd082}, #{lsmd083}, #{lsmd084}, #{lsmd085}, #{lsmd086},
+                     #{lsmd906}, #{lsmd907}, #{lsmdcrtdt}, #{lsmdcrtid}, #{lsmdent}, #{lsmdmoddt}, #{lsmdmodid},
+                     #{lsmdowndp}, #{lsmdownid}, #{lsmdsite}, #{lsmdstus}
+                 )
+    </insert>
+
+
+
+    <select id="ListSaleOrderOutStock" resultType="com.mgkj.vo.ListSaleOrderOutStockVo"
+            parameterType="com.mgkj.dto.ListSaleOrderOutStockDto">
+        SELECT DISTINCT TOP 10
+        A.DOC_NO AS docNo,A.DOC_DATE AS DOC_DATE,
+        CAST(A.DOC_DATE AS NVARCHAR(10))AS docDate,
+        ISNULL(E.ADMIN_UNIT_CODE ,N' ')AS departmentNo,
+        ISNULL(E.ADMIN_UNIT_NAME ,N' ')AS departmentName,
+        ISNULL(D.EMPLOYEE_CODE ,N' ')AS employeeNo,
+        ISNULL(D.EMPLOYEE_NAME ,N' ')AS employeeName,
+        C.CUSTOMER_CODE AS customerNo,
+        C.CUSTOMER_NAME AS customerName,
+        '' AS supplierNo,
+        '' AS supplierName
+        FROM SALES_DELIVERY AS A
+        INNER JOIN SALES_DELIVERY_D AS B ON A.SALES_DELIVERY_ID=B.SALES_DELIVERY_ID
+        INNER JOIN PLANT ON A.PLANT_ID=PLANT.PLANT_ID
+        INNER JOIN CUSTOMER AS C ON A.CUSTOMER_ID=C.CUSTOMER_BUSINESS_ID
+        LEFT JOIN EMPLOYEE AS D ON A.Owner_Emp=D.EMPLOYEE_ID
+        LEFT JOIN ADMIN_UNIT AS E ON A.Owner_Dept=E.ADMIN_UNIT_ID
+        INNER JOIN ITEM
+        ON B.ITEM_ID=ITEM.ITEM_BUSINESS_ID
+        WHERE PLANT.PLANT_CODE='1'
+        AND A.ApproveStatus=N'N'
+        AND A.CATEGORY=N'25'
+        <if test="docNo!=null and docNo!=''">
+            AND A.DOC_NO like concat('%',#{docNo},'%')
+        </if>
+        <if test="startDate!=null and startDate!=''">
+            AND CAST(A.DOC_DATE AS NVARCHAR(10)) &lt;= #{startDate}
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            AND CAST(A.DOC_DATE AS NVARCHAR(10)) >= #{endDate}
+        </if>
+        <if test="customer!=null and customer!=''">
+            AND (CUSTOMER_NAME like concat('%',#{customer},'%') or CUSTOMER_CODE like concat('%',#{customer},'%'))
+        </if>
+        <if test="employee!=null and employee!=''">
+            AND (EMPLOYEE.EMPLOYEE_CODE like concat('%',#{employee},'%') or EMPLOYEE.EMPLOYEE_NAME like concat('%',#{employee},'%'))
+        </if>
+        <if test="department!=null and department!=''">
+            AND (E.ADMIN_UNIT_NAME like concat('%',#{department},'%') or E.ADMIN_UNIT_CODE like concat('%',#{department},'%'))
+        </if>
+        <if test="barCode!=null and barCode!=''">
+            AND ITEM.ITEM_CODE like concat('%', LEFT(#{barCode}, CHARINDEX('#', #{barCode}) - 1), '%')
+        </if>
+        ORDER BY A.DOC_DATE DESC,A.DOC_NO ASC
+
+    </select>
+    <select id="ListSaleOrderOutStockDetail" resultType="com.mgkj.vo.ListSaleOrderOutStockDetailVo"
+            parameterType="java.lang.String">
+        SELECT
+            [SALES_DELIVERY].[DOC_NO]      AS [docNo],
+            CAST([SALES_DELIVERY].[DOC_DATE]  AS NVARCHAR(10))  AS [docDate],
+            [CUSTOMER].[CUSTOMER_CODE]      AS [customerNo],
+            [CUSTOMER].[CUSTOMER_NAME]     AS [customerName],
+            [ITEM].[ITEM_CODE]             AS [itemCode],
+            ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE] ,N' ') AS [productCode],
+            '' AS stockCode,
+            [SALES_DELIVERY_D].[ITEM_DESCRIPTION]   AS [itemName],
+            [SALES_DELIVERY_D].[ITEM_SPECIFICATION] AS [itemSpec],
+            [UNIT].[UNIT_CODE]  AS [unitNo],
+            [SALES_DELIVERY_D].[applyQty] AS [applyQty],
+            SUM(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_INVENTORY_QTY],0)) AS [stockQty],
+            SUM(ISNULL([ITEM_WAREHOUSE_BIN].TOTAL_SECOND_QTY, 0)) AS referenceStockQty,
+            ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceStockUnitNo,
+            ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceStockUnitName,
+            0           AS [scanSumQty],
+            '' AS supplierNo,
+            '' AS supplierName,
+            ISNULL([WAREHOUSE].[WAREHOUSE_CODE] ,N' ') AS warehouseCode,
+            ISNULL([BIN].[BIN_CODE] ,N' ') AS binCode,
+            ISNULL([ITEM_LOT].[LOT_CODE] ,N' ') AS lotNo,
+            UNIT.UNIT_NAME as   unitName,
+            ISNULL(UNIT_02.UNIT_CODE,'') AS   referenceUnitNo,
+            ISNULL(UNIT_02.UNIT_NAME,'') AS   referenceUnitName,
+            dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,[SALES_DELIVERY_D].[applyQty],ITEM.SECOND_UNIT_ID,0) AS referenceQty,
+            UNIT_03.UNIT_CODE AS   valuationUnitNo,
+            UNIT_03.UNIT_NAME AS   valuationUnitName,
+            dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,[SALES_DELIVERY_D].[applyQty], [SALES_DELIVERY_D].PRICE_UNIT_ID,0) AS valuationQty,
+            UNIT_04.UNIT_CODE AS   stockUnitNo,
+            UNIT_04.UNIT_NAME AS   stockUnitName,
+            UNIT_04.DICIMAL_DIGIT AS   stockKeep,
+            --,dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID,UNIT.UNIT_ID,[SALES_DELIVERY_D].[applyQty], ITEM.STOCK_UNIT_ID,0) AS stockUnitQty,
+            SUM([SALES_DELIVERY_D].sourceDocQty ) AS sourceDocQty,
+            CASE
+            WHEN dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, 1, ITEM.STOCK_UNIT_ID, 1)  ='0'
+            THEN 1
+            ELSE dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, 1, ITEM.STOCK_UNIT_ID, 1)
+            END   as rate,
+            ISNULL(UNIT.DICIMAL_DIGIT,0)  as [keep]
+        FROM
+            [SALES_DELIVERY]               AS [SALES_DELIVERY]
+            INNER JOIN [CUSTOMER]
+        ON  [SALES_DELIVERY].[CUSTOMER_ID] = [CUSTOMER].[CUSTOMER_BUSINESS_ID]
+            INNER JOIN (
+            SELECT
+            [SALES_DELIVERY_D].[SALES_DELIVERY_ID],
+            [SALES_DELIVERY_D].[ITEM_ID],
+            [SALES_DELIVERY_D].[ITEM_FEATURE_ID],
+            [SALES_DELIVERY_D].[BUSINESS_UNIT_ID],
+            [SALES_DELIVERY_D].[ITEM_DESCRIPTION],
+            [SALES_DELIVERY_D].[ITEM_SPECIFICATION],
+            [SALES_DELIVERY_D].[WAREHOUSE_ID],
+            [SALES_DELIVERY_D].[BIN_ID],
+            [SALES_DELIVERY_D].[ITEM_LOT_ID],
+            [SALES_DELIVERY_D].PRICE_UNIT_ID,
+            SUM([SALES_DELIVERY_D].[BUSINESS_QTY] -[SALES_DELIVERY_D].[ISSUED_QTY]) AS [applyQty],
+            SUM([SALES_DELIVERY_D].[BUSINESS_QTY] ) AS sourceDocQty
+            FROM
+            [SALES_DELIVERY_D]
+            GROUP BY
+            [SALES_DELIVERY_D].[SALES_DELIVERY_ID],
+            [SALES_DELIVERY_D].[ITEM_ID],
+            [SALES_DELIVERY_D].[ITEM_FEATURE_ID],
+            [SALES_DELIVERY_D].[BUSINESS_UNIT_ID],
+            [SALES_DELIVERY_D].[ITEM_DESCRIPTION],
+            [SALES_DELIVERY_D].[ITEM_SPECIFICATION],
+            [SALES_DELIVERY_D].[WAREHOUSE_ID],
+            [SALES_DELIVERY_D].[BIN_ID],
+            [SALES_DELIVERY_D].[ITEM_LOT_ID],
+            [SALES_DELIVERY_D].PRICE_UNIT_ID
+            )   AS [SALES_DELIVERY_D]
+            ON  [SALES_DELIVERY].[SALES_DELIVERY_ID] = [SALES_DELIVERY_D].[SALES_DELIVERY_ID]
+            INNER JOIN [ITEM]
+            ON  [SALES_DELIVERY_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE]    AS [ITEM_FEATURE]
+            ON  [SALES_DELIVERY_D].[ITEM_FEATURE_ID] = [ITEM_FEATURE].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT]
+            ON  [SALES_DELIVERY_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            LEFT OUTER JOIN (
+            SELECT
+            [SALES_DELIVERY_D].[ITEM_ID],
+            [SALES_DELIVERY_D].[ITEM_FEATURE_ID],
+            [SALES_DELIVERY_D].[BUSINESS_UNIT_ID],
+            [SALES_DELIVERY_D].[WAREHOUSE_ID],
+            [SALES_DELIVERY_D].[BIN_ID],
+            [SALES_DELIVERY_D].[ITEM_LOT_ID],
+            SUM(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_INVENTORY_QTY],0)) as [TOTAL_INVENTORY_QTY],
+            SUM(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_SECOND_QTY],0)) as [TOTAL_SECOND_QTY]
+            FROM (
+            SELECT DISTINCT
+            CASE
+            WHEN SALES_DELIVERY_D.SOURCE_ID_RTK ='BORROW_DOC.BORROW_DOC_D'
+            THEN BORROW_DOC.BO_ID_RTK
+            ELSE 'OTHER'
+            END AS BO_ID_RTK,
+            CASE
+            WHEN SALES_DELIVERY_D.SOURCE_ID_RTK ='BORROW_DOC.BORROW_DOC_D'
+            THEN BORROW_DOC.BO_ID_ROid
+            ELSE '00000000-0000-0000-0000-000000000000'
+            END AS BO_ID_ROid,
+            [SALES_DELIVERY_D].[ITEM_ID],
+            [SALES_DELIVERY_D].[ITEM_FEATURE_ID],
+            [SALES_DELIVERY_D].[BUSINESS_UNIT_ID],
+            [SALES_DELIVERY_D].[ITEM_DESCRIPTION],
+            [SALES_DELIVERY_D].[ITEM_SPECIFICATION],
+            [SALES_DELIVERY_D].[WAREHOUSE_ID],
+            [SALES_DELIVERY_D].[BIN_ID],
+            [SALES_DELIVERY_D].[ITEM_LOT_ID]
+            FROM
+            SALES_DELIVERY_D
+            INNER JOIN
+            SALES_DELIVERY on SALES_DELIVERY.SALES_DELIVERY_ID = SALES_DELIVERY_D.SALES_DELIVERY_ID
+            LEFT JOIN
+            BORROW_DOC_D ON SALES_DELIVERY_D.SOURCE_ID_ROid = BORROW_DOC_D.BORROW_DOC_D_ID  AND
+            SALES_DELIVERY_D.SOURCE_ID_RTK ='BORROW_DOC.BORROW_DOC_D'
+            LEFT JOIN
+            BORROW_DOC ON	BORROW_DOC.BORROW_DOC_ID = BORROW_DOC_D.BORROW_DOC_ID
+            WHERE
+            <if test="docNo!=null and docNo!=''">
+                [SALES_DELIVERY].[DOC_NO] like concat('%',#{docNo},'%')
+            </if>
+            AND [SALES_DELIVERY].[ApproveStatus] = N'N'
+            AND [SALES_DELIVERY].[CATEGORY] = N'25'
+        ) AS [SALES_DELIVERY_D]
+        INNER JOIN
+        (
+        SELECT
+            [ITEM_WAREHOUSE_BIN].[ITEM_ID],
+            [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID],
+            [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID,
+            [ITEM_WAREHOUSE_BIN].BIN_ID,
+            [ITEM_WAREHOUSE_BIN].ITEM_LOT_ID,
+            ITEM_WAREHOUSE_BIN.BO_ID_RTK,
+            ITEM_WAREHOUSE_BIN.BO_ID_ROid,
+            SUM([ITEM_WAREHOUSE_BIN].[INVENTORY_QTY]) AS [TOTAL_INVENTORY_QTY],
+            SUM([ITEM_WAREHOUSE_BIN].[SECOND_QTY]) AS [TOTAL_SECOND_QTY]
+            FROM
+            [ITEM_WAREHOUSE_BIN] AS [ITEM_WAREHOUSE_BIN]
+            INNER JOIN
+            [PLANT] ON  [ITEM_WAREHOUSE_BIN].[Owner_Org_ROid] =[PLANT].[PLANT_ID]
+            INNER JOIN
+            [WAREHOUSE] ON [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+            WHERE	[PLANT].[PLANT_CODE]='1'
+            GROUP BY
+            [ITEM_WAREHOUSE_BIN].[ITEM_ID],
+            [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID],
+            [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID,
+            [ITEM_WAREHOUSE_BIN].BIN_ID,
+            [ITEM_WAREHOUSE_BIN].ITEM_LOT_ID,
+            ITEM_WAREHOUSE_BIN.BO_ID_RTK,
+            ITEM_WAREHOUSE_BIN.BO_ID_ROid
+            ) AS [ITEM_WAREHOUSE_BIN] ON
+            [ITEM_WAREHOUSE_BIN].[ITEM_ID]=[SALES_DELIVERY_D].[ITEM_ID] AND
+            [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID] = [SALES_DELIVERY_D].[ITEM_FEATURE_ID] AND
+            [ITEM_WAREHOUSE_BIN].BO_ID_RTK =[SALES_DELIVERY_D].BO_ID_RTK AND
+            [ITEM_WAREHOUSE_BIN].BO_ID_ROid =[SALES_DELIVERY_D].BO_ID_ROid  AND
+            ([ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = [SALES_DELIVERY_D].[WAREHOUSE_ID] OR [SALES_DELIVERY_D].[WAREHOUSE_ID] = '00000000-0000-0000-0000-000000000000' ) AND
+            ([ITEM_WAREHOUSE_BIN].BIN_ID = [SALES_DELIVERY_D].[BIN_ID] OR [SALES_DELIVERY_D].[BIN_ID]= '00000000-0000-0000-0000-000000000000'  ) AND
+            ([ITEM_WAREHOUSE_BIN].ITEM_LOT_ID =[SALES_DELIVERY_D].ITEM_LOT_ID or [SALES_DELIVERY_D].ITEM_LOT_ID= '00000000-0000-0000-0000-000000000000')
+            GROUP BY
+            [SALES_DELIVERY_D].[ITEM_ID],
+            [SALES_DELIVERY_D].[ITEM_FEATURE_ID],
+            [SALES_DELIVERY_D].[BUSINESS_UNIT_ID],
+            [SALES_DELIVERY_D].[WAREHOUSE_ID],
+            [SALES_DELIVERY_D].[BIN_ID],
+            [SALES_DELIVERY_D].[ITEM_LOT_ID]
+            )  AS [ITEM_WAREHOUSE_BIN]
+            ON  [ITEM_WAREHOUSE_BIN].[ITEM_ID]=[SALES_DELIVERY_D].[ITEM_ID] AND
+            [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID] = [SALES_DELIVERY_D].[ITEM_FEATURE_ID] AND
+            ([ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = [SALES_DELIVERY_D].[WAREHOUSE_ID]   ) AND
+            ([ITEM_WAREHOUSE_BIN].BIN_ID = [SALES_DELIVERY_D].[BIN_ID]   ) AND
+            ([ITEM_WAREHOUSE_BIN].ITEM_LOT_ID =[SALES_DELIVERY_D].ITEM_LOT_ID  )
+            LEFT  OUTER JOIN [WAREHOUSE] ON [SALES_DELIVERY_D].[WAREHOUSE_ID]=[WAREHOUSE].[WAREHOUSE_ID]
+            LEFT  OUTER JOIN [BIN] ON  [SALES_DELIVERY_D].[BIN_ID] = [BIN].[BIN_ID]
+            LEFT  OUTER JOIN [ITEM_LOT] ON [SALES_DELIVERY_D].[ITEM_LOT_ID] = [ITEM_LOT].[ITEM_LOT_ID]
+
+            LEFT JOIN [UNIT] AS UNIT_02
+            ON  ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03
+            ON  [SALES_DELIVERY_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04
+            ON ITEM.STOCK_UNIT_ID=UNIT_04.[UNIT_ID]
+        WHERE
+            <if test="docNo!=null and docNo!=''">
+                [SALES_DELIVERY].[DOC_NO] like concat('%',#{docNo},'%')
+            </if>
+            AND [SALES_DELIVERY].[ApproveStatus] = N'N'
+            AND [SALES_DELIVERY].[CATEGORY] = N'25'
+        GROUP BY
+            [SALES_DELIVERY].[DOC_NO],
+            [SALES_DELIVERY].[DOC_DATE],
+            [CUSTOMER].[CUSTOMER_CODE],
+            [CUSTOMER].[CUSTOMER_NAME],
+            [ITEM].[ITEM_CODE],
+            [ITEM_FEATURE].[ITEM_FEATURE_CODE],
+            [SALES_DELIVERY_D].[ITEM_DESCRIPTION],
+            [SALES_DELIVERY_D].[ITEM_SPECIFICATION],
+            [UNIT].[UNIT_CODE],
+            [SALES_DELIVERY_D].[applyQty],
+            [WAREHOUSE].[WAREHOUSE_CODE],
+            [BIN].[BIN_CODE],
+            [ITEM_LOT].[LOT_CODE],
+            UNIT.UNIT_NAME,
+            UNIT_02.UNIT_CODE,
+            UNIT_02.UNIT_NAME,
+            UNIT_03.UNIT_CODE,
+            UNIT_03.UNIT_NAME,
+            UNIT_04.UNIT_CODE,
+            UNIT_04.UNIT_NAME,
+            UNIT_04.DICIMAL_DIGIT,
+            ITEM.SECOND_UNIT_ID,
+            UNIT.UNIT_ID,
+            ITEM.ITEM_BUSINESS_ID,
+            [SALES_DELIVERY_D].PRICE_UNIT_ID,
+            ITEM.STOCK_UNIT_ID,
+            [SALES_DELIVERY_D].sourceDocQty,
+            UNIT.DICIMAL_DIGIT
+    </select>
+    <select id="ListNoticeOutStock" resultType="com.mgkj.vo.ListNoticeOutStockVo"
+            parameterType="com.mgkj.dto.ListNoticeOutStockDto">
+        SELECT DISTINCT TOP 10
+        A.DOC_NO                                                AS docNo,
+        CAST(A.DOC_DATE  AS NVARCHAR(10))                       AS docDate,
+        CAST(A.DOC_DATE AS NVARCHAR(10))                        AS createDate,
+        ISNULL(E.ADMIN_UNIT_CODE, N' ')                         AS departmentNo,
+        ISNULL(E.ADMIN_UNIT_NAME, N' ')                         AS departmentName,
+        ISNULL(D.EMPLOYEE_CODE, N' ')                           AS employeeNo,
+        ISNULL(D.EMPLOYEE_NAME, N' ')                           AS employeeName,
+        C.CUSTOMER_CODE                                         AS customerNo,
+        C.CUSTOMER_NAME                                         AS customerName,
+        ''                                                      AS supplierNo,
+        ''                                                      AS supplierName
+        FROM SALES_DELIVERY AS A
+        INNER JOIN SALES_DELIVERY_D AS B ON A.SALES_DELIVERY_ID = B.SALES_DELIVERY_ID
+        INNER JOIN PLANT ON A.PLANT_ID = PLANT.PLANT_ID
+        INNER JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = B.ITEM_ID
+        INNER JOIN CUSTOMER AS C ON A.CUSTOMER_ID = C.CUSTOMER_BUSINESS_ID
+        LEFT JOIN EMPLOYEE AS D ON A.Owner_Emp = D.EMPLOYEE_ID
+        LEFT JOIN ADMIN_UNIT AS E ON A.Owner_Dept = E.ADMIN_UNIT_ID
+        WHERE PLANT.PLANT_CODE = '1'
+        AND A.ApproveStatus = N'Y'
+--         AND A.CATEGORY = N'24'
+--         AND B.ISSUED = N'0'
+        AND B.INSPECTION_STATUS &lt;&gt; '2'
+        <if test="docNo!=null and docNo!=''">
+            and A.DOC_NO like concat('%',#{docNo},'%')
+        </if>
+        <if test="customer!=null and customer!=''">
+            and (C.CUSTOMER_CODE like concat('%',#{customer},'%') or C.CUSTOMER_NAME like concat('%',#{customer},'%'))
+        </if>
+        <if test="department!=null and department!=''">
+            and (E.ADMIN_UNIT_CODE like concat('%',#{department},'%') OR E.ADMIN_UNIT_NAME like concat('%',#{department},'%'))
+        </if>
+        <if test="employee!=null and employee!=''">
+            and (D.EMPLOYEE_CODE like concat('%',#{employee},'%') OR D.EMPLOYEE_NAME like concat('%',#{employee},'%'))
+        </if>
+        <if test="startDate!=null and startDate!=''">
+            and A.DOC_DATE &gt;=#{startDate}
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            and A.DOC_DATE &lt;=#{endDate}
+        </if>
+        <if test="itemCode!=null and itemCode!=''">
+            and ITEM.ITEM_CODE like concat('%',#{itemCode},'%')
+        </if>
+        <if test="itemName!=null and itemName!=''">
+            and ITEM.ITEM_NAME like concat('%',#{itemName},'%')
+        </if>
+        <if test="barCode!=null and barCode!=''">
+            and ITEM.ITEM_CODE like concat('%', LEFT(#{barCode}, CHARINDEX('#', #{barCode}) - 1), '%')
+        </if>
+        ORDER BY docDate DESC, docNo ASC
+    </select>
+    <select id="ListNoticeOutStockDetail" resultType="com.mgkj.vo.ListNoticeOutStockDetailVo"
+            parameterType="java.lang.String">
+        SELECT [SALES_DELIVERY].[DOC_NO]                                                                                 AS [docNo]
+        , CAST([SALES_DELIVERY].[DOC_DATE] AS NVARCHAR(10))                                                              AS [docDate]
+        , [CUSTOMER].[CUSTOMER_CODE]                                                                                     AS [customerNo]
+        , [CUSTOMER].[CUSTOMER_NAME]                                                                                     AS [customerName]
+        , [ITEM].[ITEM_CODE]                                                                                             AS [itemCode]
+        , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ')                                                               AS [productCode]
+        , ''                                                                                                             AS stockCode
+        , [SALES_DELIVERY_D].[ITEM_DESCRIPTION]                                                                          AS [itemName]
+        , [SALES_DELIVERY_D].[ITEM_SPECIFICATION]                                                                        AS [itemSpec]
+        , [UNIT].[UNIT_CODE]                                                                                             AS [unitNo]
+        , CAST([SALES_DELIVERY_D].[applyQty] as real)                                                                    AS [applyQty]
+        , CAST(SUM(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_INVENTORY_QTY], 0)) as real)                                       AS [stockQty]
+        , sum(ISNULL([ITEM_WAREHOUSE_BIN].TOTAL_SECOND_QTY, 0))                                                          AS referenceStockQty
+        , ISNULL(UNIT_02.UNIT_CODE, '')                                                                                  AS referenceStockUnitNo
+        ,
+        ISNULL(UNIT_02.UNIT_NAME, '')                                                                                     AS referenceStockUnitName
+        ,
+        0                                                                                                                 AS [scanSumQty]
+        , ''                                                                                                             AS supplierNo
+        , ''                                                                                                             AS supplierName
+        , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ')                                                                     AS warehouseCode
+        , ISNULL([BIN].[BIN_CODE], N' ')                                                                                 AS binCode
+        , ISNULL([ITEM_LOT].[LOT_CODE], N' ')                                                                            AS lotNo
+        , UNIT.UNIT_NAME                                                                                                 as unitName
+        , ISNULL(UNIT_02.UNIT_CODE, '')                                                                                  AS referenceUnitNo
+        , ISNULL(UNIT_02.UNIT_NAME, '')                                                                                  AS referenceUnitName
+        , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [SALES_DELIVERY_D].[applyQty], ITEM.SECOND_UNIT_ID,
+        0)                                                                                          AS referenceQty
+        , UNIT_03.UNIT_CODE                                                                                              AS valuationUnitNo
+        , UNIT_03.UNIT_NAME                                                                                              AS valuationUnitName
+        , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, [SALES_DELIVERY_D].[applyQty],
+        [SALES_DELIVERY_D].PRICE_UNIT_ID,
+        0)                                                                                          AS valuationQty
+        , UNIT_04.UNIT_CODE                                                                                              AS stockUnitNo
+        , UNIT_04.UNIT_NAME                                                                                              AS stockUnitName
+        , UNIT_04.DICIMAL_DIGIT                                                                                          AS stockKeep
+        , SUM([SALES_DELIVERY_D].sourceDocQty)                                                                           AS sourceDocQty
+        , CASE
+        WHEN dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID,
+        UNIT.UNIT_ID,
+        1,
+        ITEM.STOCK_UNIT_ID,
+        1) = '0' THEN 1
+        ELSE dbo.UNIT_CONVERT(ITEM.ITEM_BUSINESS_ID,
+        UNIT.UNIT_ID,
+        1,
+        ITEM.STOCK_UNIT_ID,
+        1) END                                                                               as rate
+        , ISNULL(UNIT.DICIMAL_DIGIT, 0)                                                                                  as [keep]
+        FROM [SALES_DELIVERY] AS [SALES_DELIVERY]
+        INNER JOIN [CUSTOMER] ON [SALES_DELIVERY].[CUSTOMER_ID] = [CUSTOMER].[CUSTOMER_BUSINESS_ID]
+        INNER JOIN (SELECT [SALES_DELIVERY_D].[SALES_DELIVERY_ID]
+        , [SALES_DELIVERY_D].[ITEM_ID]
+        , [SALES_DELIVERY_D].[ITEM_FEATURE_ID]
+        , [SALES_DELIVERY_D].[BUSINESS_UNIT_ID]
+        , [SALES_DELIVERY_D].[ITEM_DESCRIPTION]
+        , [SALES_DELIVERY_D].[ITEM_SPECIFICATION]
+        , [SALES_DELIVERY_D].[WAREHOUSE_ID]
+        , [SALES_DELIVERY_D].[BIN_ID]
+        , [SALES_DELIVERY_D].[ITEM_LOT_ID]
+        , [SALES_DELIVERY_D].PRICE_UNIT_ID
+        , SALES_DELIVERY_D.SOURCE_ID_RTK
+        , SALES_DELIVERY_D.SOURCE_ID_ROid
+        , SUM(
+        CASE
+        WHEN [SALES_DELIVERY_D].[BUSINESS_QTY] &lt;
+        [SALES_DELIVERY_D].ACCEPTED_BUSINESS_QTY + [SALES_DELIVERY_D].SP_RECEIPT_BUSINESS_QTY THEN
+        [SALES_DELIVERY_D].[BUSINESS_QTY]
+        ELSE
+        [SALES_DELIVERY_D].ACCEPTED_BUSINESS_QTY + [SALES_DELIVERY_D].SP_RECEIPT_BUSINESS_QTY
+        END
+        - [SALES_DELIVERY_D].[ISSUED_QTY]
+        )                                      AS [applyQty]
+        , SUM([SALES_DELIVERY_D].[BUSINESS_QTY]) AS sourceDocQty
+        FROM [SALES_DELIVERY_D]
+        WHERE
+        --                          [SALES_DELIVERY_D].[ISSUED] = N'0'AND
+        [SALES_DELIVERY_D].INSPECTION_STATUS &lt;&gt; '2'
+        GROUP BY [SALES_DELIVERY_D].[SALES_DELIVERY_ID]
+        , [SALES_DELIVERY_D].[ITEM_ID]
+        , [SALES_DELIVERY_D].[ITEM_FEATURE_ID]
+        , [SALES_DELIVERY_D].[BUSINESS_UNIT_ID]
+        , [SALES_DELIVERY_D].[ITEM_DESCRIPTION]
+        , [SALES_DELIVERY_D].[ITEM_SPECIFICATION]
+        , [SALES_DELIVERY_D].[WAREHOUSE_ID]
+        , [SALES_DELIVERY_D].[BIN_ID]
+        , [SALES_DELIVERY_D].[ITEM_LOT_ID]
+        , [SALES_DELIVERY_D].PRICE_UNIT_ID, SALES_DELIVERY_D.SOURCE_ID_RTK, SALES_DELIVERY_D.SOURCE_ID_ROid) AS [SALES_DELIVERY_D]
+        ON [SALES_DELIVERY].[SALES_DELIVERY_ID] = [SALES_DELIVERY_D].[SALES_DELIVERY_ID]
+        INNER JOIN [ITEM] ON [SALES_DELIVERY_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+        LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+        ON [SALES_DELIVERY_D].[ITEM_FEATURE_ID] = [ITEM_FEATURE].[ITEM_FEATURE_ID]
+        INNER JOIN [UNIT] ON [SALES_DELIVERY_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+        LEFT OUTER JOIN (SELECT [SALES_DELIVERY_D].[ITEM_ID]
+        , [SALES_DELIVERY_D].[ITEM_FEATURE_ID]
+        , [SALES_DELIVERY_D].[BUSINESS_UNIT_ID]
+        , [SALES_DELIVERY_D].[WAREHOUSE_ID]
+        , [SALES_DELIVERY_D].[BIN_ID]
+        , [SALES_DELIVERY_D].[ITEM_LOT_ID]
+        , sum(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_INVENTORY_QTY], 0)) as [TOTAL_INVENTORY_QTY]
+        , sum(ISNULL([ITEM_WAREHOUSE_BIN].[TOTAL_SECOND_QTY], 0))    as [TOTAL_SECOND_QTY]
+        FROM (SELECT DISTINCT CASE
+        WHEN SALES_DELIVERY_D.SOURCE_ID_RTK = 'BORROW_DOC.BORROW_DOC_D' THEN
+        BORROW_DOC.BO_ID_RTK
+        ELSE
+        'OTHER'
+        END     AS BO_ID_RTK
+        , CASE
+        WHEN SALES_DELIVERY_D.SOURCE_ID_RTK = 'BORROW_DOC.BORROW_DOC_D' THEN
+        BORROW_DOC.BO_ID_ROid
+        ELSE
+        '00000000-0000-0000-0000-000000000000'
+        END AS BO_ID_ROid
+        , [SALES_DELIVERY_D].[ITEM_ID]
+        , [SALES_DELIVERY_D].[ITEM_FEATURE_ID]
+        , [SALES_DELIVERY_D].[BUSINESS_UNIT_ID]
+        , [SALES_DELIVERY_D].[WAREHOUSE_ID]
+        , [SALES_DELIVERY_D].[BIN_ID]
+        , [SALES_DELIVERY_D].[ITEM_LOT_ID]
+        FROM SALES_DELIVERY_D
+        inner join SALES_DELIVERY
+        on SALES_DELIVERY.SALES_DELIVERY_ID = SALES_DELIVERY_D.SALES_DELIVERY_ID
+        left join BORROW_DOC_D
+        ON SALES_DELIVERY_D.SOURCE_ID_ROid = BORROW_DOC_D.BORROW_DOC_D_ID AND
+        SALES_DELIVERY_D.SOURCE_ID_RTK = 'BORROW_DOC.BORROW_DOC_D'
+        LEFT JOIN BORROW_DOC ON BORROW_DOC.BORROW_DOC_ID = BORROW_DOC_D.BORROW_DOC_ID
+        WHERE [SALES_DELIVERY].[DOC_NO] = #{docNo}
+        AND [SALES_DELIVERY].[ApproveStatus] = N'Y'
+        --                                   AND [SALES_DELIVERY].[CATEGORY] = N'24'
+        ) AS [SALES_DELIVERY_D]
+
+        INNER JOIN
+
+        (SELECT [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+        , [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+        , [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+        , [ITEM_WAREHOUSE_BIN].BIN_ID
+        , [ITEM_WAREHOUSE_BIN].ITEM_LOT_ID
+        , ITEM_WAREHOUSE_BIN.BO_ID_RTK
+        , ITEM_WAREHOUSE_BIN.BO_ID_ROid
+        , SUM([ITEM_WAREHOUSE_BIN].[INVENTORY_QTY]) AS [TOTAL_INVENTORY_QTY]
+        , SUM([ITEM_WAREHOUSE_BIN].[SECOND_QTY])    AS [TOTAL_SECOND_QTY]
+        FROM [ITEM_WAREHOUSE_BIN] AS [ITEM_WAREHOUSE_BIN]
+        INNER JOIN [PLANT] ON [ITEM_WAREHOUSE_BIN].[Owner_Org_ROid] = [PLANT].[PLANT_ID]
+        INNER JOIN [WAREHOUSE]
+        ON [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+        WHERE [PLANT].[PLANT_CODE] = '1'
+        GROUP BY [ITEM_WAREHOUSE_BIN].[ITEM_ID]
+        , [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID]
+        , [ITEM_WAREHOUSE_BIN].WAREHOUSE_ID
+        , [ITEM_WAREHOUSE_BIN].BIN_ID
+        , [ITEM_WAREHOUSE_BIN].ITEM_LOT_ID
+        , ITEM_WAREHOUSE_BIN.BO_ID_RTK
+        , ITEM_WAREHOUSE_BIN.BO_ID_ROid) AS [ITEM_WAREHOUSE_BIN] ON
+        [ITEM_WAREHOUSE_BIN].[ITEM_ID] = [SALES_DELIVERY_D].[ITEM_ID] AND
+        [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID] = [SALES_DELIVERY_D].[ITEM_FEATURE_ID] AND
+        [ITEM_WAREHOUSE_BIN].BO_ID_RTK = [SALES_DELIVERY_D].BO_ID_RTK AND
+        [ITEM_WAREHOUSE_BIN].BO_ID_ROid = [SALES_DELIVERY_D].BO_ID_ROid AND
+        ([ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = [SALES_DELIVERY_D].[WAREHOUSE_ID] OR
+        [SALES_DELIVERY_D].[WAREHOUSE_ID] = '00000000-0000-0000-0000-000000000000') AND
+        ([ITEM_WAREHOUSE_BIN].BIN_ID = [SALES_DELIVERY_D].[BIN_ID] OR
+        [SALES_DELIVERY_D].[BIN_ID] = '00000000-0000-0000-0000-000000000000') AND
+        ([ITEM_WAREHOUSE_BIN].ITEM_LOT_ID = [SALES_DELIVERY_D].ITEM_LOT_ID or
+        [SALES_DELIVERY_D].ITEM_LOT_ID = '00000000-0000-0000-0000-000000000000')
+        group by [SALES_DELIVERY_D].[ITEM_ID]
+        , [SALES_DELIVERY_D].[ITEM_FEATURE_ID]
+        , [SALES_DELIVERY_D].[BUSINESS_UNIT_ID]
+        , [SALES_DELIVERY_D].[WAREHOUSE_ID]
+        , [SALES_DELIVERY_D].[BIN_ID]
+        , [SALES_DELIVERY_D].[ITEM_LOT_ID]) AS [ITEM_WAREHOUSE_BIN]
+        ON [ITEM_WAREHOUSE_BIN].[ITEM_ID] = [SALES_DELIVERY_D].[ITEM_ID] AND
+        [ITEM_WAREHOUSE_BIN].[ITEM_FEATURE_ID] = [SALES_DELIVERY_D].[ITEM_FEATURE_ID] AND
+        ([ITEM_WAREHOUSE_BIN].WAREHOUSE_ID = [SALES_DELIVERY_D].[WAREHOUSE_ID]) AND
+        ([ITEM_WAREHOUSE_BIN].BIN_ID = [SALES_DELIVERY_D].[BIN_ID]) AND
+        ([ITEM_WAREHOUSE_BIN].ITEM_LOT_ID = [SALES_DELIVERY_D].ITEM_LOT_ID)
+        LEFT OUTER JOIN [WAREHOUSE] ON [SALES_DELIVERY_D].[WAREHOUSE_ID] = [WAREHOUSE].[WAREHOUSE_ID]
+        LEFT OUTER JOIN [BIN] ON [SALES_DELIVERY_D].[BIN_ID] = [BIN].[BIN_ID]
+        LEFT OUTER JOIN [ITEM_LOT] ON [SALES_DELIVERY_D].[ITEM_LOT_ID] = [ITEM_LOT].[ITEM_LOT_ID]
+        LEFT JOIN [UNIT] AS UNIT_02
+        ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+        LEFT JOIN [UNIT] AS UNIT_03
+        ON [SALES_DELIVERY_D].PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+        LEFT JOIN dbo.UNIT AS UNIT_04
+        ON ITEM.STOCK_UNIT_ID = UNIT_04.[UNIT_ID]
+        WHERE [SALES_DELIVERY].[DOC_NO] = #{docNo}
+        AND [SALES_DELIVERY].[ApproveStatus] = N'Y'
+        --   AND [SALES_DELIVERY].[CATEGORY] = N'24'
+        GROUP BY [SALES_DELIVERY].[DOC_NO], [SALES_DELIVERY].[DOC_DATE], [CUSTOMER].[CUSTOMER_CODE], [CUSTOMER].[CUSTOMER_NAME]
+        , [ITEM].[ITEM_CODE], [ITEM_FEATURE].[ITEM_FEATURE_CODE], [SALES_DELIVERY_D].[ITEM_DESCRIPTION]
+        , [SALES_DELIVERY_D].[ITEM_SPECIFICATION], [UNIT].[UNIT_CODE], [SALES_DELIVERY_D].[applyQty]
+        , [WAREHOUSE].[WAREHOUSE_CODE]
+        , [BIN].[BIN_CODE]
+        , [ITEM_LOT].[LOT_CODE]
+        , UNIT.UNIT_NAME
+        , UNIT_02.UNIT_CODE
+        , UNIT_02.UNIT_NAME
+        , UNIT_03.UNIT_CODE
+        , UNIT_03.UNIT_NAME
+        , UNIT_04.UNIT_CODE
+        , UNIT_04.UNIT_NAME
+        , UNIT_04.DICIMAL_DIGIT
+        , ITEM.SECOND_UNIT_ID
+        , UNIT.UNIT_ID
+        , ITEM.ITEM_BUSINESS_ID
+        , [SALES_DELIVERY_D].PRICE_UNIT_ID
+        , ITEM.STOCK_UNIT_ID
+        , [SALES_DELIVERY_D].sourceDocQty
+        , UNIT.DICIMAL_DIGIT
+    </select>
+    <select id="ListSaleReturn" resultType="com.mgkj.vo.ListSaleReturnVo">
+        SELECT DISTINCT TOP 10
+                A.DOC_NO                         AS docNo,
+                A.DOC_DATE                       AS DOC_DATE,
+                        CAST(A.DOC_DATE AS NVARCHAR(10)) AS createDate,
+                        ISNULL(E.ADMIN_UNIT_CODE, N' ')  AS departmentNo,
+                        ISNULL(E.ADMIN_UNIT_NAME, N' ')  AS departmentName,
+                        ISNULL(D.EMPLOYEE_CODE, N' ')    AS employeeNo,
+                        ISNULL(D.EMPLOYEE_NAME, N' ')    AS employeeName,
+                        C.CUSTOMER_CODE                  AS customerNo,
+                        C.CUSTOMER_NAME                  AS customerName,
+                        ''                               AS supplierNo,
+                        ''                               AS supplierName
+        FROM SALES_RETURN AS A
+                 INNER JOIN PLANT ON A.PLANT_ID = PLANT.PLANT_ID
+                 INNER JOIN CUSTOMER AS C ON A.CUSTOMER_ID = C.CUSTOMER_BUSINESS_ID
+                 LEFT JOIN EMPLOYEE AS D ON A.Owner_Emp = D.EMPLOYEE_ID
+                 LEFT JOIN ADMIN_UNIT AS E ON A.Owner_Dept = E.ADMIN_UNIT_ID
+                 INNER JOIN SALES_RETURN_D AS B ON A.SALES_RETURN_ID = B.SALES_RETURN_ID
+                 INNER JOIN ITEM
+                            ON B.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+        WHERE PLANT.PLANT_CODE = '1'
+          AND A.ApproveStatus = N'Y'
+          AND A.CATEGORY = N'26'
+          AND A.RECEIPTED_STATUS IN (N'1', N'2')
+          AND B.ACCEPTED_BUSINESS_QTY + B.SP_RECEIPT_BUSINESS_QTY + B.SCRAP_BUSINESS_QTY - B.RECEIPTED_BUSINESS_QTY > 0
+          <if test="docNo!=null and docNo!=''">
+              and A.DOC_NO like concat('%',#{docNo},'%')
+          </if>
+          <if test="costumer!=null and costumer != ''">
+              and (C.CUSTOMER_CODE like concat('%',#{costumer},'%') or C.CUSTOMER_NAME like concat('%',#{costumer},'%'))
+          </if>
+          <if test="employee!=null and employee != ''">
+              and (D.EMPLOYEE_CODE like concat('%',#{employee},'%') or D.EMPLOYEE_NAME like concat('%',#{employee},'%'))
+          </if>
+          <if test="department!=null and department != ''">
+              and (E.ADMIN_UNIT_CODE like concat('%',#{department},'%') or E.ADMIN_UNIT_NAME like concat('%',#{department},'%'))
+          </if>
+          <if test="endDate!=null and endDate!=''">
+              and A.DOC_DATE &gt; #{endDate}
+          </if>
+          <if test="startDate!=null and startDate!=''">
+              and A.DOC_DATE &lt; #{startDate}
+          </if>
+        UNION ALL
+        SELECT DISTINCT TOP 10 A.DOC_NO                         AS docNo,
+                A.DOC_DATE                       AS DOC_DATE,
+                        CAST(A.DOC_DATE AS NVARCHAR(10)) AS createDate,
+                        ISNULL(E.ADMIN_UNIT_CODE, N' ')  AS departmentNo,
+                        ISNULL(E.ADMIN_UNIT_NAME, N' ')  AS departmentName,
+                        ISNULL(D.EMPLOYEE_CODE, N' ')    AS employeeNo,
+                        ISNULL(D.EMPLOYEE_NAME, N' ')    AS employeeName,
+                        C.CUSTOMER_CODE                  AS customerNo,
+                        C.CUSTOMER_NAME                  AS customerName,
+                        ''                               AS supplierNo,
+                        ''                               AS supplierName
+        FROM SALES_RETURN_RECEIPT AS A
+                 INNER JOIN PLANT ON A.Owner_Org_ROid = PLANT.PLANT_ID
+                 INNER JOIN CUSTOMER AS C ON A.SHIP_TO_CUSTOMER_ID = C.CUSTOMER_BUSINESS_ID
+                 LEFT JOIN EMPLOYEE AS D ON A.Owner_Emp = D.EMPLOYEE_ID
+                 LEFT JOIN ADMIN_UNIT AS E ON A.Owner_Dept = E.ADMIN_UNIT_ID
+                 INNER JOIN SALES_RETURN_RECEIPT_D AS B ON A.SALES_RETURN_RECEIPT_ID = B.SALES_RETURN_RECEIPT_ID
+                 INNER JOIN ITEM
+                            ON B.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+        WHERE PLANT.PLANT_CODE = '1'
+          AND A.ApproveStatus = N'N'
+        <if test="docNo!=null and docNo!=''">
+            and A.DOC_NO like concat('%',#{docNo},'%')
+        </if>
+        <if test="costumer!=null and costumer != ''">
+            and (C.CUSTOMER_CODE like concat('%',#{costumer},'%') or C.CUSTOMER_NAME like concat('%',#{costumer},'%'))
+        </if>
+        <if test="employee!=null and employee != ''">
+            and (D.EMPLOYEE_CODE like concat('%',#{employee},'%') or D.EMPLOYEE_NAME like concat('%',#{employee},'%'))
+        </if>
+        <if test="department!=null and department != ''">
+            and (E.ADMIN_UNIT_CODE like concat('%',#{department},'%') or E.ADMIN_UNIT_NAME like concat('%',#{department},'%'))
+        </if>
+        <if test="endDate!=null and endDate!=''">
+            and A.DOC_DATE &gt; #{endDate}
+        </if>
+        <if test="startDate!=null and startDate!=''">
+            and A.DOC_DATE &lt; #{startDate}
+        </if>
+        ORDER BY A.DOC_DATE DESC, A.DOC_NO ASC
+    </select>
+    <select id="ListSaleReturnDetail" resultType="com.mgkj.vo.ListSaleReturnDetailVo">
+        SELECT [SALES_RETURN].[DOC_NO]                             AS [docNo]
+                , CAST([SALES_RETURN].[DOC_DATE] AS NVARCHAR(10))     AS [docDate]
+                , [CUSTOMER].[CUSTOMER_CODE]                          AS [customerNo]
+                , [CUSTOMER].[CUSTOMER_NAME]                          AS [customerName]
+                , [ITEM].[ITEM_CODE]                                  AS [itemCode]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ')    AS [productCode]
+                , ''                                                  AS stockCode
+                , [SALES_RETURN_D].[ITEM_DESCRIPTION]                 AS [itemName]
+                , [SALES_RETURN_D].[ITEM_SPECIFICATION]               AS [itemSpec]
+                , [UNIT].[UNIT_CODE]                                  AS [unitNo]
+                , SUM(SALES_RETURN_D.ACCEPTED_BUSINESS_QTY +
+            SALES_RETURN_D.SP_RECEIPT_BUSINESS_QTY +
+            SALES_RETURN_D.SCRAP_BUSINESS_QTY -
+            SALES_RETURN_D.RECEIPTED_BUSINESS_QTY)          AS [applyQty]
+                , 0                                                   AS [stockQty]
+                , 0                                                   AS [scanSumQty]
+                , ''                                                  AS supplierNo
+                , ''                                                  AS supplierName
+                , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ')          AS warehouseNo
+                , ISNULL([BIN].[BIN_CODE], N' ')                      AS storageSpacesNo
+                , ISNULL([ITEM_LOT].[LOT_CODE], N' ')                 AS lotNo
+                , UNIT.UNIT_NAME                                      as unitName
+                , ISNULL(UNIT_02.UNIT_CODE, '')                       AS referenceUnitNo
+                , ISNULL(UNIT_02.UNIT_NAME, '')                       AS referenceUnitName
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM(SALES_RETURN_D.ACCEPTED_BUSINESS_QTY +
+            SALES_RETURN_D.SP_RECEIPT_BUSINESS_QTY +
+            SALES_RETURN_D.SCRAP_BUSINESS_QTY -
+            SALES_RETURN_D.RECEIPTED_BUSINESS_QTY),
+            ITEM.SECOND_UNIT_ID, 0)          AS referenceQty
+                , UNIT_03.UNIT_CODE                                   AS valuationUnitNo
+                , UNIT_03.UNIT_NAME                                   AS valuationUnitName
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM(SALES_RETURN_D.ACCEPTED_BUSINESS_QTY +
+            SALES_RETURN_D.SP_RECEIPT_BUSINESS_QTY +
+            SALES_RETURN_D.SCRAP_BUSINESS_QTY -
+            SALES_RETURN_D.RECEIPTED_BUSINESS_QTY),
+            SALES_RETURN_D.PRICE_UNIT_ID, 0) AS valuationQty
+                , UNIT_04.UNIT_CODE                                   AS stockUnitNo
+                , UNIT_04.UNIT_NAME                                   AS stockUnitName
+                , UNIT_04.DICIMAL_DIGIT                               AS stockKeep
+                , SUM(SALES_RETURN_D.ACCEPTED_BUSINESS_QTY +
+            SALES_RETURN_D.SP_RECEIPT_BUSINESS_QTY +
+            SALES_RETURN_D.SCRAP_BUSINESS_QTY)              AS sourceDocQty
+                , 0                                                      keep
+                , 1                                                      rate,
+            ISNULL(E.ADMIN_UNIT_CODE, N' ')  AS departmentNo,
+            ISNULL(E.ADMIN_UNIT_NAME, N' ')  AS departmentName,
+            ISNULL(D.EMPLOYEE_CODE, N' ')    AS employeeNo,
+            ISNULL(D.EMPLOYEE_NAME, N' ')    AS employeeName
+        FROM [SALES_RETURN] AS [SALES_RETURN]
+            INNER JOIN [SALES_RETURN_D] AS [SALES_RETURN_D]
+        ON [SALES_RETURN].[SALES_RETURN_ID] = [SALES_RETURN_D].[SALES_RETURN_ID]
+            INNER JOIN [ITEM] AS [ITEM] ON [SALES_RETURN_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [SALES_RETURN_D].[ITEM_FEATURE_ID] = [ITEM_FEATURE].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT] AS [UNIT] ON [SALES_RETURN_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [CUSTOMER] AS [CUSTOMER] ON [SALES_RETURN].[CUSTOMER_ID] = [CUSTOMER].[CUSTOMER_BUSINESS_ID]
+            LEFT OUTER JOIN [WAREHOUSE] ON [SALES_RETURN_D].[WAREHOUSE_ID] = [WAREHOUSE].[WAREHOUSE_ID]
+            LEFT OUTER JOIN [BIN] ON [SALES_RETURN_D].[BIN_ID] = [BIN].[BIN_ID]
+            LEFT OUTER JOIN [ITEM_LOT] ON [SALES_RETURN_D].[ITEM_LOT_ID] = [ITEM_LOT].[ITEM_LOT_ID]
+            LEFT JOIN [UNIT] AS UNIT_02
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03
+            ON SALES_RETURN_D.PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04
+            ON ITEM.STOCK_UNIT_ID = UNIT_04.[UNIT_ID]
+            LEFT JOIN EMPLOYEE AS D ON SALES_RETURN.Owner_Emp = D.EMPLOYEE_ID
+            LEFT JOIN ADMIN_UNIT AS E ON SALES_RETURN.Owner_Dept = E.ADMIN_UNIT_ID
+        WHERE [SALES_RETURN].[DOC_NO] = #{docNo}
+          AND [SALES_RETURN].[ApproveStatus] = N'Y'
+          AND [SALES_RETURN].[CATEGORY] = N'26'
+          AND [SALES_RETURN_D].[RECEIPTED] = N'0'
+          AND SALES_RETURN_D.ACCEPTED_BUSINESS_QTY +
+            SALES_RETURN_D.SP_RECEIPT_BUSINESS_QTY +
+            SALES_RETURN_D.SCRAP_BUSINESS_QTY -
+            SALES_RETURN_D.RECEIPTED_BUSINESS_QTY > 0
+        GROUP BY [SALES_RETURN].[DOC_NO], [SALES_RETURN].[DOC_DATE], [CUSTOMER].[CUSTOMER_CODE], [CUSTOMER].[CUSTOMER_NAME]
+                , [ITEM].[ITEM_CODE], [ITEM_FEATURE].[ITEM_FEATURE_CODE], [SALES_RETURN_D].[ITEM_DESCRIPTION]
+                , [SALES_RETURN_D].[ITEM_SPECIFICATION], [UNIT].[UNIT_CODE]
+                , [WAREHOUSE].[WAREHOUSE_CODE]
+                , [BIN].[BIN_CODE]
+                , [ITEM_LOT].[LOT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , SALES_RETURN_D.PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID, E.ADMIN_UNIT_CODE, E.ADMIN_UNIT_NAME, D.EMPLOYEE_CODE, D.EMPLOYEE_NAME
+        UNION ALL
+        SELECT [SALES_RETURN_RECEIPT].[DOC_NO]                             AS [docNo]
+                , CAST([SALES_RETURN_RECEIPT].[DOC_DATE] AS NVARCHAR(10))     AS [docDate]
+                , [CUSTOMER].[CUSTOMER_CODE]                                  AS [customerNo]
+                , [CUSTOMER].[CUSTOMER_NAME]                                  AS [customerName]
+                , [ITEM].[ITEM_CODE]                                          AS [itemCode]
+                , ISNULL([ITEM_FEATURE].[ITEM_FEATURE_CODE], N' ')            AS [productCode]
+                , ''                                                          AS stockCode
+                , [SALES_RETURN_RECEIPT_D].[ITEM_DESCRIPTION]                 AS [itemName]
+                , [SALES_RETURN_RECEIPT_D].[ITEM_SPECIFICATION]               AS [itemSpec]
+                , [UNIT].[UNIT_CODE]                                          AS [unitNo]
+                , SUM(SALES_RETURN_RECEIPT_D.BUSINESS_QTY)                    AS [applyQty]
+                , 0                                                           AS [stockQty]
+                , 0                                                           AS [scanSumQty]
+                , ''                                                          AS supplierNo
+                , ''                                                          AS supplierName
+                , ISNULL([WAREHOUSE].[WAREHOUSE_CODE], N' ')                  AS warehouseNo
+                , ISNULL([BIN].[BIN_CODE], N' ')                              AS storageSpacesNo
+                , ISNULL([ITEM_LOT].[LOT_CODE], N' ')                         AS lotNo
+                , UNIT.UNIT_NAME                                              as unitName
+                , ISNULL(UNIT_02.UNIT_CODE, '')                               AS referenceUnitNo
+                , ISNULL(UNIT_02.UNIT_NAME, '')                               AS referenceUnitName
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM(SALES_RETURN_RECEIPT_D.BUSINESS_QTY),
+            ITEM.SECOND_UNIT_ID, 0)                  AS referenceQty
+                , UNIT_03.UNIT_CODE                                           AS valuationUnitNo
+                , UNIT_03.UNIT_NAME                                           AS valuationUnitName
+                , dbo.[UNIT_CONVERT](ITEM.ITEM_BUSINESS_ID, UNIT.UNIT_ID, SUM(SALES_RETURN_RECEIPT_D.BUSINESS_QTY),
+            SALES_RETURN_RECEIPT_D.PRICE_UNIT_ID, 0) AS valuationQty
+                , UNIT_04.UNIT_CODE                                           AS stockUnitNo
+                , UNIT_04.UNIT_NAME                                           AS stockUnitName
+                , UNIT_04.DICIMAL_DIGIT                                       AS stockKeep
+                , SUM(SALES_RETURN_RECEIPT_D.BUSINESS_QTY)                    AS sourceDocQty
+                , 0                                                              keep
+                , 1                                                              rate,
+                ISNULL(E.ADMIN_UNIT_CODE, N' ')  AS departmentNo,
+                ISNULL(E.ADMIN_UNIT_NAME, N' ')  AS departmentName,
+                ISNULL(D.EMPLOYEE_CODE, N' ')    AS employeeNo,
+                ISNULL(D.EMPLOYEE_NAME, N' ')    AS employeeName
+        FROM [SALES_RETURN_RECEIPT] AS [SALES_RETURN_RECEIPT]
+            INNER JOIN [SALES_RETURN_RECEIPT_D] AS [SALES_RETURN_RECEIPT_D]
+        ON [SALES_RETURN_RECEIPT].[SALES_RETURN_RECEIPT_ID] =
+            [SALES_RETURN_RECEIPT_D].[SALES_RETURN_RECEIPT_ID]
+            INNER JOIN [ITEM] AS [ITEM] ON [SALES_RETURN_RECEIPT_D].[ITEM_ID] = [ITEM].[ITEM_BUSINESS_ID]
+            LEFT OUTER JOIN [ITEM_FEATURE] AS [ITEM_FEATURE]
+            ON [SALES_RETURN_RECEIPT_D].[ITEM_FEATURE_ID] = [ITEM_FEATURE].[ITEM_FEATURE_ID]
+            INNER JOIN [UNIT] AS [UNIT] ON [SALES_RETURN_RECEIPT_D].[BUSINESS_UNIT_ID] = [UNIT].[UNIT_ID]
+            INNER JOIN [CUSTOMER] AS [CUSTOMER]
+            ON [SALES_RETURN_RECEIPT].SHIP_TO_CUSTOMER_ID = [CUSTOMER].[CUSTOMER_BUSINESS_ID]
+            LEFT OUTER JOIN [WAREHOUSE] ON [SALES_RETURN_RECEIPT_D].[WAREHOUSE_ID] = [WAREHOUSE].[WAREHOUSE_ID]
+            LEFT OUTER JOIN [BIN] ON [SALES_RETURN_RECEIPT_D].[BIN_ID] = [BIN].[BIN_ID]
+            LEFT OUTER JOIN [ITEM_LOT] ON [SALES_RETURN_RECEIPT_D].[ITEM_LOT_ID] = [ITEM_LOT].[ITEM_LOT_ID]
+            LEFT JOIN [UNIT] AS UNIT_02
+            ON ITEM.SECOND_UNIT_ID = UNIT_02.[UNIT_ID]
+            LEFT JOIN [UNIT] AS UNIT_03
+            ON SALES_RETURN_RECEIPT_D.PRICE_UNIT_ID = UNIT_03.[UNIT_ID]
+            LEFT JOIN dbo.UNIT AS UNIT_04
+            ON ITEM.STOCK_UNIT_ID = UNIT_04.[UNIT_ID]
+            LEFT JOIN EMPLOYEE AS D ON SALES_RETURN_RECEIPT.Owner_Emp = D.EMPLOYEE_ID
+            LEFT JOIN ADMIN_UNIT AS E ON SALES_RETURN_RECEIPT.Owner_Dept = E.ADMIN_UNIT_ID
+        WHERE [SALES_RETURN_RECEIPT].[DOC_NO] = #{docNo}
+          AND [SALES_RETURN_RECEIPT].[ApproveStatus] = N'N'
+        GROUP BY [SALES_RETURN_RECEIPT].[DOC_NO], [SALES_RETURN_RECEIPT].[DOC_DATE], [CUSTOMER].[CUSTOMER_CODE]
+                , [CUSTOMER].[CUSTOMER_NAME], [ITEM].[ITEM_CODE], [ITEM_FEATURE].[ITEM_FEATURE_CODE]
+                , [SALES_RETURN_RECEIPT_D].[ITEM_DESCRIPTION], [SALES_RETURN_RECEIPT_D].[ITEM_SPECIFICATION], [UNIT].[UNIT_CODE]
+                , [WAREHOUSE].[WAREHOUSE_CODE]
+                , [BIN].[BIN_CODE]
+                , [ITEM_LOT].[LOT_CODE]
+                , UNIT.UNIT_NAME
+                , UNIT_02.UNIT_CODE
+                , UNIT_02.UNIT_NAME
+                , UNIT_03.UNIT_CODE
+                , UNIT_03.UNIT_NAME
+                , UNIT_04.UNIT_CODE
+                , UNIT_04.UNIT_NAME
+                , UNIT_04.DICIMAL_DIGIT
+                , ITEM.SECOND_UNIT_ID
+                , UNIT.UNIT_ID
+                , ITEM.ITEM_BUSINESS_ID
+                , SALES_RETURN_RECEIPT_D.PRICE_UNIT_ID
+                , ITEM.STOCK_UNIT_ID, E.ADMIN_UNIT_CODE, E.ADMIN_UNIT_NAME, D.EMPLOYEE_CODE, D.EMPLOYEE_NAME
+    </select>
+</mapper>
