@@ -16,6 +16,7 @@ import com.mgkj.entity.*;
 import com.mgkj.mapper.DeliveryNoticeMapper;
 import com.mgkj.mapper.InvBarcodeOperationMapper;
 import com.mgkj.service.*;
+import com.mgkj.task.TaskList;
 import com.mgkj.vo.BarCodeDetailVo;
 import com.mgkj.vo.InvBarcodeOperationVo;
 import com.mgkj.vo.getBarCodeDTO;
@@ -58,6 +59,9 @@ public class DeliveryNoticeController {
 
     @Resource
     private SalesoutboundtaskdetailService salesoutboundtaskdetailService;
+
+    @Resource
+    private TaskList taskList;
 
 
     @PostMapping("/getDeliveryNotice")
@@ -131,6 +135,7 @@ public class DeliveryNoticeController {
         record.setOrgNo(deliveryDetail.getShjg());
         record.setCreateBy(dto.getCreateBy());
         record.setPlanQty(new BigDecimal(deliveryDetail.getPlanQty()));
+        record.setStatus(0);
         record.setSynced(0);
 
         try {
@@ -211,11 +216,37 @@ public class DeliveryNoticeController {
         if (record.getSynced() != null && record.getSynced() == 1) {
             return Result.fail().message("该记录已同步到E10，无法删除");
         }
+        if (record.getStatus() != null && record.getStatus() == 1) {
+            return Result.fail().message("该记录已同步到E10，无法删除");
+        }
         boolean removed = salesoutboundtaskdetailService.removeById(id);
         if (!removed) {
             return Result.fail().message("删除失败");
         }
         return Result.ok().message("删除成功");
+    }
+
+    @PostMapping("/syncPendingToE10")
+    @ApiOperation(value = "分批同步待出库扫码记录到E10（不要求全部扫完）")
+    public Result<?> syncPendingToE10(@RequestBody Map<String, String> params) {
+        String docNo = params.get("docNo");
+        return taskList.syncSalesOutboundByDocNo(docNo);
+    }
+
+    @PostMapping("/getUnscannedBarcodes")
+    @ApiOperation(value = "查询同品号未扫条码（当前销货单下库存有量且未扫码）")
+    public Result<?> getUnscannedBarcodes(@RequestBody Map<String, String> params) {
+        String docNo = params.get("docNo");
+        String itemCode = params.get("itemCode");
+        String warehouseCode = params.get("warehouseCode");
+        if (StrUtil.isEmpty(docNo)) {
+            return Result.fail().message("销货单号不能为空");
+        }
+        if (StrUtil.isEmpty(itemCode)) {
+            return Result.fail().message("品号不能为空");
+        }
+        List<BarCodeDetailVo> list = deliveryNoticeMapper.getUnscannedBarcodesByItem(docNo, itemCode, warehouseCode);
+        return Result.ok(list);
     }
 
     @PostMapping("/isScanningCodeRecord")

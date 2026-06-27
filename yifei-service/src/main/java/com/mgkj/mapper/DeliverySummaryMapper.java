@@ -14,7 +14,7 @@ import java.util.List;
 public interface DeliverySummaryMapper extends BaseMapper<DeliverySummary> {
     DeliverySummary getDeliverySummary(@Param("barcode") String barcode);
 
-    List<DeliveryDetailsBarcodeVo> getDeliveryDetailsBarcode(@Param("uuid") String uuid);
+    List<DeliveryDetailsBarcodeVo> getDeliveryDetailsBarcode(@Param("uuid") String uuid, @Param("createBy") String createBy);
 
     int deleteByDeliveryNumer(@Param("deliveryNumer") String deliveryNumer);
 
@@ -25,4 +25,6 @@ public interface DeliverySummaryMapper extends BaseMapper<DeliverySummary> {
     int updateQty(@Param("qty") BigDecimal qty,@Param("id") String id);
 
     int isDeliverySummaryRecord(@Param("deliveryNumer") String deliveryNumer);
+
+    DeliverySummary selectDeliverySummaryByPurchaseId(@Param("id") String id);
 }

@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.mgkj.dto.*;
 import com.mgkj.dto.agv.CreateAgvTaskRequest;
 import com.mgkj.entity.*;
+import com.mgkj.common.result.Result;
 import com.mgkj.mapper.AgvTaskInfoMapper;
 import com.mgkj.mapper.DeliveryNoticeMapper;
 import com.mgkj.mapper.MOCTAMapper;
@@ -199,9 +200,11 @@ public class TaskList {
             BigDecimal businessQty = defaultZero(e10Summary.getBusinessQty());
             BigDecimal readyQty = taskQty.add(issuedQty);
 
-            // 齐套公式：同一销货单下所有品号 1 开头的任务数量 + E10 已出库数量 = E10 业务数量。
-            if (readyQty.compareTo(businessQty) != 0) {
-                log.info("自动销货单出库未齐套跳过，docNo={}, taskQty={}, issuedQty={}, businessQty={}",
+            // 分批同步：不要求全部扫完，但累计出库量不能超过 E10 业务数量。
+            if (readyQty.compareTo(businessQty) > 0) {
+                markSalesOutboundTaskFailed(taskDetailList,
+                        "扫码数量超出销货单剩余可出库量，taskQty=" + taskQty + ", issuedQty=" + issuedQty + ", businessQty=" + businessQty);
+                log.warn("自动销货单出库数量超出跳过，docNo={}, taskQty={}, issuedQty={}, businessQty={}",
                         docNo, taskQty, issuedQty, businessQty);
                 continue;
             }
@@ -217,9 +220,65 @@ public class TaskList {
                         docNo, invalidMessage, JSONUtil.toJsonStr(submitDTO));
                 continue;
             }
-            log.info("自动销货单出库提交参数，docNo={}, submitDTO={}", docNo, JSONUtil.toJsonStr(submitDTO));
+            log.info("自动销货单出库分批提交参数，docNo={}, pendingCount={}, submitDTO={}",
+                    docNo, taskDetailList.size(), JSONUtil.toJsonStr(submitDTO));
             handleReadySalesOutboundTask(docNo, taskDetailList, submitDTO, e10Summary);
         }
+    }
+
+    /**
+     * 手动/分批同步指定销货单的待出库扫码记录到 E10。
+     * 不要求全部扫完，每次只提交 status=0 的待同步记录，可多次生成出库单。
+     */
+    public Result<?> syncSalesOutboundByDocNo(String docNo) {
+        if (StrUtil.isBlank(docNo)) {
+            return Result.fail().message("销货单号不能为空");
+        }
+
+        List<Salesoutboundtaskdetail> pendingList = salesoutboundtaskdetailService.lambdaQuery()
+                .eq(Salesoutboundtaskdetail::getDocNo, docNo)
+                .eq(Salesoutboundtaskdetail::getStatus, 0)
+                .list();
+        if (CollUtil.isEmpty(pendingList)) {
+            return Result.fail().message("没有待同步的扫码记录");
+        }
+
+        List<Salesoutboundtaskdetail> onePrefixTaskList = pendingList.stream()
+                .filter(this::isOnePrefixSalesOutboundTask)
+                .collect(Collectors.toList());
+        if (CollUtil.isEmpty(onePrefixTaskList)) {
+            return Result.fail().message("待同步记录中无品号1开头的明细");
+        }
+
+        List<SalesOutboundDocSummary> e10SummaryList = deliveryNoticeMapper.getSalesOutboundDocSummary(
+                Collections.singletonList(docNo));
+        if (CollUtil.isEmpty(e10SummaryList)) {
+            return Result.fail().message("E10未查询到该销货单品号1开头单身");
+        }
+        SalesOutboundDocSummary e10Summary = e10SummaryList.get(0);
+
+        BigDecimal taskQty = sumSalesOutboundTaskQty(onePrefixTaskList);
+        BigDecimal issuedQty = defaultZero(e10Summary.getIssuedQty());
+        BigDecimal businessQty = defaultZero(e10Summary.getBusinessQty());
+        BigDecimal readyQty = taskQty.add(issuedQty);
+        if (readyQty.compareTo(businessQty) > 0) {
+            markSalesOutboundTaskFailed(onePrefixTaskList,
+                    "扫码数量超出销货单剩余可出库量");
+            return Result.fail().message("扫码数量超出销货单剩余可出库量，请检查后再试");
+        }
+
+        List<SaleOutStockDto> saleOutStockDtoList = onePrefixTaskList.stream()
+                .map(this::buildSaleOutStockDto)
+                .collect(Collectors.toList());
+        SaleOutSubmitDTO submitDTO = buildAutoSaleOutSubmitDTO(onePrefixTaskList, saleOutStockDtoList);
+        String invalidMessage = validateSaleOutSubmitDTO(submitDTO);
+        if (StrUtil.isNotBlank(invalidMessage)) {
+            markSalesOutboundTaskFailed(onePrefixTaskList, invalidMessage);
+            return Result.fail().message(invalidMessage);
+        }
+
+        log.info("手动分批同步E10，docNo={}, pendingCount={}", docNo, onePrefixTaskList.size());
+        return handleReadySalesOutboundTaskWithResult(docNo, onePrefixTaskList, submitDTO, e10Summary);
     }
 
     private boolean isOnePrefixSalesOutboundTask(Salesoutboundtaskdetail detail) {
@@ -293,7 +352,14 @@ public class TaskList {
                                               List<Salesoutboundtaskdetail> taskDetailList,
                                               SaleOutSubmitDTO submitDTO,
                                               SalesOutboundDocSummary e10Summary) {
-        log.info("自动销货单出库已齐套，开始提交E10，docNo={}, taskDetailCount={}, submitDetailCount={}, businessQty={}, issuedQty={}",
+        handleReadySalesOutboundTaskWithResult(docNo, taskDetailList, submitDTO, e10Summary);
+    }
+
+    private Result<?> handleReadySalesOutboundTaskWithResult(String docNo,
+                                                             List<Salesoutboundtaskdetail> taskDetailList,
+                                                             SaleOutSubmitDTO submitDTO,
+                                                             SalesOutboundDocSummary e10Summary) {
+        log.info("销货单出库分批提交E10，docNo={}, taskDetailCount={}, submitDetailCount={}, businessQty={}, issuedQty={}",
                 docNo,
                 taskDetailList.size(),
                 submitDTO.getList().size(),
@@ -303,25 +369,27 @@ public class TaskList {
         String createBy = submitDTO.getCreateBy();
 
         try {
-            // 复用人工销货出库提交链路：先写 E10 中间表，再调用 E10 上传接口。
             MiddleReturnDto middleReturnDto = saleService.SaleOutStockInsertMiddleTable(submitDTO.getList(), createBy);
             JSONObject jsonObject = saleService.SaleOutStockSubmit(middleReturnDto, createBy);
             String executionCode = getE10ExecutionCode(jsonObject);
             if ("0".equals(executionCode)) {
                 String createDocNo = getE10CreateDocNo(jsonObject);
                 markSalesOutboundTaskSuccess(taskDetailList, createDocNo);
-                log.info("自动销货单出库提交E10成功，docNo={}, createDocNo={}", docNo, createDocNo);
-                return;
+                log.info("销货单出库提交E10成功，docNo={}, createDocNo={}, batchCount={}",
+                        docNo, createDocNo, taskDetailList.size());
+                return Result.ok(createDocNo).message("同步成功，生成出库单：" + createDocNo);
             }
 
             String failureMessage = getE10FailureMessage(jsonObject);
             markSalesOutboundTaskFailed(taskDetailList, failureMessage);
-            log.error("自动销货单出库提交E10失败，docNo={}, failureMessage={}, response={}",
+            log.error("销货单出库提交E10失败，docNo={}, failureMessage={}, response={}",
                     docNo, failureMessage, JSONUtil.toJsonStr(jsonObject));
+            return Result.fail().message(failureMessage);
         } catch (Exception e) {
             String failureMessage = StrUtil.blankToDefault(e.getMessage(), e.getClass().getSimpleName());
             markSalesOutboundTaskFailed(taskDetailList, failureMessage);
-            log.error("自动销货单出库提交E10异常，docNo={}, failureMessage={}", docNo, failureMessage, e);
+            log.error("销货单出库提交E10异常，docNo={}, failureMessage={}", docNo, failureMessage, e);
+            return Result.fail().message(failureMessage);
         }
     }
 
@@ -336,6 +404,7 @@ public class TaskList {
     private void markSalesOutboundTaskSuccess(List<Salesoutboundtaskdetail> taskDetailList, String createDocNo) {
         for (Salesoutboundtaskdetail detail : taskDetailList) {
             detail.setStatus(1);
+            detail.setSynced(1);
             if (StrUtil.isNotBlank(createDocNo)) {
                 detail.setCreateDocNo(createDocNo);
             }

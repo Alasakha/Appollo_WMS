@@ -320,7 +320,7 @@
             SELECT docNo, itemCode,
                    SUM(ISNULL(qty, 0)) AS qty
             FROM SalesOutboundTaskDetail
-            WHERE 1=1
+            WHERE ISNULL(status, 0) = 0
             <if test="warehouseCodeList != null and warehouseCodeList.size > 0">
                 AND warehouseCode IN
                 <foreach item="w" collection="warehouseCodeList" open="(" separator="," close=")">
@@ -393,5 +393,23 @@
             #{item}
         </foreach>
     </update>
+
+    <!-- 同品号未扫条码：库存有量且未在本销货单扫码记录中 -->
+    <select id="getUnscannedBarcodesByItem" resultType="com.mgkj.vo.BarCodeDetailVo">
+        SELECT b.org_no orgNo, b.barcode, b.item_no itemCode, b.item_name itemName, b.item_spec itemSpec,
+               b.unit_no unitNo, b.unit_name unitName, b.qty, b.sn_warehouse_no warehouseCode,
+               b.sn_warehouse_name warehouseName, b.sn_cell_no binCode, b.remark, b.combination_lot_no lotCode
+        FROM bm_barcode_detail b
+        WHERE b.item_no = #{itemCode}
+          AND ISNULL(b.qty, 0) > 0
+        <if test="warehouseCode != null and warehouseCode != ''">
+            AND b.sn_warehouse_no = #{warehouseCode}
+        </if>
+          AND NOT EXISTS (
+              SELECT 1 FROM SalesOutboundTaskDetail s
+              WHERE s.barcode = b.barcode AND s.docNo = #{docNo}
+          )
+        ORDER BY b.barcode
+    </select>
 
 </mapper>

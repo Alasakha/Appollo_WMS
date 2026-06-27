@@ -59,4 +59,13 @@ public class MoReturnCollectVo {
     @ApiModelProperty("序号")
     private String xh;
 
+    @ApiModelProperty("仓库编码")
+    private String warehouseCode;
+
+    @ApiModelProperty("仓库名称")
+    private String warehouseName;
+
+    @ApiModelProperty("库位编码")
+    private String binCode;
+
 }

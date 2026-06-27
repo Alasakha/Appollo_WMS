@@ -619,13 +619,19 @@ public class MoController {
             // 9. 保存最后一次成功结果
             finalResult = result3;
         }
+
         MessageDto messageDto = new MessageDto();
-        messageDto.setContent("整车入库成功！\n" + msg);
-        userSet.add("HuLiQin");
-        userSet.add("ZhuGuoLin");
-        List<String> userList = new ArrayList<>(userSet);
-        messageDto.setTouser(userList);
-        weChatService.sendWXMessage(messageDto);
+        try{
+            messageDto.setContent("整车入库成功！\n" + msg);
+            userSet.add("HuLiQin");
+            userSet.add("ZhuGuoLin");
+            List<String> userList = new ArrayList<>(userSet);
+            messageDto.setTouser(userList);
+            weChatService.sendWXMessage(messageDto);
+        } catch (Exception e) {
+            log.error("发送微信消息失败, content: {}", messageDto.getContent(), e);
+        }
+
 
         List<String> ids = dtoList.stream()
                 .map(MoInStorageSubmitDto::getId)

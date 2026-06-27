@@ -228,8 +228,12 @@ public class PurchaseController {
     @ApiOperation(value = "采购收货--获取送货对应条码")
     @Log("采购收货--获取送货对应条码")
     @PostMapping("/getDeliveryDetailsBarcode")
-    public Result<List<DeliveryDetailsBarcodeVo>> getDeliveryDetailsBarcode(@RequestBody String uuid) {
-        List<DeliveryDetailsBarcodeVo> list =deliverySummaryMapper.getDeliveryDetailsBarcode(uuid);
+    public Result<List<DeliveryDetailsBarcodeVo>> getDeliveryDetailsBarcode(@RequestBody PurcharseDeliveryDto dto) {
+        String uuid = dto.getUuid() != null && !dto.getUuid().isEmpty() ? dto.getUuid() : dto.getNumber();
+        if (uuid == null || uuid.isEmpty()) {
+            return Result.<List<DeliveryDetailsBarcodeVo>>fail(null).message("uuid不能为空");
+        }
+        List<DeliveryDetailsBarcodeVo> list = deliverySummaryMapper.getDeliveryDetailsBarcode(uuid, dto.getCreateBy());
         if(list != null) {
             for(DeliveryDetailsBarcodeVo t : list) {
                 if(!t.getLotAtt31().equals("1")) {
@@ -357,6 +361,51 @@ public class PurchaseController {
 
         return Result.ok().message("删除成功");
 
+    }
+
+    @PostMapping("/updatePurchaseReceiveRecord")
+    @ApiOperation(value = "采购收货-修改扫码实收数量")
+    @Log("采购收货-修改扫码实收数量")
+    @Transactional
+    public Result updatePurchaseReceiveRecord(@RequestBody PurchaseCountApprovalDto dto) {
+        if (StrUtil.isBlank(dto.getId())) {
+            return Result.fail().message("记录id不能为空");
+        }
+        PurchaseSummary p = purchaseSummaryMapper.selectPurchaseSummary(dto.getId());
+        if (p == null) {
+            return Result.fail().message("扫码记录不存在");
+        }
+        Integer statusCode = p.getStatusCode();
+        if (statusCode != null && statusCode != 0) {
+            return Result.fail().message("已提交记录不能修改");
+        }
+        BigDecimal newQty = dto.getChangeqty();
+        if (newQty == null || newQty.compareTo(BigDecimal.ZERO) <= 0) {
+            return Result.fail().message("数量必须大于0");
+        }
+        BigDecimal oldQty = p.getQty() != null ? p.getQty() : BigDecimal.ZERO;
+        if (newQty.compareTo(oldQty) == 0) {
+            return Result.ok().message("修改成功");
+        }
+        DeliverySummary deliverySummary = deliverySummaryMapper.selectDeliverySummaryByPurchaseId(dto.getId());
+        if (deliverySummary == null) {
+            return Result.fail().message("送货单身记录不存在");
+        }
+        BigDecimal currentMatchQty = deliverySummary.getMatchQty() != null ? deliverySummary.getMatchQty() : BigDecimal.ZERO;
+        BigDecimal deliveryNum = deliverySummary.getDeliveryNum() != null ? deliverySummary.getDeliveryNum() : BigDecimal.ZERO;
+        BigDecimal newMatchQty = currentMatchQty.subtract(oldQty).add(newQty);
+        if (newMatchQty.compareTo(deliveryNum) > 0) {
+            return Result.fail().message("收货数量已满");
+        }
+        int d = deliverySummaryMapper.updateQty(newMatchQty, dto.getId());
+        if (d <= 0) {
+            throw new RuntimeException("送货单身中间表匹配数更新失败");
+        }
+        p.setQty(newQty);
+        if (!purchaseSummaryService.updateById(p)) {
+            throw new RuntimeException("扫码记录更新失败");
+        }
+        return Result.ok().message("修改成功");
     }
 
 

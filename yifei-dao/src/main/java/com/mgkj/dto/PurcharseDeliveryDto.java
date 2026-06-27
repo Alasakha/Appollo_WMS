@@ -19,6 +19,9 @@ public class PurcharseDeliveryDto {
     @ApiModelProperty("条码/送货单号")
     String number;
 
+    @ApiModelProperty("送货单身uuid")
+    String uuid;
+
     @ApiModelProperty("创建人")
     String createBy;
 

@@ -19,4 +19,7 @@ public class PurchaseCountApprovalDto {
 
     @ApiModelProperty(value = "创建人")
     private String createBy;
+
+    @ApiModelProperty(value = "扫码记录id(purchase_summary.id)")
+    private String id;
 }

@@ -102,6 +102,13 @@ public interface DeliveryNoticeMapper {
     int batchMarkSynced(@Param("idList") List<String> idList);
 
     /**
+     * 查询同品号在当前销货单下未扫码的条码（库存有量且未在本单扫码记录中）
+     */
+    List<BarCodeDetailVo> getUnscannedBarcodesByItem(@Param("docNo") String docNo,
+                                                     @Param("itemCode") String itemCode,
+                                                     @Param("warehouseCode") String warehouseCode);
+
+    /**
      * 查询某条码在 SalesOutboundTaskDetail 中已累计扫码的数量
      */
     BigDecimal getBarcodeScannedSum(@Param("barcode") String barcode, @Param("docNo") String docNo);

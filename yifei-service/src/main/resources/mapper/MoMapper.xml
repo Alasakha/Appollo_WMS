@@ -1225,7 +1225,7 @@ JOIN MO_RECEIPT_REQUISTION_D MD ON MD.MO_RECEIPT_REQUISTION_ID = M.MO_RECEIPT_RE
     </select>
     <select id="ListMoReturnSimpleInfo" resultType="com.mgkj.vo.MoReturnSimpleVo"
             parameterType="com.mgkj.dto.MoReturnSimpleDto">
-        SELECT TOP 10
+        SELECT DISTINCT TOP 10
         A.DOC_NO AS docNo,
         A.DOC_DATE AS docDate,
         CAST(A.DOC_DATE AS NVARCHAR(10)) AS createDate,
@@ -1236,39 +1236,48 @@ JOIN MO_RECEIPT_REQUISTION_D MD ON MD.MO_RECEIPT_REQUISTION_ID = M.MO_RECEIPT_RE
         LEFT JOIN MO_D B ON A.MO_ID = B.MO_ID
         LEFT JOIN PLANT ON A.Owner_Org_ROid = PLANT.PLANT_ID
         LEFT JOIN ITEM ON A.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+        LEFT JOIN ITEM AS LOW_ITEM ON B.ITEM_ID = LOW_ITEM.ITEM_BUSINESS_ID
         LEFT JOIN ADMIN_UNIT ON A.Owner_Dept = ADMIN_UNIT.ADMIN_UNIT_ID
         WHERE PLANT.PLANT_CODE = '1'
         AND A.ApproveStatus = 'Y'
         AND ( B.ISSUED_QTY >= 0 OR B.REQU_INCLUDE_MULT_QTY &lt; 0)
+        <if test="docNo != null and docNo != ''">
+            and A.DOC_NO like concat('%',#{docNo},'%')
+        </if>
+        <if test="item != null and item != ''">
+            and (ITEM.ITEM_CODE like concat('%',#{item},'%') or A.ITEM_DESCRIPTION like concat('%',#{item},'%'))
+        </if>
+        <if test="lowItem != null and lowItem != ''">
+            and (LOW_ITEM.ITEM_CODE like concat('%',#{lowItem},'%') or B.ITEM_DESCRIPTION like concat('%',#{lowItem},'%'))
+        </if>
+        <if test="departmentName != null and departmentName != ''">
+            and (ADMIN_UNIT.ADMIN_UNIT_CODE like concat('%',#{departmentName},'%') or ADMIN_UNIT.ADMIN_UNIT_NAME like concat('%',#{departmentName},'%'))
+        </if>
         <if test="startDate != null and startDate != ''">
-            and MO.DOC_DATE &gt;= #{startDate}
+            and A.DOC_DATE &gt;= #{startDate}
         </if>
         <if test="endDate !=null and endDate !=''">
-            and MO.DOC_DATE &lt;= #{endDate}
+            and A.DOC_DATE &lt;= #{endDate}
         </if>
-
---         and MO.DOC_NO like '%%'
---         and ADMIN_UNIT.ADMIN_UNIT_CODE like '%%'
---         and ITEM.ITEM_CODE like '%%'
---         and LOW_ITEM.ITEM_CODE like '%%'
---         ORDER BY MO.DOC_DATE DESC,MO.DOC_NO ASC
+        ORDER BY A.DOC_DATE DESC, A.DOC_NO ASC
 
     </select>
     <select id="ListMoReturnCollectInfoByDoc" resultType="com.mgkj.vo.MoReturnCollectVo"
-            parameterType="java.lang.String">
+            parameterType="com.mgkj.dto.MoReturnSimpleDto">
         SELECT DISTINCT TOP 100
         MO.DOC_NO AS docNo,
         CAST(MO.DOC_DATE AS NVARCHAR(10)) AS docDate,
-        ISNULL(ADMIN_UNIT.ADMIN_UNIT_CODE, '') AS DepartmentCode,
-        ISNULL(ADMIN_UNIT.ADMIN_UNIT_NAME, '') AS DepartmentName,
+        ISNULL(ADMIN_UNIT.ADMIN_UNIT_CODE, '') AS departmentCode,
+        ISNULL(ADMIN_UNIT.ADMIN_UNIT_NAME, '') AS departmentName,
         ITEM.ITEM_CODE AS itemCode,
         MO.ITEM_DESCRIPTION AS itemName,
         LOW_ITEM.ITEM_CODE AS lowOrderItemCode,
         MO_D.ITEM_DESCRIPTION AS lowOrderItemName,
         MO_D.ITEM_SPECIFICATION AS lowOrderItemSpec,
         UNIT.UNIT_CODE AS unitCode,
-        WAREHOUSE.WAREHOUSE_NAME AS warehouseName,
-        BIN.BIN_CODE AS binCode,
+        ISNULL(WAREHOUSE.WAREHOUSE_CODE, '') AS warehouseCode,
+        ISNULL(WAREHOUSE.WAREHOUSE_NAME, '') AS warehouseName,
+        ISNULL(BIN.BIN_CODE, '') AS binCode,
         ISNULL(SUM(ITEM_WAREHOUSE_BIN.TOTAL_INVENTORY_QTY), 0) AS stockQty, -- 按物料汇总
         MO_D.SequenceNumber AS xh,
         CASE
@@ -1326,7 +1335,7 @@ JOIN MO_RECEIPT_REQUISTION_D MD ON MD.MO_RECEIPT_REQUISTION_ID = M.MO_RECEIPT_RE
         GROUP BY
         MO.DOC_NO, MO.DOC_DATE, ADMIN_UNIT.ADMIN_UNIT_CODE, ADMIN_UNIT.ADMIN_UNIT_NAME,
         ITEM.ITEM_CODE, MO.ITEM_DESCRIPTION, LOW_ITEM.ITEM_CODE, MO_D.ITEM_DESCRIPTION,
-        MO_D.ITEM_SPECIFICATION, UNIT.UNIT_CODE, WAREHOUSE.WAREHOUSE_NAME, BIN.BIN_CODE, MO_D.SequenceNumber
+        MO_D.ITEM_SPECIFICATION, UNIT.UNIT_CODE, WAREHOUSE.WAREHOUSE_CODE, WAREHOUSE.WAREHOUSE_NAME, BIN.BIN_CODE, MO_D.SequenceNumber
         ORDER BY
         docDate DESC, docNo ASC, xh ASC
     </select>

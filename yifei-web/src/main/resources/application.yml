@@ -2,7 +2,7 @@ spring:
   application:
     name: abl-wms
   profiles:
-    active: dev
+    active: abl
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -17,7 +17,7 @@ server:
   servlet:
     session:
       timeout: 120s
-  port: 9001
+  port: 9002
 logging:
   #指定日志的配置文件的位置。
   config: classpath:logback-spring.xml
