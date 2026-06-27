@@ -68,4 +68,13 @@ public class MoReturnCollectVo {
     @ApiModelProperty("库位编码")
     private String binCode;
 
+    @ApiModelProperty("领料数量")
+    private double issuedQty;
+
+    @ApiModelProperty("批号")
+    private String lotNo;
+
+    @ApiModelProperty("工厂")
+    private String orgNo;
+
 }

@@ -38,4 +38,7 @@ public class MoReturnSimpleVo {
     @ApiModelProperty("部门")
     private String departmentName;
 
+    @ApiModelProperty("规格")
+    private String itemSpec;
+
 }

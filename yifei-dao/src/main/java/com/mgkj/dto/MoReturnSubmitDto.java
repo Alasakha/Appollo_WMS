@@ -48,4 +48,7 @@ public class MoReturnSubmitDto {
 
     @ApiModelProperty("备注")
     private String remark;
+
+    @ApiModelProperty("批号")
+    private String lotNo;
 }

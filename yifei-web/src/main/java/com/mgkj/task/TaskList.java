@@ -19,6 +19,7 @@ import com.mgkj.mapper.DeliveryNoticeMapper;
 import com.mgkj.mapper.MOCTAMapper;
 import com.mgkj.mapper.MoMapper;
 import com.mgkj.service.*;
+import com.mgkj.service.impl.E10ApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -78,6 +79,9 @@ public class TaskList {
 
     @Resource
     private SaleService saleService;
+
+    @Resource
+    private E10ApiService e10ApiService;
 
 
     /**
@@ -735,10 +739,10 @@ public class TaskList {
 
 
 //    @PostConstruct
-//    @Scheduled(cron = "0 21 9 * * ?")
-//    @Scheduled(cron = "0 40 11 * * ?")
-//    @Scheduled(cron = "0 50 16 * * ?")
-//    @Scheduled(cron = "0 10 22 * * ?")
+    @Scheduled(cron = "0 21 9 * * ?")
+    @Scheduled(cron = "0 40 11 * * ?")
+    @Scheduled(cron = "0 50 16 * * ?")
+    @Scheduled(cron = "0 10 22 * * ?")
     public void finishedGoodSinBoundDetailTask() {
         log.info("开始执行 finishedGoodSinBoundDetailTask 任务");
         // 1. 查询待提交数据
@@ -905,6 +909,19 @@ public class TaskList {
             } catch (Exception e) {
                 isSuccess = false;
                 handleThirdPartyError("主品入库异常", docNo, result2, creatorList);
+            }
+
+            JSONObject jsonObject = e10ApiService.disConfirmMoReceipt(packageStorageDocNo);
+            log.warn("撤审生产入库单响应: " + jsonObject);
+            JSONObject object = jsonObject.getJSONObject("std_data")
+                    .getJSONObject("parameter")
+                    .getJSONObject("result");
+            JSONArray jsonArray = object.getJSONArray("error");
+            if (jsonArray != null && !jsonArray.isEmpty()) {
+                String errorMsg = jsonArray.getJSONObject(0).getString("message");
+                errorMsg = "生产入库单撤审失败\n" + errorMsg;
+//                return Result.fail(errorMsg).message(errorMsg);
+                handleThirdPartyError(errorMsg, docNo, result2, creatorList);
             }
             String time = LocalDateTimeUtil.now().toString();
             if (isSuccess) {

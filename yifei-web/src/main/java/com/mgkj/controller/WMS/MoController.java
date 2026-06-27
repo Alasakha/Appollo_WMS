@@ -592,17 +592,17 @@ public class MoController {
                     .getJSONArray("als_app_request_result").getJSONObject(0)
                     .getString("doc_no");
             // 撤审生产入库单
-//            JSONObject jsonObject = e10ApiService.disConfirmMoReceipt(packageStorageDocNo);
-//            log.warn("撤审生产入库单响应: " + jsonObject);
-//            JSONObject object = jsonObject.getJSONObject("std_data")
-//                    .getJSONObject("parameter")
-//                    .getJSONObject("result");
-//            JSONArray jsonArray = object.getJSONArray("error");
-//            if (jsonArray != null && !jsonArray.isEmpty()) {
-//                String errorMsg = jsonArray.getJSONObject(0).getString("message");
-//                errorMsg = "生产入库单撤审失败\n" + errorMsg;
-//                return Result.fail(errorMsg).message(errorMsg);
-//            }
+            JSONObject jsonObject = e10ApiService.disConfirmMoReceipt(packageStorageDocNo);
+            log.warn("撤审生产入库单响应: " + jsonObject);
+            JSONObject object = jsonObject.getJSONObject("std_data")
+                    .getJSONObject("parameter")
+                    .getJSONObject("result");
+            JSONArray jsonArray = object.getJSONArray("error");
+            if (jsonArray != null && !jsonArray.isEmpty()) {
+                String errorMsg = jsonArray.getJSONObject(0).getString("message");
+                errorMsg = "生产入库单撤审失败\n" + errorMsg;
+                return Result.fail(errorMsg).message(errorMsg);
+            }
             // 8. 回写每个 barcode 的三张单号 + 更新状态
             for (MoInStorageSubmitDto submitDto : currentList) {
                 submitDto.setMoReceiptNo(packageStorageDocNo);

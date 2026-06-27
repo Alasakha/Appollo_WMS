@@ -940,8 +940,9 @@ public class MoServiceImpl implements MoService {
             // 处理批号和库位逻辑
             String lotNumber = "";
             String binCode = dto.getBinCode();
-            if (barcode.contains("#")) {
-//                lotNumber = "25-03-17";
+            if (StrUtil.isNotBlank(dto.getLotNo())) {
+                lotNumber = dto.getLotNo();
+            } else if (barcode.contains("#")) {
                 lotNumber = barcode.substring(barcode.indexOf("#") + 1);
             }
 
