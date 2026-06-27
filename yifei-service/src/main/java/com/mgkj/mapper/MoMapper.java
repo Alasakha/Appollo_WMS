@@ -238,4 +238,8 @@ public interface MoMapper extends BaseMapper {
     AgvWarehouse queryAgvTerminusByMo(@Param("barcode") String barcode, @Param("docNo") String docNo);
 
     Map<String, Object> getSnCodeInfo(String barcode);
+
+    List<UnreviewedMoReceipt> selectUnreviewedMoReceipt();
+
+    List<UnreviewedMoReceiptItem> selectUnreviewedMoReceiptItem(@Param("id") String id);
 }

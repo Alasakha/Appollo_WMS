@@ -26,6 +26,7 @@ import com.mgkj.vo.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -651,6 +652,19 @@ public class MoController {
         return Result.ok(finalResult);
     }
 
+    @ApiOperation("查询未审核生产入库单")
+    @PostMapping("/selectUnreviewedMoReceipt")
+    public Result<List<UnreviewedMoReceipt>> selectUnreviewedMoReceipt(){
+        List<UnreviewedMoReceipt> receiptList = moMapper.selectUnreviewedMoReceipt();
+        if(CollectionUtils.isNotEmpty(receiptList)){
+            for (UnreviewedMoReceipt unreviewedMoReceipt : receiptList) {
+                String id = unreviewedMoReceipt.getId();
+                List<UnreviewedMoReceiptItem> moReceiptItems = moMapper.selectUnreviewedMoReceiptItem(id);
+                unreviewedMoReceipt.setItemList(moReceiptItems);
+            }
+        }
+        return Result.ok(receiptList);
+    }
 
 
 //    <<=============================工单检验-质检-审核UpdateMoStorageCheck未写完========================================>>

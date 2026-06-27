@@ -2360,5 +2360,22 @@ JOIN MO_RECEIPT_REQUISTION_D MD ON MD.MO_RECEIPT_REQUISTION_ID = M.MO_RECEIPT_RE
         WHERE SN_NO = #{barcode}
     </select>
 
+    <select id="selectUnreviewedMoReceipt" resultType="com.mgkj.dto.UnreviewedMoReceipt">
+        SELECT PLANT.PLANT_NAME plantName,DOC.DOC_NAME docName,MO_RECEIPT.DOC_NO docNo,LEFT(MO_RECEIPT.DOC_DATE,10) docDate,WORK_CENTER.WORK_CENTER_NAME workCenterName,MO_RECEIPT.MO_RECEIPT_ID id
+        FROM MO_RECEIPT
+        LEFT JOIN PLANT ON PLANT.PLANT_ID = MO_RECEIPT.Owner_Org_ROid
+        LEFT JOIN DOC ON DOC.DOC_ID = MO_RECEIPT.DOC_ID
+        LEFT JOIN WORK_CENTER ON WORK_CENTER.WORK_CENTER_ID = MO_RECEIPT.SOURCE_ID_ROid
+        WHERE MO_RECEIPT.DOC_ID IN ('4283FE47-F119-4474-2A6A-1943B1C379C5','8E4930AE-EB5E-4F43-51D7-1943BB29D560')
+        AND MO_RECEIPT.ApproveStatus &lt;&gt; 'Y'
+    </select>
+
+    <select id="selectUnreviewedMoReceiptItem" resultType="com.mgkj.dto.UnreviewedMoReceiptItem">
+        SELECT MO.DOC_NO docNo,MO.UDF021 udf021,ITEM.ITEM_CODE itemCode,ITEM.ITEM_NAME itemName,ITEM.ITEM_SPECIFICATION itemSpecification, MO_RECEIPT_D.ACCEPTED_QTY acceptedQty
+        FROM MO_RECEIPT_D
+        LEFT JOIN MO ON MO.MO_ID = MO_RECEIPT_D.MO_ID
+        LEFT JOIN ITEM ON ITEM.ITEM_BUSINESS_ID = MO_RECEIPT_D.ITEM_ID
+        WHERE MO_RECEIPT_D.MO_RECEIPT_ID = #{id};
+    </select>
 </mapper>
 
