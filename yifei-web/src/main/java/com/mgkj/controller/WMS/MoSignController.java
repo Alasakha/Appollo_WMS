@@ -109,6 +109,30 @@ public class MoSignController {
         return Result.ok().message("审核成功！");
     }
 
+    @PostMapping("/confirmMoReceipt/docNoList")
+    @ApiOperation("审核生产入库单")
+    @Log("审核生产入库单")
+    public Result<?> confirmMoReceiptList(@RequestBody List<String> docNoList) {
+        for (String docNo : docNoList){
+            JSONObject jsonObject = e10ApiService.confirmMoReceipt(docNo);
+            log.warn("审核生产入库单响应: " + jsonObject);
+            JSONObject object = jsonObject.getJSONObject("std_data")
+                    .getJSONObject("parameter")
+                    .getJSONObject("result");
+            JSONArray jsonArray = object.getJSONArray("error");
+            if (jsonArray != null && !jsonArray.isEmpty()) {
+                String errorMsg = jsonArray.getJSONObject(0).getString("message");
+                errorMsg = "单号:"+docNo+"生产入库单审核失败\n" + errorMsg;
+                return Result.fail(errorMsg).message(errorMsg);
+            }
+            List<MoReceiptDVo> list = pickingMapper.getMoReceiptDList(docNo);
+            for (MoReceiptDVo a : list) {
+                pickingMapper.updateMoReceiptD(a.getMoDocNo(), a.getAcceptedQty().doubleValue());
+            }
+        }
+        return Result.ok().message("审核成功！");
+    }
+
     @PostMapping("/getList")
     @ApiOperation("获取工单入库签收列表-扫码")
     public Result<?> getList(@RequestBody QueryMoReceiptD dto) {
