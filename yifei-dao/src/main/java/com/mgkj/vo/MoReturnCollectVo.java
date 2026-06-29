@@ -77,4 +77,7 @@ public class MoReturnCollectVo {
     @ApiModelProperty("工厂")
     private String orgNo;
 
+    @ApiModelProperty("是否批号管理(1是0否)")
+    private Integer lotControl;
+
 }

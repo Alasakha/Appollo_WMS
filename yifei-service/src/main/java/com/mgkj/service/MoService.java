@@ -72,6 +72,9 @@ public interface MoService {
     //                *************工单退料************
     //工单退料-简洁信息
     Result ListMoReturnSimpleInfo(MoReturnSimpleDto moReturnSimpleDto);
+
+    Result GetMoReturnDocByFrameNo(MoReturnSimpleDto moReturnSimpleDto);
+
     //工单退料-汇总信息
     Result ListMoReturnCollectInfo(MoReturnSimpleDto moReturnSimpleDto);
 

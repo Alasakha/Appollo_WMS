@@ -40,4 +40,16 @@ public class MoReturnSimpleDto {
 
     @ApiModelProperty("结束日期")
     private String endDate;
+
+    @ApiModelProperty("工厂编号")
+    private String plantCode;
+
+    @ApiModelProperty("工单单据类型(5106/5156)")
+    private String docType;
+
+    @ApiModelProperty("工作中心")
+    private String workCenter;
+
+    @ApiModelProperty("车架号")
+    private String frameNo;
 }

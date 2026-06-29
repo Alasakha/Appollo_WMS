@@ -8,19 +8,18 @@ spring:
           url: jdbc:mysql://192.168.1.197:3306/ablwms?serverTimezone=UTC
           username: root
           password: 123456
-
         backend:
           driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-          url: jdbc:sqlserver://192.168.1.151:1433;databaseName=WMS;encrypt=false;trustServerCertificate=false
+#          url: jdbc:sqlserver://192.168.1.151:1433;databaseName=WMS;encrypt=false;trustServerCertificate=false
+          url: jdbc:sqlserver://192.168.1.16:1433;databaseName=WMS;encrypt=false;trustServerCertificate=false
+
           username: sa
           password: Abl123
-
         dscsys:
           driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-          url: jdbc:sqlserver://192.168.1.151:1433;databaseName=ABLTEST;encrypt=false;trustServerCertificate=false
+          url: jdbc:sqlserver://192.168.1.16:1433;databaseName=ABLTEST;encrypt=false;trustServerCertificate=false
           username: sa
           password: Abl123
-
           hikari:
             connection-timeout: 30000
             minimum-idle: 5

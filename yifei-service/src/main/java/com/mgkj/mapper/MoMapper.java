@@ -49,6 +49,8 @@ public interface MoMapper extends BaseMapper {
 
     List<MoReturnSimpleVo> ListMoReturnSimpleInfo(MoReturnSimpleDto moReturnSimpleDto);
 
+    List<MoReturnFrameLookupVo> ListMoReturnDocByFrameNo(MoReturnSimpleDto moReturnSimpleDto);
+
     List<MoReturnCollectVo> ListMoReturnCollectInfoByDoc(MoReturnSimpleDto moReturnSimpleDto);
 
     List<IssueReceiptReturnSimpleVo> ListIssueReceiptReturnSimpleInfo(IssueReceiptReturnSimpleDto dto);

@@ -892,6 +892,15 @@ public class MoServiceImpl implements MoService {
 
     }
 
+    @Override
+    public Result GetMoReturnDocByFrameNo(MoReturnSimpleDto moReturnSimpleDto) {
+        List<MoReturnFrameLookupVo> list = moMapper.ListMoReturnDocByFrameNo(moReturnSimpleDto);
+        if (list != null && !list.isEmpty()) {
+            return Result.ok(list).message("查询成功");
+        }
+        return Result.fail().message("未找到对应工单");
+    }
+
     /**
      * 工单退料-查询
      * @param moReturnSimpleDto

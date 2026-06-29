@@ -1239,33 +1239,133 @@ JOIN MO_RECEIPT_REQUISTION_D MD ON MD.MO_RECEIPT_REQUISTION_ID = M.MO_RECEIPT_RE
         LEFT JOIN ITEM ON A.ITEM_ID = ITEM.ITEM_BUSINESS_ID
         LEFT JOIN ITEM AS LOW_ITEM ON B.ITEM_ID = LOW_ITEM.ITEM_BUSINESS_ID
         LEFT JOIN ADMIN_UNIT ON A.Owner_Dept = ADMIN_UNIT.ADMIN_UNIT_ID
-        WHERE PLANT.PLANT_CODE = '1'
-        AND A.ApproveStatus = 'Y'
-        AND ( B.ISSUED_QTY &gt; 0 OR B.REQU_INCLUDE_MULT_QTY &lt; 0)
+        LEFT JOIN WORK_CENTER WC ON A.SOURCE_ID_ROid = WC.WORK_CENTER_ID
+        WHERE A.ApproveStatus = 'Y'
+        AND EXISTS (
+            SELECT 1
+            FROM ISSUE_RECEIPT_D IRD
+            INNER JOIN ISSUE_RECEIPT IR ON IR.ISSUE_RECEIPT_ID = IRD.ISSUE_RECEIPT_ID AND IR.CATEGORY = N'56'
+            WHERE IRD.MO_ID = A.MO_ID
+            AND IR.ApproveStatus = N'Y'
+            AND IRD.ISSUE_RECEIPT_QTY &gt; 0
+        )
+        <if test="plantCode != null and plantCode != ''">
+            AND PLANT.PLANT_CODE = #{plantCode}
+        </if>
+        <if test="docType != null and docType != ''">
+            AND A.DOC_NO LIKE concat(#{docType}, '%')
+        </if>
+        <if test="workCenter != null and workCenter != ''">
+            AND (WC.WORK_CENTER_CODE LIKE concat('%', #{workCenter}, '%')
+            OR WC.WORK_CENTER_NAME LIKE concat('%', #{workCenter}, '%'))
+        </if>
+        <if test="frameNo != null and frameNo != ''">
+            AND EXISTS (
+                SELECT 1
+                FROM SN_ITEM_RECORD SIR
+                WHERE SIR.SN_NO = #{frameNo}
+                AND (SIR.SOURCE_ID_ROid = A.MO_ID OR SIR.UDF051 = A.MO_ID)
+            )
+        </if>
         <if test="docNo != null and docNo != ''">
-            and A.DOC_NO like concat('%',#{docNo},'%')
+            AND A.DOC_NO LIKE concat('%',#{docNo},'%')
         </if>
         <if test="item != null and item != ''">
-            and (ITEM.ITEM_CODE like concat('%',#{item},'%') or A.ITEM_DESCRIPTION like concat('%',#{item},'%'))
-        </if>
-        <if test="lowItem != null and lowItem != ''">
-            and (LOW_ITEM.ITEM_CODE like concat('%',#{lowItem},'%') or B.ITEM_DESCRIPTION like concat('%',#{lowItem},'%'))
-        </if>
-        <if test="departmentName != null and departmentName != ''">
-            and (ADMIN_UNIT.ADMIN_UNIT_CODE like concat('%',#{departmentName},'%') or ADMIN_UNIT.ADMIN_UNIT_NAME like concat('%',#{departmentName},'%'))
-        </if>
-        <if test="startDate != null and startDate != ''">
-            and A.DOC_DATE &gt;= #{startDate}
-        </if>
-        <if test="endDate !=null and endDate !=''">
-            and A.DOC_DATE &lt;= #{endDate}
+            AND (
+                ITEM.ITEM_CODE LIKE concat('%',#{item},'%')
+                OR A.ITEM_DESCRIPTION LIKE concat('%',#{item},'%')
+                OR LOW_ITEM.ITEM_CODE LIKE concat('%',#{item},'%')
+                OR B.ITEM_DESCRIPTION LIKE concat('%',#{item},'%')
+            )
         </if>
         ORDER BY docDate DESC, docNo ASC
 
     </select>
+    <select id="ListMoReturnDocByFrameNo" resultType="com.mgkj.vo.MoReturnFrameLookupVo"
+            parameterType="com.mgkj.dto.MoReturnSimpleDto">
+        SELECT TOP 2
+        docNo,
+        itemCode,
+        itemName,
+        workCenterCode,
+        workCenterName,
+        moTypeName
+        FROM (
+            SELECT
+            A.DOC_NO AS docNo,
+            ITEM.ITEM_CODE AS itemCode,
+            A.ITEM_DESCRIPTION AS itemName,
+            ISNULL(WC.WORK_CENTER_CODE, '') AS workCenterCode,
+            ISNULL(WC.WORK_CENTER_NAME, '') AS workCenterName,
+            N'装配' AS moTypeName
+            FROM SN_ITEM_RECORD SIR
+            INNER JOIN MO A ON SIR.SOURCE_ID_ROid = A.MO_ID
+            INNER JOIN PLANT ON A.Owner_Org_ROid = PLANT.PLANT_ID
+            INNER JOIN ITEM ON A.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+            LEFT JOIN WORK_CENTER WC ON A.SOURCE_ID_ROid = WC.WORK_CENTER_ID AND A.SOURCE_ID_RTK = N'WORK_CENTER'
+            WHERE A.ApproveStatus = 'Y'
+            AND SIR.SN_NO = #{frameNo}
+            AND A.DOC_NO LIKE '5106%'
+            AND EXISTS (
+                SELECT 1
+                FROM ISSUE_RECEIPT_D IRD
+                INNER JOIN ISSUE_RECEIPT IR ON IR.ISSUE_RECEIPT_ID = IRD.ISSUE_RECEIPT_ID AND IR.CATEGORY = N'56'
+                WHERE IRD.MO_ID = A.MO_ID
+                AND IR.ApproveStatus = N'Y'
+                AND IRD.ISSUE_RECEIPT_QTY &gt; 0
+            )
+            <if test="plantCode != null and plantCode != ''">
+                AND PLANT.PLANT_CODE = #{plantCode}
+            </if>
+            <if test="docType != null and docType != ''">
+                AND A.DOC_NO LIKE concat(#{docType}, '%')
+            </if>
+            <if test="workCenter != null and workCenter != ''">
+                AND (WC.WORK_CENTER_CODE LIKE concat('%', #{workCenter}, '%')
+                OR WC.WORK_CENTER_NAME LIKE concat('%', #{workCenter}, '%'))
+            </if>
+
+            UNION ALL
+
+            SELECT
+            A.DOC_NO AS docNo,
+            ITEM.ITEM_CODE AS itemCode,
+            A.ITEM_DESCRIPTION AS itemName,
+            ISNULL(WC.WORK_CENTER_CODE, '') AS workCenterCode,
+            ISNULL(WC.WORK_CENTER_NAME, '') AS workCenterName,
+            N'包装' AS moTypeName
+            FROM SN_ITEM_RECORD SIR
+            INNER JOIN MO A ON SIR.UDF051 = A.MO_ID
+            INNER JOIN PLANT ON A.Owner_Org_ROid = PLANT.PLANT_ID
+            INNER JOIN ITEM ON A.ITEM_ID = ITEM.ITEM_BUSINESS_ID
+            LEFT JOIN WORK_CENTER WC ON A.SOURCE_ID_ROid = WC.WORK_CENTER_ID AND A.SOURCE_ID_RTK = N'WORK_CENTER'
+            WHERE A.ApproveStatus = 'Y'
+            AND SIR.SN_NO = #{frameNo}
+            AND A.DOC_NO LIKE '5156%'
+            AND EXISTS (
+                SELECT 1
+                FROM ISSUE_RECEIPT_D IRD
+                INNER JOIN ISSUE_RECEIPT IR ON IR.ISSUE_RECEIPT_ID = IRD.ISSUE_RECEIPT_ID AND IR.CATEGORY = N'56'
+                WHERE IRD.MO_ID = A.MO_ID
+                AND IR.ApproveStatus = N'Y'
+                AND IRD.ISSUE_RECEIPT_QTY &gt; 0
+            )
+            <if test="plantCode != null and plantCode != ''">
+                AND PLANT.PLANT_CODE = #{plantCode}
+            </if>
+            <if test="docType != null and docType != ''">
+                AND A.DOC_NO LIKE concat(#{docType}, '%')
+            </if>
+            <if test="workCenter != null and workCenter != ''">
+                AND (WC.WORK_CENTER_CODE LIKE concat('%', #{workCenter}, '%')
+                OR WC.WORK_CENTER_NAME LIKE concat('%', #{workCenter}, '%'))
+            </if>
+        ) AS FrameMo
+        ORDER BY docNo ASC
+    </select>
     <select id="ListMoReturnCollectInfoByDoc" resultType="com.mgkj.vo.MoReturnCollectVo"
             parameterType="com.mgkj.dto.MoReturnSimpleDto">
-        SELECT TOP 100
+        SELECT TOP 200
         MO.DOC_NO AS docNo,
         CAST(MO.DOC_DATE AS NVARCHAR(10)) AS docDate,
         ISNULL(ADMIN_UNIT.ADMIN_UNIT_CODE, '') AS departmentCode,
@@ -1273,79 +1373,55 @@ JOIN MO_RECEIPT_REQUISTION_D MD ON MD.MO_RECEIPT_REQUISTION_ID = M.MO_RECEIPT_RE
         ITEM.ITEM_CODE AS itemCode,
         MO.ITEM_DESCRIPTION AS itemName,
         LOW_ITEM.ITEM_CODE AS lowOrderItemCode,
-        MO_D.ITEM_DESCRIPTION AS lowOrderItemName,
-        MO_D.ITEM_SPECIFICATION AS lowOrderItemSpec,
+        ISNULL(IRD.ITEM_DESCRIPTION, '') AS lowOrderItemName,
+        ISNULL(IRD.ITEM_SPECIFICATION, '') AS lowOrderItemSpec,
         UNIT.UNIT_CODE AS unitCode,
         ISNULL(WAREHOUSE.WAREHOUSE_CODE, '') AS warehouseCode,
         ISNULL(WAREHOUSE.WAREHOUSE_NAME, '') AS warehouseName,
         ISNULL(BIN.BIN_CODE, '') AS binCode,
-        ISNULL(ITEM_LOT.LOT_CODE, '') AS lotNo,
+        ISNULL(IL.LOT_CODE, '') AS lotNo,
         ISNULL(PLANT.PLANT_CODE, '') AS orgNo,
-        CAST(ISNULL(MO_D.ISSUED_QTY, 0) AS NUMERIC(16, 4)) AS issuedQty,
-        ISNULL(SUM(ITEM_WAREHOUSE_BIN.TOTAL_INVENTORY_QTY), 0) AS stockQty,
-        MO_D.SequenceNumber AS xh,
-        CASE
-        WHEN SUM(MO_D.ISSUED_QTY) > 0 THEN SUM(MO_D.ISSUED_QTY)
-        ELSE SUM(MO_D.ISSUED_QTY - MO_D.REQU_INCLUDE_MULT_QTY)
-        END AS applyQty
-        FROM
-        MO
+        CAST(IRD.ISSUE_RECEIPT_QTY AS NUMERIC(16, 4)) AS issuedQty,
+        CAST(IRD.ISSUE_RECEIPT_QTY AS NUMERIC(16, 4)) AS applyQty,
+        0 AS stockQty,
+        CAST(IRD.SequenceNumber AS NVARCHAR(20)) AS xh,
+        CASE WHEN LOW_ITEM.LOT_CONTROL = N'N' THEN 0 ELSE 1 END AS lotControl
+        FROM MO
         INNER JOIN PLANT ON MO.Owner_Org_ROid = PLANT.PLANT_ID
-        INNER JOIN MO_D ON MO.MO_ID = MO_D.MO_ID
         INNER JOIN ITEM ON MO.ITEM_ID = ITEM.ITEM_BUSINESS_ID
-        INNER JOIN ITEM AS LOW_ITEM ON MO_D.ITEM_ID = LOW_ITEM.ITEM_BUSINESS_ID
         LEFT JOIN ADMIN_UNIT ON MO.Owner_Dept = ADMIN_UNIT.ADMIN_UNIT_ID
+        INNER JOIN ISSUE_RECEIPT_D IRD ON IRD.MO_ID = MO.MO_ID
+        INNER JOIN ISSUE_RECEIPT IR ON IR.ISSUE_RECEIPT_ID = IRD.ISSUE_RECEIPT_ID AND IR.CATEGORY = N'56'
+        INNER JOIN ITEM AS LOW_ITEM ON IRD.ITEM_ID = LOW_ITEM.ITEM_BUSINESS_ID
         INNER JOIN UNIT ON LOW_ITEM.STOCK_UNIT_ID = UNIT.UNIT_ID
-        LEFT JOIN ITEM_LOT ON ITEM_LOT.ITEM_LOT_ID = MO_D.ITEM_LOT_ID
-        LEFT JOIN WAREHOUSE ON WAREHOUSE.WAREHOUSE_ID = MO_D.WAREHOUSE_ID
-        LEFT JOIN BIN ON BIN.BIN_ID = MO_D.BIN_ID
-        LEFT JOIN (
-        SELECT
-        ITEM_ID,
-        ITEM_FEATURE_ID,
-        WAREHOUSE_ID,
-        SUM(INVENTORY_QTY) AS TOTAL_INVENTORY_QTY
-        FROM
-        ITEM_WAREHOUSE_BIN
-        WHERE
-        BO_ID_RTK = 'OTHER'
-        AND CAST(BO_ID_ROid AS NVARCHAR(36)) = '00000000-0000-0000-0000-00000000000'
-        GROUP BY
-        ITEM_ID, ITEM_FEATURE_ID, WAREHOUSE_ID
-        ) AS ITEM_WAREHOUSE_BIN
-        ON ITEM_WAREHOUSE_BIN.ITEM_ID = MO_D.ITEM_ID
-        AND ITEM_WAREHOUSE_BIN.ITEM_FEATURE_ID = MO_D.ITEM_FEATURE_ID
-        AND ITEM_WAREHOUSE_BIN.WAREHOUSE_ID = MO_D.WAREHOUSE_ID
-        WHERE PLANT.PLANT_CODE = '1'
-        AND MO.ApproveStatus = 'Y'
-        AND (MO_D.ISSUED_QTY &gt; 0 OR MO_D.REQU_INCLUDE_MULT_QTY &lt; 0)
+        LEFT JOIN ITEM_LOT IL ON IRD.ITEM_LOT_ID = IL.ITEM_LOT_ID
+        LEFT JOIN WAREHOUSE ON IRD.WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
+        LEFT JOIN BIN ON IRD.BIN_ID = BIN.BIN_ID
+        WHERE MO.ApproveStatus = 'Y'
+        AND IR.ApproveStatus = N'Y'
+        AND IRD.ISSUE_RECEIPT_QTY &gt; 0
+        <if test="plantCode != null and plantCode != ''">
+            AND PLANT.PLANT_CODE = #{plantCode}
+        </if>
         <if test="docNo!=null and docNo!=''">
-            and MO.DOC_NO like concat('%',#{docNo},'%')
+            AND MO.DOC_NO LIKE concat('%',#{docNo},'%')
         </if>
         <if test="item!=null and item!=''">
-            and (ITEM.ITEM_CODE like concat('%',#{item},'%') or MO.ITEM_DESCRIPTION like concat('%',#{item},'%'))
+            AND (ITEM.ITEM_CODE LIKE concat('%',#{item},'%') OR MO.ITEM_DESCRIPTION LIKE concat('%',#{item},'%'))
         </if>
         <if test="lowItem!=null and lowItem!=''">
-            and LOW_ITEM.ITEM_CODE like concat('%',#{lowItem},'%') or MO_D.ITEM_DESCRIPTION like
-            concat('%',#{lowItem},'%')
+            AND (LOW_ITEM.ITEM_CODE LIKE concat('%',#{lowItem},'%') OR IRD.ITEM_DESCRIPTION LIKE concat('%',#{lowItem},'%'))
         </if>
         <if test="departmentName!=null and departmentName!=''">
-            and (ADMIN_UNIT.ADMIN_UNIT_CODE like concat('%',#{departmentName},'%') or ADMIN_UNIT.ADMIN_UNIT_NAME like
-            concat('%',#{departmentName},'%'))
+            AND (ADMIN_UNIT.ADMIN_UNIT_CODE LIKE concat('%',#{departmentName},'%') OR ADMIN_UNIT.ADMIN_UNIT_NAME LIKE concat('%',#{departmentName},'%'))
         </if>
         <if test="startDate != null and startDate != ''">
-            and MO.DOC_DATE &gt;= #{startDate}
+            AND MO.DOC_DATE &gt;= #{startDate}
         </if>
         <if test="endDate !=null and endDate !=''">
-            and MO.DOC_DATE &lt;= #{endDate}
+            AND MO.DOC_DATE &lt;= #{endDate}
         </if>
-        GROUP BY
-        MO.DOC_NO, MO.DOC_DATE, ADMIN_UNIT.ADMIN_UNIT_CODE, ADMIN_UNIT.ADMIN_UNIT_NAME,
-        ITEM.ITEM_CODE, MO.ITEM_DESCRIPTION, LOW_ITEM.ITEM_CODE, MO_D.ITEM_DESCRIPTION,
-        MO_D.ITEM_SPECIFICATION, UNIT.UNIT_CODE, WAREHOUSE.WAREHOUSE_CODE, WAREHOUSE.WAREHOUSE_NAME,
-        BIN.BIN_CODE, ITEM_LOT.LOT_CODE, PLANT.PLANT_CODE, MO_D.ISSUED_QTY, MO_D.SequenceNumber
-        ORDER BY
-        docDate DESC, docNo ASC, xh ASC
+        ORDER BY MO.DOC_DATE DESC, MO.DOC_NO ASC, IRD.SequenceNumber ASC
     </select>
     <select id="ListIssueReceiptReturnSimpleInfo" resultType="com.mgkj.vo.IssueReceiptReturnSimpleVo"
             parameterType="com.mgkj.dto.IssueReceiptReturnSimpleDto">

@@ -745,6 +745,12 @@ public class MoController {
         return moService.ListMoReturnSimpleInfo(moReturnSimpleDto);
     }
 
+    @ApiOperation("工单退料-车架号反查工单")
+    @PostMapping("/GetMoReturnDocByFrameNo")
+    public Result GetMoReturnDocByFrameNo(@RequestBody MoReturnSimpleDto moReturnSimpleDto){
+        return moService.GetMoReturnDocByFrameNo(moReturnSimpleDto);
+    }
+
     //工单退料     工单=====>退料入库单
     @ApiOperation("工单退料-详细查询")
     @PostMapping("/ListMoReturnCollectInfo")
@@ -759,6 +765,13 @@ public class MoController {
         try {
             MiddleReturnDto middleReturnDto = moService.insertMoReturnMiddleTable(list);
             JSONObject jsonObject = moService.MoReturnSubmit(middleReturnDto);
+            JSONObject execution = jsonObject.getJSONObject("payload")
+                    .getJSONObject("std_data")
+                    .getJSONObject("execution");
+            String executionCode = execution.getString("code");
+            if (!"0".equals(executionCode)) {
+                return Result.fail(jsonObject).message(execution.getString("description"));
+            }
             return Result.ok(jsonObject).message("添加成功");
         }catch (Exception e){
             return Result.fail().message("添加失败");
