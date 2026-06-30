@@ -1385,26 +1385,33 @@ JOIN MO_RECEIPT_REQUISTION_D MD ON MD.MO_RECEIPT_REQUISTION_ID = M.MO_RECEIPT_RE
         CAST(IRD.ISSUE_RECEIPT_QTY AS NUMERIC(16, 4)) AS applyQty,
         0 AS stockQty,
         CAST(IRD.SequenceNumber AS NVARCHAR(20)) AS xh,
-        CASE WHEN LOW_ITEM.LOT_CONTROL = N'N' THEN 0 ELSE 1 END AS lotControl
-        FROM MO
+        CASE WHEN LOW_ITEM.LOT_CONTROL = N'N' THEN 0 ELSE 1 END AS lotControl,
+        ISNULL(IRD.REMARK, '') AS remark,
+        ISNULL((
+            SELECT TOP 1 ISNULL(MOD.REMARK, '')
+            FROM MO_D MOD
+            WHERE MOD.MO_ID = MO.MO_ID
+            AND MOD.ITEM_ID = IRD.ITEM_ID
+            ORDER BY MOD.SequenceNumber
+        ), '') AS moRemark
+        FROM ISSUE_RECEIPT_D IRD
+        INNER JOIN ISSUE_RECEIPT IR ON IR.ISSUE_RECEIPT_ID = IRD.ISSUE_RECEIPT_ID
+            AND IR.CATEGORY = N'56'
+            AND IR.ApproveStatus = N'Y'
+        INNER JOIN MO ON MO.MO_ID = IRD.MO_ID
+            AND MO.ApproveStatus = 'Y'
+            AND MO.DOC_NO = #{docNo}
         INNER JOIN PLANT ON MO.Owner_Org_ROid = PLANT.PLANT_ID
         INNER JOIN ITEM ON MO.ITEM_ID = ITEM.ITEM_BUSINESS_ID
-        LEFT JOIN ADMIN_UNIT ON MO.Owner_Dept = ADMIN_UNIT.ADMIN_UNIT_ID
-        INNER JOIN ISSUE_RECEIPT_D IRD ON IRD.MO_ID = MO.MO_ID
-        INNER JOIN ISSUE_RECEIPT IR ON IR.ISSUE_RECEIPT_ID = IRD.ISSUE_RECEIPT_ID AND IR.CATEGORY = N'56'
         INNER JOIN ITEM AS LOW_ITEM ON IRD.ITEM_ID = LOW_ITEM.ITEM_BUSINESS_ID
         INNER JOIN UNIT ON LOW_ITEM.STOCK_UNIT_ID = UNIT.UNIT_ID
+        LEFT JOIN ADMIN_UNIT ON MO.Owner_Dept = ADMIN_UNIT.ADMIN_UNIT_ID
         LEFT JOIN ITEM_LOT IL ON IRD.ITEM_LOT_ID = IL.ITEM_LOT_ID
         LEFT JOIN WAREHOUSE ON IRD.WAREHOUSE_ID = WAREHOUSE.WAREHOUSE_ID
         LEFT JOIN BIN ON IRD.BIN_ID = BIN.BIN_ID
-        WHERE MO.ApproveStatus = 'Y'
-        AND IR.ApproveStatus = N'Y'
-        AND IRD.ISSUE_RECEIPT_QTY &gt; 0
+        WHERE IRD.ISSUE_RECEIPT_QTY &gt; 0
         <if test="plantCode != null and plantCode != ''">
             AND PLANT.PLANT_CODE = #{plantCode}
-        </if>
-        <if test="docNo!=null and docNo!=''">
-            AND MO.DOC_NO LIKE concat('%',#{docNo},'%')
         </if>
         <if test="item!=null and item!=''">
             AND (ITEM.ITEM_CODE LIKE concat('%',#{item},'%') OR MO.ITEM_DESCRIPTION LIKE concat('%',#{item},'%'))
@@ -1421,7 +1428,7 @@ JOIN MO_RECEIPT_REQUISTION_D MD ON MD.MO_RECEIPT_REQUISTION_ID = M.MO_RECEIPT_RE
         <if test="endDate !=null and endDate !=''">
             AND MO.DOC_DATE &lt;= #{endDate}
         </if>
-        ORDER BY MO.DOC_DATE DESC, MO.DOC_NO ASC, IRD.SequenceNumber ASC
+        ORDER BY IRD.SequenceNumber ASC
     </select>
     <select id="ListIssueReceiptReturnSimpleInfo" resultType="com.mgkj.vo.IssueReceiptReturnSimpleVo"
             parameterType="com.mgkj.dto.IssueReceiptReturnSimpleDto">

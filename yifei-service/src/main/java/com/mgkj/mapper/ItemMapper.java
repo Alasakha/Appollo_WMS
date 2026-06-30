@@ -14,10 +14,10 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface ItemMapper extends BaseMapper<Item> {
 
-    @Select("SELECT BIN_CONTROL FROM ITEM I\n" +
-            "LEFT JOIN ITEM_PLANT IP ON IP.ITEM_ID = I.ITEM_BUSINESS_ID\n" +
-            "LEFT JOIN WAREHOUSE W ON W.WAREHOUSE_ID = IP.INBOUND_WAREHOUSE_ID\n" +
-            "WHERE ITEM_CODE = #{itemCode}")
+    @Select("SELECT ISNULL(MAX(CAST(W.BIN_CONTROL AS INT)), 0) FROM ITEM I " +
+            "LEFT JOIN ITEM_PLANT IP ON IP.ITEM_ID = I.ITEM_BUSINESS_ID " +
+            "LEFT JOIN WAREHOUSE W ON W.WAREHOUSE_ID = IP.INBOUND_WAREHOUSE_ID " +
+            "WHERE I.ITEM_CODE = #{itemCode}")
     int selectBinControl(String itemCode);
 }
 

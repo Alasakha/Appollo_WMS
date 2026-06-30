@@ -39,6 +39,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -84,6 +85,47 @@ public class MoController {
 
     @Resource
     private FinishedgoodsinbounddetailService finishedgoodsinbounddetailService;
+
+    private static final ConcurrentHashMap<String, Object> FINISHED_GOODS_BARCODE_LOCKS = new ConcurrentHashMap<>();
+
+    private boolean existsFinishedGoodsBarcode(String barcode) {
+        return finishedgoodsinbounddetailService.count(
+                new QueryWrapper<FinishedGoodsInboundDetail>().eq("barcode", barcode)) > 0;
+    }
+
+    private void markFinishedGoodsSubmitted(List<MoInStorageSubmitDto> dtoList) {
+        String remark = LocalDateTimeUtil.now().toString();
+        List<String> ids = dtoList.stream()
+                .map(MoInStorageSubmitDto::getId)
+                .filter(StrUtil::isNotBlank)
+                .collect(Collectors.toList());
+        if (!ids.isEmpty()) {
+            LambdaUpdateWrapper<FinishedGoodsInboundDetail> wrapper = new LambdaUpdateWrapper<>();
+            wrapper.in(FinishedGoodsInboundDetail::getId, ids);
+            wrapper.eq(FinishedGoodsInboundDetail::getStatus, 0);
+            wrapper.set(FinishedGoodsInboundDetail::getStatus, 1);
+            wrapper.set(FinishedGoodsInboundDetail::getRemark, remark);
+            finishedgoodsinbounddetailService.update(wrapper);
+            return;
+        }
+        List<String> barcodes = dtoList.stream()
+                .map(MoInStorageSubmitDto::getBarcode)
+                .filter(StrUtil::isNotBlank)
+                .map(String::trim)
+                .distinct()
+                .collect(Collectors.toList());
+        if (!barcodes.isEmpty()) {
+            log.warn("整车入库提交ids为空，按barcode回写状态: {}", barcodes);
+            LambdaUpdateWrapper<FinishedGoodsInboundDetail> wrapper = new LambdaUpdateWrapper<>();
+            wrapper.in(FinishedGoodsInboundDetail::getBarcode, barcodes);
+            wrapper.eq(FinishedGoodsInboundDetail::getStatus, 0);
+            wrapper.set(FinishedGoodsInboundDetail::getStatus, 1);
+            wrapper.set(FinishedGoodsInboundDetail::getRemark, remark);
+            finishedgoodsinbounddetailService.update(wrapper);
+            return;
+        }
+        log.error("整车入库提交无法回写状态，请求参数: {}", JSON.toJSONString(dtoList));
+    }
 
     @ApiOperation("工单入库-扫码接口")
     @PostMapping("/scanBarcode")
@@ -195,12 +237,13 @@ public class MoController {
 
     @ApiOperation("整车入库扫码")
     @PostMapping("/finishedGoodsReceipt/scan")
+    @Transactional(rollbackFor = Exception.class)
     public Result<?> finishedGoodsReceiptScan(@RequestBody MoInStorageByBarcodeDto dto) {
-        String barcode = dto.getBarcode();
-        // 1、查询是否已扫码
-        QueryWrapper<FinishedGoodsInboundDetail> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("barcode", barcode);
-        long count = finishedgoodsinbounddetailService.count(queryWrapper);
+        String barcode = StrUtil.trim(dto.getBarcode());
+        if (StrUtil.isBlank(barcode)) {
+            return Result.fail(null, "条码不能为空");
+        }
+        dto.setBarcode(barcode);
         int i = moMapper.selectBarcodeBooleanPackageIssuestorage(barcode);
 
         String TA021 = moMapper.selectMoDocNo(barcode);
@@ -244,34 +287,42 @@ public class MoController {
         map.put("alreadyScanCodeList", alreadyScanCodeList);
         map.put("noScanCodeList", noScanCodeList);
         map.put("noScanBarCodeList", noScanBarCodeList);
-        if (count > 0) {
-            return Result.ok(map).message("该条码已存在！");
+
+        Object lock = FINISHED_GOODS_BARCODE_LOCKS.computeIfAbsent(barcode, k -> new Object());
+        synchronized (lock) {
+            try {
+                if (existsFinishedGoodsBarcode(barcode)) {
+                    return Result.ok(map).message("该条码已存在！");
+                }
+                if (i > 0) {
+                    map.put("barcodeInfo", null);
+                    return Result.ok(map).message("该条码已入库！");
+                }
+                FinishedGoodsInboundDetail finishedgoodsinbounddetail = new FinishedGoodsInboundDetail();
+                finishedgoodsinbounddetail.setBarcode(barcode);
+                finishedgoodsinbounddetail.setWarehouseCode(mo.getWarehouseCode());
+                finishedgoodsinbounddetail.setWarehouseName(mo.getWarehouseName());
+                finishedgoodsinbounddetail.setBinCode(mo.getBinCode());
+                finishedgoodsinbounddetail.setLotNo(mo.getLotNo());
+                finishedgoodsinbounddetail.setQty(BigDecimal.valueOf(mo.getQty()));
+                finishedgoodsinbounddetail.setDocNo(mo.getSourceNo());
+                finishedgoodsinbounddetail.setCustomerDocNo(mo.getCustomerNo());
+                finishedgoodsinbounddetail.setUnitCode(mo.getUnitNo());
+                finishedgoodsinbounddetail.setItemCode(mo.getItemNo());
+                finishedgoodsinbounddetail.setItemName(mo.getItemName());
+                finishedgoodsinbounddetail.setItemSpec(mo.getItemSpec());
+                finishedgoodsinbounddetail.setOrgNo(Integer.valueOf(mo.getShjg()));
+                finishedgoodsinbounddetail.setCreateBy(dto.getCreateBy());
+                boolean saved = finishedgoodsinbounddetailService.save(finishedgoodsinbounddetail);
+                if (!saved) {
+                    return Result.fail(map).message("提交失败！");
+                }
+                map.put("barcodeInfo", finishedgoodsinbounddetail);
+                return Result.ok(map).message("提交成功！");
+            } finally {
+                FINISHED_GOODS_BARCODE_LOCKS.remove(barcode, lock);
+            }
         }
-        if (i > 0) {
-            map.put("barcodeInfo", null);
-            return Result.ok(map).message("该条码已入库！");
-        }
-        FinishedGoodsInboundDetail finishedgoodsinbounddetail = new FinishedGoodsInboundDetail();
-        finishedgoodsinbounddetail.setBarcode(dto.getBarcode());
-        finishedgoodsinbounddetail.setWarehouseCode(mo.getWarehouseCode());
-        finishedgoodsinbounddetail.setWarehouseName(mo.getWarehouseName());
-        finishedgoodsinbounddetail.setBinCode(mo.getBinCode());
-        finishedgoodsinbounddetail.setLotNo(mo.getLotNo());
-        finishedgoodsinbounddetail.setQty(BigDecimal.valueOf(mo.getQty()));
-        finishedgoodsinbounddetail.setDocNo(mo.getSourceNo());
-        finishedgoodsinbounddetail.setCustomerDocNo(mo.getCustomerNo());
-        finishedgoodsinbounddetail.setUnitCode(mo.getUnitNo());
-        finishedgoodsinbounddetail.setItemCode(mo.getItemNo());
-        finishedgoodsinbounddetail.setItemName(mo.getItemName());
-        finishedgoodsinbounddetail.setItemSpec(mo.getItemSpec());
-        finishedgoodsinbounddetail.setOrgNo(Integer.valueOf(mo.getShjg()));
-        finishedgoodsinbounddetail.setCreateBy(dto.getCreateBy());
-        boolean saved = finishedgoodsinbounddetailService.save(finishedgoodsinbounddetail);
-        if (!saved) {
-            return Result.fail(map).message("提交失败！");
-        }
-        map.put("barcodeInfo", finishedgoodsinbounddetail);
-        return Result.ok(map).message("提交成功！");
     }
 
     @ApiOperation("整车入库-提交数据列表")
@@ -634,21 +685,7 @@ public class MoController {
         }
 
 
-        List<String> ids = dtoList.stream()
-                .map(MoInStorageSubmitDto::getId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        if (ids.isEmpty()) {
-            // 可选：记录日志，说明为什么没更新
-            log.error("请求参数{}，ids为空", JSON.toJSONString(dtoList));
-            return Result.ok(finalResult);
-        }
-        LambdaUpdateWrapper<FinishedGoodsInboundDetail> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        lambdaUpdateWrapper.in(FinishedGoodsInboundDetail::getId, ids);
-        lambdaUpdateWrapper.set(FinishedGoodsInboundDetail::getStatus, 1);
-        lambdaUpdateWrapper.set(FinishedGoodsInboundDetail::getRemark, LocalDateTimeUtil.now().toString());
-        finishedgoodsinbounddetailService.update(lambdaUpdateWrapper);
+        markFinishedGoodsSubmitted(dtoList);
         return Result.ok(finalResult);
     }
 
@@ -765,16 +802,32 @@ public class MoController {
         try {
             MiddleReturnDto middleReturnDto = moService.insertMoReturnMiddleTable(list);
             JSONObject jsonObject = moService.MoReturnSubmit(middleReturnDto);
-            JSONObject execution = jsonObject.getJSONObject("payload")
-                    .getJSONObject("std_data")
-                    .getJSONObject("execution");
+            if (jsonObject == null) {
+                return Result.fail().message("E10 无响应");
+            }
+            JSONObject payload = jsonObject.getJSONObject("payload");
+            if (payload == null) {
+                log.error("工单退料 E10 返回异常: {}", jsonObject);
+                return Result.fail(jsonObject).message("E10 返回格式异常");
+            }
+            JSONObject stdData = payload.getJSONObject("std_data");
+            if (stdData == null) {
+                log.error("工单退料 E10 返回缺少 std_data: {}", jsonObject);
+                return Result.fail(jsonObject).message("E10 返回缺少 std_data");
+            }
+            JSONObject execution = stdData.getJSONObject("execution");
+            if (execution == null) {
+                log.error("工单退料 E10 返回缺少 execution: {}", jsonObject);
+                return Result.fail(jsonObject).message("E10 返回缺少 execution");
+            }
             String executionCode = execution.getString("code");
             if (!"0".equals(executionCode)) {
                 return Result.fail(jsonObject).message(execution.getString("description"));
             }
             return Result.ok(jsonObject).message("添加成功");
         }catch (Exception e){
-            return Result.fail().message("添加失败");
+            log.error("工单退料提交异常, params={}", list, e);
+            return Result.fail().message("添加失败: " + e.getMessage());
         }
     }
 

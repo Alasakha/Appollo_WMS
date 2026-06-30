@@ -908,6 +908,9 @@ public class MoServiceImpl implements MoService {
      */
     @Override
     public Result ListMoReturnCollectInfo(MoReturnSimpleDto moReturnSimpleDto) {
+        if (moReturnSimpleDto == null || StrUtil.isBlank(moReturnSimpleDto.getDocNo())) {
+            return Result.fail().message("工单单号不能为空");
+        }
         try {
             List<MoReturnCollectVo> vo = moMapper.ListMoReturnCollectInfoByDoc(moReturnSimpleDto);
             if (vo!=null && !vo.isEmpty()){
