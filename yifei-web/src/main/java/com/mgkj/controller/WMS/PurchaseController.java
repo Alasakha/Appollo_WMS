@@ -566,7 +566,7 @@ public class PurchaseController {
 
     @ApiOperation("采购收货-生成到货单-E10标准接口")
     @Log("采购收货-生成到货单-E10标准接口")
-    @Debounce // 防抖 默认3秒
+    @Debounce // 防抖 默认30秒
     @PostMapping("/PurchaseReceipts")
     public Result PurchaseReceipts(@RequestBody PurchaseReceiptDto Dto) {
         String createBy = Dto.getCreateBy();
