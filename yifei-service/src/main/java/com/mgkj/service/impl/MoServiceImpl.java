@@ -980,7 +980,7 @@ public class MoServiceImpl implements MoService {
                                 .lsmd027(MORETURN_APPID + MORETURN_APPMODULE + WMS_APPVERSION + DateUtil.format(date, "yyMMddhhmmss"))//APP申请串号
                                 .lsmd028(MORETURN_APPMODULE)//APP申请所属模组
                                 .lsmd029("N")//ERP异动码
-                                .lsmd030("")//备注
+                                .lsmd030(StrUtil.blankToDefault(dto.getRemark(), ""))//备注
                                 .lsmd031("1")//条码异动类型
                                 .lsmd033(UUID.randomUUID().toString().trim().replace("-", ""))//APP申请序列号
                                 .lsmd036(binCode)

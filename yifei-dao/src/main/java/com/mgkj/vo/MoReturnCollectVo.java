@@ -80,10 +80,4 @@ public class MoReturnCollectVo {
     @ApiModelProperty("是否批号管理(1是0否)")
     private Integer lotControl;
 
-    @ApiModelProperty("发料单明细备注")
-    private String remark;
-
-    @ApiModelProperty("工单明细说明")
-    private String moRemark;
-
 }
